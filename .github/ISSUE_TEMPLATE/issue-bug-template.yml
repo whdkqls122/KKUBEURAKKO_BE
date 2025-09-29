@@ -1,4 +1,4 @@
-name: "🐞 버그 리포트"
+name: "🐞 Bug report "
 description: "오류나 예기치 않은 동작을 보고합니다."
 title: "[BUG] "     # 기본 이슈 제목 접두사
 labels: ["bug"]
