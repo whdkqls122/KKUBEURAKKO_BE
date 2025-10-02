@@ -56,6 +56,8 @@ dependencies {
     //aws
     implementation 'com.amazonaws:aws-java-sdk-s3:1.12.791'
 
+    //swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
