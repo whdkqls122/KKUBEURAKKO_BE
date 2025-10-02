@@ -1,6 +1,13 @@
 package com.kkubeurakko.kkubeurakko_be.domain.coupons.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
 public enum CouponType {
-	DELIVERY,
-	TAKEOUT
+	DELIVERY("배달"),
+	TAKEOUT("포장");
+
+	private final String type;
 }
