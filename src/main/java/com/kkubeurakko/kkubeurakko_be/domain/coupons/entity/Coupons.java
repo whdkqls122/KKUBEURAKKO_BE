@@ -49,7 +49,7 @@ public class Coupons extends BaseEntity {
 	private int minOrderAmount;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "couponType", nullable = false)
+	@Column(name = "coupon_type", nullable = false)
 	private CouponType couponType;
 
 	@DateTimeFormat(pattern = "yyyy-MM-dd")

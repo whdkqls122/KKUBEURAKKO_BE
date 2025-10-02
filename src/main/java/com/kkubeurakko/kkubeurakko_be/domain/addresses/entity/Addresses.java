@@ -28,10 +28,10 @@ import lombok.NoArgsConstructor;
 public class Addresses extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "address_id")
+	@Column(name = "addresses_id")
 	private Long id;
 
-	@Column(name = "addres_name", nullable = false, length = 30)
+	@Column(name = "address_name", nullable = false, length = 30)
 	private String addressName;
 
 	@Column(name = "road_name", nullable = false, length = 50)

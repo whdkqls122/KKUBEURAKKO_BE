@@ -35,10 +35,10 @@ import lombok.NoArgsConstructor;
 public class Stores extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "stroes_id")
+	@Column(name = "stores_id")
 	private Long id;
 
-	@Column(name = "open_time", nullable = false, length = 100)
+	@Column(name = "address", nullable = false, length = 100)
 	private String address;
 
 	@Column(name = "tel", nullable = false, length = 13)
@@ -59,12 +59,12 @@ public class Stores extends BaseEntity {
 	@Column(name = "delivery_region", nullable = false, length = 250)
 	private String delivery_region;
 
-	@OneToMany(mappedBy = "Coupons", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Coupons> couponsList = new ArrayList<>();
 
-	@OneToMany(mappedBy = "MenuGroups", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<MenuGroups> menuGroupsList = new ArrayList<>();
 
-	@OneToMany(mappedBy = "Sales", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Sales> salesList = new ArrayList<>();
 }

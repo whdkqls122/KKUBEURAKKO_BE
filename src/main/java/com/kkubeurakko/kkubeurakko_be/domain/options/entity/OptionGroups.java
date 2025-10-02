@@ -39,12 +39,6 @@ public class OptionGroups extends BaseEntity {
 	@Column(name = "description", length = 250)
 	private String description;
 
-	@Column(name = "created_at", nullable = false)
-	private LocalDate createdAt;
-
-	@Column(name = "updated_at")
-	private LocalDate updatedAt;
-
 	@Column(name = "required", nullable = false)
 	private boolean required;
 

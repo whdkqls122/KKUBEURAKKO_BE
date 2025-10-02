@@ -40,12 +40,12 @@ public class Users extends BaseEntity {
 	@Column(name = "nickname", nullable = false)
 	private String nickname;
 
-	@OneToMany(mappedBy = "Users", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<UsersCoupons> usersCoupons = new ArrayList<>();
 
-	@OneToMany(mappedBy = "Addresses", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Addresses> addressesList = new ArrayList<>();
 
-	@OneToMany(mappedBy = "Orders", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "user")
 	private List<Orders> ordersList = new ArrayList<>();
 }
