@@ -55,4 +55,28 @@
 5. **해당 이슈 다 작업했다면 Pull Request 날린다**
 
 ---
-## 3. Git Rebase
+## 3. Git Rebase 작업 가이드
+
+$git checkout develop 
+$git pull origin develop
+$git checkout 내브랜치 
+
+1. develop 브랜치 기준으로 rebase 하기,
+   - `git rebase develop`
+
+2. 충돌이 났다면 해결 후 
+   - ` git add .`
+   - ` git rebase --continue`
+     
+3. 최종 커밋하고 원격 저장소에 푸시  
+   - `git add .`
+   - `git commit -m` 
+   - `git push origin 브랜치명`  
+
+⚠️rebase 취소 명령어
+` git rebase --abort `
+
+⚠️ 중요 공지
+git rebase develop 명령어 실행 전에,
+매 기능 push할 때마다 새로운 브랜치를 생성하면 오류를 방지할 수 있습니다.
+
