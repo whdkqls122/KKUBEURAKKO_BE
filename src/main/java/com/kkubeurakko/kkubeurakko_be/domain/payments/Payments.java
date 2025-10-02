@@ -41,7 +41,7 @@ public class Payments extends BaseEntity {
 
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "orders_id")
-	private Orders orders;
+	private Orders order;
 
 
 }

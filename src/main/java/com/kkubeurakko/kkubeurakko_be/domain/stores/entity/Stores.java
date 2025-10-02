@@ -1,14 +1,25 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.entity;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -47,4 +58,13 @@ public class Stores extends BaseEntity {
 
 	@Column(name = "delivery_region", nullable = false, length = 250)
 	private String delivery_region;
+
+	@OneToMany(mappedBy = "Coupons", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Coupons> couponsList = new ArrayList<>();
+
+	@OneToMany(mappedBy = "MenuGroups", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<MenuGroups> menuGroupsList = new ArrayList<>();
+
+	@OneToMany(mappedBy = "Sales", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Sales> salesList = new ArrayList<>();
 }

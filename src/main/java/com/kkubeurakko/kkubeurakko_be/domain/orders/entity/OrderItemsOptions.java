@@ -34,5 +34,5 @@ public class OrderItemsOptions {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "options_id", nullable = false)
-	private Options options;
+	private Options option;
 }

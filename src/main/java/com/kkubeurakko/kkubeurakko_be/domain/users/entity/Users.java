@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
 
 import jakarta.persistence.CascadeType;
@@ -39,9 +40,12 @@ public class Users extends BaseEntity {
 	@Column(name = "nickname", nullable = false)
 	private String nickname;
 
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "Users", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<UsersCoupons> usersCoupons = new ArrayList<>();
 
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Addresses> addresses = new ArrayList<>();
+	@OneToMany(mappedBy = "Addresses", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Addresses> addressesList = new ArrayList<>();
+
+	@OneToMany(mappedBy = "Orders", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Orders> ordersList = new ArrayList<>();
 }

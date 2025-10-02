@@ -61,5 +61,5 @@ public class Addresses extends BaseEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_number", nullable = false)
-	private Users users;
+	private Users user;
 }
