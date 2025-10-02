@@ -57,9 +57,11 @@
 ---
 ## 3. Git Rebase 작업 가이드
 
-$git checkout develop 
-$git pull origin develop
-$git checkout 내브랜치 
+$git checkout develop   
+
+$git pull origin develop  
+
+$git checkout 내브랜치   
 
 1. develop 브랜치 기준으로 rebase 하기,
    - `git rebase develop`
