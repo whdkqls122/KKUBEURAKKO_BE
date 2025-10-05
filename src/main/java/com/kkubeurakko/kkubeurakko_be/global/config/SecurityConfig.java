@@ -8,7 +8,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+
+import com.kkubeurakko.kkubeurakko_be.global.jwt.JwtFilter;
+import com.kkubeurakko.kkubeurakko_be.global.jwt.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+	private final JwtUtil jwtUtil;
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -37,10 +42,10 @@ public class SecurityConfig {
 			.csrf((auth) -> auth.disable())
 			.formLogin(auth -> auth.disable())
 			.httpBasic((auth) -> auth.disable())
-			// .addFilterBefore(
-			// 	new JwtFilter(jwtUtil),
-			// 	UsernamePasswordAuthenticationFilter.class
-			// )
+			.addFilterBefore(
+				new JwtFilter(jwtUtil),
+				UsernamePasswordAuthenticationFilter.class
+			)
 			// .addFilterBefore(
 			// 	new CustomLogoutFilter(jwtUtil, refreshTokenRepository),
 			// 	LogoutFilter.class

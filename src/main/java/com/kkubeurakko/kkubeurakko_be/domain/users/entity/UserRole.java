@@ -11,4 +11,15 @@ public enum UserRole {
 
 	private final String role;
 	private final int accessLevel;
+
+	public static UserRole findUserRole(String role) {
+		switch (role) {
+			case "관리자":
+				return ADMIN;
+			case "회원":
+				return CUSTOMER;
+			default:
+				throw new RuntimeException("잘못된 권한");
+		}
+	}
 }
