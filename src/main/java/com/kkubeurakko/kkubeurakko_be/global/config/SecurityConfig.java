@@ -11,6 +11,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import com.kkubeurakko.kkubeurakko_be.global.exception.GlobalAccessDeniedHandler;
+import com.kkubeurakko.kkubeurakko_be.global.exception.GlobalAuthenticationEntryPoint;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.JwtFilter;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.JwtUtil;
 
@@ -21,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 	private final JwtUtil jwtUtil;
+	private final GlobalAuthenticationEntryPoint authenticationEntryPoint;
+	private final GlobalAccessDeniedHandler accessDeniedHandler;
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -59,10 +63,10 @@ public class SecurityConfig {
 			// 		).successHandler(customSuccessHandler)
 			// 	)
 			// )
-			// .exceptionHandling(exceptionHandling -> exceptionHandling
-			// 	.authenticationEntryPoint(authenticationEntryPoint)
-			// 	.accessDeniedHandler(accessDeniedHandler)
-			// )
+			.exceptionHandling(exceptionHandling -> exceptionHandling
+				.authenticationEntryPoint(authenticationEntryPoint)
+				.accessDeniedHandler(accessDeniedHandler)
+			)
 			.authorizeHttpRequests((auth) -> auth
 				.requestMatchers("/").permitAll()
 				.anyRequest().authenticated()
