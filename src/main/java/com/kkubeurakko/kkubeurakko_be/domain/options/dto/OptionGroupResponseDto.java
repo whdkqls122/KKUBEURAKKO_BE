@@ -7,15 +7,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class OptionGroupResponseDto {
-    private Long id;
-    private String name;
-    private String description;
-    private boolean required;
-    private OptionGroupType optionGroupType;
-    private Status status;
-}
+public record OptionGroupResponseDto(
+        Long id,
+        String name,
+        String description,
+        boolean required,
+        OptionGroupType optionGroupType,
+        Status status
+) {}
