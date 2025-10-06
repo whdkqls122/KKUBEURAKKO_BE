@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.options.service;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class OptionServiceImpl implements OptionService {
         Options option = Options.builder()
                 .name(requestDto.getName())
                 .price(requestDto.getPrice())
+                .status(Status.ON_SALE)
                 .optionGroup(optionGroup)
                 .build();
         optionsRepository.save(option);
