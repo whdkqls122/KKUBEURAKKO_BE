@@ -49,8 +49,19 @@
 
 5. **해당 이슈 다 작업했다면 Pull Request 날린다**
 
+---  
+## 3. 공통 예외
+| 예외 클래스                                | HTTP 상태 코드                | 메시지                | 처리 방법               |
+| ------------------------------------- | ------------------------- | ------------------ | ------------------- |
+| `IllegalArgumentException`            | 400 Bad Request           | 예외 메시지 그대로         | 잘못된 인자 전달 시         |
+| `InsufficientAuthenticationException` | 401 Unauthorized          | "인증 정보가 부족합니다."    | JWT 만료/인증 실패        |
+| `AccessDeniedException`               | 403 Forbidden             | "권한이 없습니다."        | 권한 부족 시             |
+| `EntityNotFoundException`             | 404 Not Found             | "존재하지 않는 리소스입니다."  | DB 조회 실패 시          |
+| `Exception`                           | 500 Internal Server Error | "서버 오류가 발생했습니다."   | 기타 예외               |
+
 ---
-## 3. Git Rebase 작업 가이드
+
+## 4. Git Rebase 작업 가이드
 
 $git checkout develop   
 
