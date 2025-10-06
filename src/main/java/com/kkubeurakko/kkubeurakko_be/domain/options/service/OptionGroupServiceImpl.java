@@ -18,7 +18,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
         OptionGroups optionGroup = OptionGroups.builder()
                 .name(requestDto.getName())
                 .description(requestDto.getDescription())
-                .required(requestDto.isRequired())
+                .required(requestDto.getRequired())
                 .optionGroupType(requestDto.getOptionGroupType())
                 .status(Status.ON_SALE)
                 .build();
