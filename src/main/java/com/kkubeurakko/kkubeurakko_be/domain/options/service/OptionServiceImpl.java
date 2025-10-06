@@ -3,18 +3,17 @@ package com.kkubeurakko.kkubeurakko_be.domain.options.service;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
-import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupsRepository;
-import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionsRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OptionsServiceImpl implements OptionsService {
+public class OptionServiceImpl implements OptionService {
 
-    private final OptionsRepository optionsRepository;
-    private final OptionGroupsRepository optionGroupsRepository;
+    private final OptionRepository optionsRepository;
+    private final OptionGroupRepository optionGroupsRepository;
 
     @Override
     public void createOption(OptionRequestDto requestDto) {

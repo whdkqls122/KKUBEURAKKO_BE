@@ -3,15 +3,15 @@ package com.kkubeurakko.kkubeurakko_be.domain.options.service;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
-import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupsRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OptionGroupsServiceImpl implements OptionGroupsService {
+public class OptionGroupServiceImpl implements OptionGroupService {
 
-    private final OptionGroupsRepository optionGroupsRepository;
+    private final OptionGroupRepository optionGroupsRepository;
 
     @Override
     public void createOptionGroup(OptionGroupRequestDto requestDto) {

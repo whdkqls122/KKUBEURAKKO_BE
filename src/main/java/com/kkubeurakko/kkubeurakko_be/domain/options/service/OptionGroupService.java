@@ -4,7 +4,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupRequestDto;
 import org.springframework.stereotype.Service;
 
 @Service
-public interface OptionGroupsService {
+public interface OptionGroupService {
 
     //옵션 그룹 생성
     public void createOptionGroup(OptionGroupRequestDto requestDto);
