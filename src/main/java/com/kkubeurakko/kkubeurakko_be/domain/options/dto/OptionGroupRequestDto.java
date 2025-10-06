@@ -15,5 +15,4 @@ public class OptionGroupRequestDto {
     private String description;
     private boolean required;
     private OptionGroupType optionGroupType;
-    private Long menuId;
 }
