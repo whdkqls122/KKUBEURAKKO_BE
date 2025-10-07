@@ -16,10 +16,10 @@ public class OptionGroupServiceImpl implements OptionGroupService {
     @Override
     public void createOptionGroup(OptionGroupRequestDto requestDto) {
         OptionGroups optionGroup = OptionGroups.builder()
-                .name(requestDto.getName())
-                .description(requestDto.getDescription())
-                .required(requestDto.getRequired())
-                .optionGroupType(requestDto.getOptionGroupType())
+                .name(requestDto.name())
+                .description(requestDto.description())
+                .required(requestDto.required())
+                .optionGroupType(requestDto.optionGroupType())
                 .status(Status.ON_SALE)
                 .build();
         optionGroupsRepository.save(optionGroup);

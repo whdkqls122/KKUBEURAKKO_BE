@@ -18,12 +18,12 @@ public class OptionServiceImpl implements OptionService {
 
     @Override
     public void createOption(OptionRequestDto requestDto) {
-        OptionGroups optionGroup = optionGroupsRepository.findById(requestDto.getOptionGroupId())
+        OptionGroups optionGroup = optionGroupsRepository.findById(requestDto.optionGroupId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID의 옵션 그룹이 존재하지 않습니다."));
 
         Options option = Options.builder()
-                .name(requestDto.getName())
-                .price(requestDto.getPrice())
+                .name(requestDto.name())
+                .price(requestDto.price())
                 .status(Status.ON_SALE)
                 .optionGroup(optionGroup)
                 .build();
