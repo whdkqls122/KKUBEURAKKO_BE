@@ -27,13 +27,13 @@ class OptionGroupServiceImplTest {
 
     @Test
     void createOptionGroup_ShouldSaveOptionGroup() {
-        // given
-        OptionGroupRequestDto requestDto = OptionGroupRequestDto.builder()
-                .name("맵기 선택")
-                .description("맵기 단계를 선택해 주세요")
-                .required(true)
-                .optionGroupType(com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType.SINGLE)
-                .build();
+        // given (record는 new로 생성)
+        OptionGroupRequestDto requestDto = new OptionGroupRequestDto(
+                "맵기 선택",
+                "맵기 단계를 선택해 주세요",
+                true,
+                com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType.SINGLE
+        );
 
         // when
         optionGroupService.createOptionGroup(requestDto);

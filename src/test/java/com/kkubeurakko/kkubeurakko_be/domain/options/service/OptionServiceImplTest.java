@@ -46,11 +46,7 @@ class OptionServiceImplTest {
 
         when(optionGroupsRepository.findById(1L)).thenReturn(Optional.of(optionGroup));
 
-        OptionRequestDto requestDto = OptionRequestDto.builder()
-                .name("순한맛")
-                .price(2000)
-                .optionGroupId(1L)
-                .build();
+        OptionRequestDto requestDto = new OptionRequestDto("순한맛", 2000, 1L);
 
         // when
         optionService.createOption(requestDto);
