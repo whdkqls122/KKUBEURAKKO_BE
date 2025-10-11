@@ -65,7 +65,9 @@
 
 $git checkout develop   
 
-$git pull origin develop  
+$git fetch origin 
+
+$git reset --hard origin/develop
 
 $git checkout 내브랜치   
 
