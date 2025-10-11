@@ -67,12 +67,12 @@ $git checkout develop
 
 $git fetch origin 
 
-$git reset --hard origin/develop
-
+$git reset --hard origin/develop (선택)
+ 
 $git checkout 내브랜치   
 
 1. develop 브랜치 기준으로 rebase 하기,
-   - `git rebase develop`
+   - `git rebase origin/develop`
 
 2. 충돌이 났다면 해결 후 
    - ` git add .`
