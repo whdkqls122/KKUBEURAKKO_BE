@@ -15,6 +15,8 @@ import com.kkubeurakko.kkubeurakko_be.global.exception.GlobalAccessDeniedHandler
 import com.kkubeurakko.kkubeurakko_be.global.exception.GlobalAuthenticationEntryPoint;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.filter.JwtFilter;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.handler.CustomSuccessHandler;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.service.CustomOAuth2UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +27,8 @@ public class SecurityConfig {
 	private final JwtUtil jwtUtil;
 	private final GlobalAuthenticationEntryPoint authenticationEntryPoint;
 	private final GlobalAccessDeniedHandler accessDeniedHandler;
-
+	private final CustomOAuth2UserService customOAuth2UserService;
+	private final CustomSuccessHandler customSuccessHandler;
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		return http
@@ -56,13 +59,13 @@ public class SecurityConfig {
 			// )
 			// //JWTFilter 추가
 			// .addFilterAfter(new JwtFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class)
-			// .oauth2Login(
-			// 	((oauth2) -> oauth2
-			// 		.userInfoEndpoint((userInfoEndpointConfig ->
-			// 			userInfoEndpointConfig.userService(customOAuth2UserService))
-			// 		).successHandler(customSuccessHandler)
-			// 	)
-			// )
+			.oauth2Login(
+				((oauth2) -> oauth2
+					.userInfoEndpoint((userInfoEndpointConfig ->
+						userInfoEndpointConfig.userService(customOAuth2UserService))
+					).successHandler(customSuccessHandler)
+				)
+			)
 			.exceptionHandling(exceptionHandling -> exceptionHandling
 				.authenticationEntryPoint(authenticationEntryPoint)
 				.accessDeniedHandler(accessDeniedHandler)
