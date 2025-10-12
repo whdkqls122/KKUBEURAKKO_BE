@@ -1,4 +1,4 @@
-package com.kkubeurakko.kkubeurakko_be.global.jwt;
+package com.kkubeurakko.kkubeurakko_be.global.jwt.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;

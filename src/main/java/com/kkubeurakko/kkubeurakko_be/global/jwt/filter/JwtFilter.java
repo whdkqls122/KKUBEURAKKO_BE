@@ -1,4 +1,4 @@
-package com.kkubeurakko.kkubeurakko_be.global.jwt;
+package com.kkubeurakko.kkubeurakko_be.global.jwt.filter;
 
 import java.io.IOException;
 
@@ -6,6 +6,7 @@ import org.springframework.security.authentication.InsufficientAuthenticationExc
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
+import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;

@@ -13,8 +13,8 @@ import org.springframework.web.cors.CorsConfiguration;
 
 import com.kkubeurakko.kkubeurakko_be.global.exception.GlobalAccessDeniedHandler;
 import com.kkubeurakko.kkubeurakko_be.global.exception.GlobalAuthenticationEntryPoint;
-import com.kkubeurakko.kkubeurakko_be.global.jwt.JwtFilter;
-import com.kkubeurakko.kkubeurakko_be.global.jwt.JwtUtil;
+import com.kkubeurakko.kkubeurakko_be.global.jwt.filter.JwtFilter;
+import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 
