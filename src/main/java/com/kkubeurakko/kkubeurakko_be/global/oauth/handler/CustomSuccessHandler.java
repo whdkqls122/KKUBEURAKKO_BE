@@ -20,15 +20,15 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 	private final JwtUtil jwtUtil;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final ObjectMapper objectMapper;
-
-	private final UserRepository userRepository;
 
 	@Value("${spring.jwt.access-token-expiry}")
 	private long accessTokenExpiry;
@@ -48,7 +48,7 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 
 		refreshTokenRepository.deleteById(userNumber);
 
-		boolean firstLogin = userRepository.existsByUserNumber(userNumber);
+		boolean firstLogin = customUserDetails.getUserDto().isFirstLogin();
 
 		String access = jwtUtil.createAccessToken(userNumber, role, accessTokenExpiry);
 		String refresh = jwtUtil.createRefreshToken(userNumber, role, refreshTokenExpiry);
@@ -64,7 +64,7 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 		Map<String, Object> tokenResponse = Map.of(
 			"firstLogin", firstLogin
 		);
-
+		log.info("토큰 발급 및 로그인 처리 완료:{}", userNumber + " " + firstLogin);
 		// objectMapper로 바로 쓰기
 		objectMapper.writeValue(response.getWriter(), tokenResponse);
 	}

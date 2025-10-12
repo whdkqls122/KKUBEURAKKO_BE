@@ -35,7 +35,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		String userNumber = getUserNumber(userRequest, oAuth2User);
 
 		Users user = userRepository.findByUserNumber(userNumber).orElse(null);
+		boolean firstLogin = false;
 		if (user == null) {
+			firstLogin = true;
 			user = Users.builder()
 				.userNumber(userNumber)
 				.role(UserRole.CUSTOMER)
@@ -46,8 +48,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		UserDto userDto = UserDto.builder()
 			.userNumber(user.getUserNumber())
 			.role(user.getRole())
+			.firstLogin(firstLogin)
 			.build();
-
+		log.info("유저 정보 생성 완료:{}", userNumber);
 		return new CustomOAuth2User(userDto);
 	}
 

@@ -11,13 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@Builder
 public class UserDto {
 	private UserRole role;
 	private String userNumber;
-
-	@Builder
-	public UserDto(String userNumber, UserRole role) {
-		this.userNumber = userNumber;
-		this.role = role;
-	}
+	private boolean firstLogin;
 }
