@@ -101,9 +101,6 @@ public class JwtUtil {
 		return getClaims(token).get("userNumber", String.class);
 	}
 
-	public String getUserPhone(String token) {
-		return getClaims(token).get("phone", String.class);
-	}
 
 	public String getRole(String token) {
 		return getClaims(token).get("role", String.class);
