@@ -13,7 +13,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -32,17 +31,14 @@ import lombok.NoArgsConstructor;
 public class Users extends BaseEntity {
 	@Id
 	@Column(name = "user_number")
-	private String user_number;
+	private String userNumber;
 
-	@Column(name = "phone", length = 13, unique = true, nullable = false)
+	@Column(name = "phone", length = 13, unique = true)
 	private String phone;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", nullable = false)
 	private UserRole role;
-
-	@Column(name = "nickname", nullable = false)
-	private String nickname;
 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<UsersCoupons> usersCoupons = new ArrayList<>();
