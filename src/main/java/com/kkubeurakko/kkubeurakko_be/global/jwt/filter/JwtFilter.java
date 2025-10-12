@@ -3,10 +3,15 @@ package com.kkubeurakko.kkubeurakko_be.global.jwt.filter;
 import java.io.IOException;
 
 import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -49,12 +54,17 @@ public class JwtFilter extends OncePerRequestFilter {
 			String role = jwtUtil.getRole(accessToken);
 			UserRole userRole = UserRole.findUserRole(role);
 
-			// CustomOAuth2User principal = new CustomOAuth2User(new UserDto(userNumber, userRole));
-			//
-			// Authentication authentication = new UsernamePasswordAuthenticationToken(
-			// 	principal, null, principal.getAuthorities()
-			// );
-			// SecurityContextHolder.getContext().setAuthentication(authentication);
+			CustomOAuth2User principal = new CustomOAuth2User(
+				UserDto.builder()
+					.userNumber(userNumber)
+					.role(userRole).
+					build()
+			);
+
+			Authentication authentication = new UsernamePasswordAuthenticationToken(
+				principal, null, principal.getAuthorities()
+			);
+			SecurityContextHolder.getContext().setAuthentication(authentication);
 		} catch (
 			ExpiredJwtException e) {
 			throw new InsufficientAuthenticationException("JWT가 만료되었습니다.", e);
