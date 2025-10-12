@@ -11,6 +11,9 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.GoogleResponse;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.KakaoResponse;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.NaverResponse;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.OAuth2Response;
 
 import lombok.RequiredArgsConstructor;
@@ -52,12 +55,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		String registrationId = userRequest.getClientRegistration().getRegistrationId();
 		OAuth2Response oAuth2Response = null;
 
-		// if (registrationId.equals("kakao")) {
-		// 	oAuth2Response = new KakaoResponse(oAuth2User.getAttributes());
-		// }
-		// 추후 naver, google 추가 가능
-		// else if (registrationId.equals("naver")) { ... }
-		// else if (registrationId.equals("google")) { ... }
+		if (registrationId.equals("kakao")) {
+			oAuth2Response = new KakaoResponse(oAuth2User.getAttributes());
+		} else if (registrationId.equals("naver")) {
+			oAuth2Response = new NaverResponse(oAuth2User.getAttributes());
+		} else if (registrationId.equals("google")) {
+			oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
+		}
 
 		if (oAuth2Response == null) {
 			throw new OAuth2AuthenticationException("지원하지 않는 소셜 로그인입니다.");
