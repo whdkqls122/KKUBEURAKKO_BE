@@ -1,0 +1,96 @@
+package com.kkubeurakko.kkubeurakko_be.global.oauth;
+
+import static org.mockito.Mockito.*;
+
+import java.util.concurrent.TimeUnit;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
+import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
+import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenRepository;
+import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.handler.CustomSuccessHandler;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+@ExtendWith(MockitoExtension.class)
+class OAuthTest {
+
+	@Mock
+	private UserRepository userRepository;
+
+	@Mock
+	private RefreshTokenRepository refreshTokenRepository;
+
+	@Mock
+	private RedisTemplate<String, String> redisTemplate;
+
+	@Mock
+	private ValueOperations<String, String> valueOps;
+
+	@Mock
+	private HttpServletRequest request;
+
+	@Mock
+	private HttpServletResponse response;
+
+	@Mock
+	private FilterChain filterChain;
+
+	@Mock
+	private ObjectMapper objectMapper;
+
+	private JwtUtil jwtUtil;
+	private CustomSuccessHandler successHandler;
+
+	private final String TEST_USER = "google_7777";
+
+	@BeforeEach
+	void setUp() {
+		String secret = java.util.Base64.getEncoder().encodeToString("01234567890123456789012345678901".getBytes());
+		jwtUtil = new JwtUtil(secret);
+
+		lenient().when(redisTemplate.opsForValue()).thenReturn(valueOps);
+
+		successHandler = new CustomSuccessHandler(jwtUtil, refreshTokenRepository, objectMapper);
+		successHandler.setAccessTokenExpiry(1000 * 60 * 10);
+		successHandler.setRefreshTokenExpiry(1000 * 60 * 60 * 24);
+	}
+
+	@Test
+	@DisplayName("로그인 수행 후 토큰 발급 검증")
+	void testLogin() throws Exception {
+		lenient().when(userRepository.existsByUserNumber(TEST_USER)).thenReturn(false);
+
+		CustomOAuth2User principal = new CustomOAuth2User(
+			UserDto.builder()
+				.userNumber(TEST_USER)
+				.role(UserRole.CUSTOMER)
+				.build()
+		);
+
+		successHandler.onAuthenticationSuccess(
+			request,
+			response,
+			new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())
+		);
+
+		verify(refreshTokenRepository, times(1)).save(any());
+		verify(response, times(1)).addCookie(any());
+		verify(response, times(1)).setHeader(eq("Authorization"), any());
+	}
+}
