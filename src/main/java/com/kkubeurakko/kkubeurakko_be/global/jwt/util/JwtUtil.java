@@ -109,4 +109,10 @@ public class JwtUtil {
 	public String getCategory(String token) {
 		return getClaims(token).get("category", String.class);
 	}
+
+	public long getRemainingExpiration(String token) {
+		Date expiration = getClaims(token).getExpiration();
+		long now = System.currentTimeMillis();
+		return expiration.getTime() - now;
+	}
 }
