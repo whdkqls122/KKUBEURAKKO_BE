@@ -1,7 +1,10 @@
 package com.kkubeurakko.kkubeurakko_be.domain.options.service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 import org.junit.jupiter.api.Test;
@@ -10,9 +13,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 class OptionGroupServiceImplTest {
     @Mock
@@ -25,8 +29,9 @@ class OptionGroupServiceImplTest {
         MockitoAnnotations.openMocks(this);
     }
 
+    //옵션 그룹 생성
     @Test
-    void createOptionGroup_ShouldSaveOptionGroup() {
+    void createOptionGroup() {
         // given (record는 new로 생성)
         OptionGroupRequestDto requestDto = new OptionGroupRequestDto(
                 "맵기 선택",
@@ -51,5 +56,49 @@ class OptionGroupServiceImplTest {
         assertTrue(saved.isRequired());
         assertEquals(com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType.SINGLE, saved.getOptionGroupType());
         assertEquals(Status.ON_SALE, saved.getStatus());
+    }
+
+    //옵션 그룹 단건 조회
+    @Test
+    void getOptionGroup() {
+        // given
+        OptionGroups group = OptionGroups.builder()
+                .id(1L)
+                .name("맵기 선택")
+                .description("맵기 단계를 선택")
+                .required(true)
+                .optionGroupType(OptionGroupType.SINGLE)
+                .status(Status.ON_SALE)
+                .build();
+
+        Options option1 = Options.builder()
+                .id(1L)
+                .name("순한맛")
+                .price(0)
+                .status(Status.ON_SALE)
+                .optionGroup(group)
+                .build();
+        Options option2 = Options.builder()
+                .id(2L)
+                .name("보통")
+                .price(0)
+                .status(Status.ON_SALE)
+                .optionGroup(group)
+                .build();
+
+        group.getOptions().add(option1);
+        group.getOptions().add(option2);
+
+        when(optionGroupRepository.findById(1L)).thenReturn(Optional.of(group));
+
+        // when
+        OptionGroupResponseDto responseDto = optionGroupService.getOptionGroup(1L);
+
+        // then
+        assertEquals(group.getId(), responseDto.id());
+        assertEquals(2, responseDto.options().size());
+        assertEquals("순한맛", responseDto.options().get(0).name());
+        assertEquals("보통", responseDto.options().get(1).name());
+        verify(optionGroupRepository, times(1)).findById(1L);
     }
 }
