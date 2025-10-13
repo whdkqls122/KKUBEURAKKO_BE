@@ -22,8 +22,10 @@ import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenReposito
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.handler.CustomSuccessHandler;
+import com.kkubeurakko.kkubeurakko_be.global.security.filter.CustomLogoutFilter;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -56,7 +58,7 @@ class OAuthTest {
 
 	private JwtUtil jwtUtil;
 	private CustomSuccessHandler successHandler;
-
+	private CustomLogoutFilter logoutFilter;
 	private final String TEST_USER = "google_7777";
 
 	@BeforeEach
@@ -69,6 +71,7 @@ class OAuthTest {
 		successHandler = new CustomSuccessHandler(jwtUtil, refreshTokenRepository, objectMapper);
 		successHandler.setAccessTokenExpiry(1000 * 60 * 10);
 		successHandler.setRefreshTokenExpiry(1000 * 60 * 60 * 24);
+		logoutFilter = new CustomLogoutFilter(jwtUtil, refreshTokenRepository, redisTemplate);
 	}
 
 	@Test
@@ -92,5 +95,28 @@ class OAuthTest {
 		verify(refreshTokenRepository, times(1)).save(any());
 		verify(response, times(1)).addCookie(any());
 		verify(response, times(1)).setHeader(eq("Authorization"), any());
+	}
+
+	@Test
+	@DisplayName("로그아웃 수행 후 RefreshToken 삭제 및 블랙리스트 등록을 검증")
+	void testLogout() throws Exception {
+		// Access / Refresh 토큰 생성
+		String accessToken = jwtUtil.createAccessToken(TEST_USER, UserRole.CUSTOMER.getRole(), 1000 * 60 * 10);
+		String refreshToken = jwtUtil.createRefreshToken(TEST_USER, UserRole.CUSTOMER.getRole(), 1000 * 60 * 60 * 24);
+
+		// 요청 쿠키 모킹
+		Cookie cookie = new Cookie("Authorization", refreshToken);
+		when(request.getCookies()).thenReturn(new Cookie[]{cookie});
+		when(request.getHeader("Authorization")).thenReturn("Bearer " + accessToken);
+		when(request.getRequestURI()).thenReturn("/logout");
+		when(request.getMethod()).thenReturn("POST");
+		when(refreshTokenRepository.existsByRefresh(refreshToken)).thenReturn(true);
+
+		logoutFilter.doFilter(request, response, filterChain);
+
+		// RefreshToken 삭제 확인
+		verify(refreshTokenRepository, times(1)).deleteByRefresh(refreshToken);
+		// Redis 블랙리스트 등록 확인
+		verify(valueOps, times(1)).set(startsWith("blacklist:"), eq("logout"), anyLong(), eq(TimeUnit.MILLISECONDS));
 	}
 }
