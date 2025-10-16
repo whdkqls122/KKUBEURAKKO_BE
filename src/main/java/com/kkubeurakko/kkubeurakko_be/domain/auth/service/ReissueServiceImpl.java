@@ -12,16 +12,20 @@ import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReissueServiceImpl implements ReissueService{
 	private final JwtUtil jwtUtil;
 	private final RefreshTokenRepository refreshTokenRepository;
 	@Value("${spring.jwt.access-token-expiry}")
 	private long accessTokenExpiry;
+
 	@Override
 	public String reissue(HttpServletRequest request) {
+		log.info("Accesstoken 재발급 시작");
 		String refreshToken = getRefreshTokenFromCookies(request);
 		//토큰 유효성 검사
 		jwtUtil.validateToken(refreshToken);
@@ -31,6 +35,7 @@ public class ReissueServiceImpl implements ReissueService{
 		isExistRefreshToken(refreshToken, userNumber);
 		String role = jwtUtil.getRole(refreshToken);
 
+		log.info("Accesstoken 재발급 성공");
 		//토큰 생성 및 반환
 		return jwtUtil.createAccessToken(userNumber, role, accessTokenExpiry);
 	}
@@ -38,6 +43,7 @@ public class ReissueServiceImpl implements ReissueService{
 	private String getRefreshTokenFromCookies(HttpServletRequest request) {
 		Cookie[] cookies = request.getCookies();
 		if(cookies == null) {
+			log.error("쿠키가 없음");
 			throw new AuthenticationCredentialsNotFoundException("쿠키가 없습니다.");
 		}
 		for (Cookie cookie : cookies) {
@@ -45,12 +51,14 @@ public class ReissueServiceImpl implements ReissueService{
 				return cookie.getValue();
 			}
 		}
+		log.error("refresh 이름의 쿠키가 없음");
 		throw new BadCredentialsException("refreshToken이 없습니다.");
 	}
 
 	private void isExistRefreshToken(String refreshToken, String userNumber){
 		RefreshToken findRefreshToken = refreshTokenRepository.findByUserNumber(userNumber);
 		if (findRefreshToken == null || !refreshToken.equals(findRefreshToken.getRefresh())) {
+			log.error("저장된 refreshToken과 불일치");
 			throw new RuntimeException();  // 로그아웃 요청을 보내도록 -> 재로그인 요청하도록(공통 예외처리 구현 이후 수정 예정)
 		}
 	}
