@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
@@ -35,6 +36,7 @@ public class SecurityConfig {
 	private final CustomSuccessHandler customSuccessHandler;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final RedisTemplate<String, String> redisTemplate;
+
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		return http
@@ -76,16 +78,22 @@ public class SecurityConfig {
 			)
 			.authorizeHttpRequests((auth) -> auth
 				.requestMatchers("/").permitAll()
-					.requestMatchers(
-							"/swagger-ui/**",
-							"/v3/api-docs/**",
-							"/swagger-ui.html",
-							"/swagger-resources/**",
-							"/webjars/**"
-					).permitAll()
+				.requestMatchers(
+					"/swagger-ui/**",
+					"/v3/api-docs/**",
+					"/swagger-ui.html",
+					"/swagger-resources/**",
+					"/webjars/**",
+					"/v1/admin/login"
+				).permitAll()
 				.anyRequest().authenticated()
 			)
 			.sessionManagement((session) -> session
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).build();
+	}
+
+	@Bean
+	public BCryptPasswordEncoder bCryptPasswordEncoder() {
+		return new BCryptPasswordEncoder();
 	}
 }
