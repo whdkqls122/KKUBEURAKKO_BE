@@ -64,6 +64,7 @@ public class OptionGroups extends BaseEntity {
 	private Menus menu;
 
 	@OneToMany(mappedBy = "optionGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+	@Builder.Default //테스트 코드시 초기화하기 위함
 	private List<Options> options = new ArrayList<>();
 
 }
