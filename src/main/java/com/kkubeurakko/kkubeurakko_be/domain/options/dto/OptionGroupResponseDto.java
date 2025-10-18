@@ -1,22 +1,21 @@
 package com.kkubeurakko.kkubeurakko_be.domain.options.dto;
 
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType;
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
+
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
+
+import lombok.Builder;
 
 @Builder
 public record OptionGroupResponseDto(
-        Long id,
-        String name,
-        String description,
-        boolean required,
-        OptionGroupType optionGroupType,
-        Status status,
-        List<OptionResponseDto> options
-) {}
+	Long id,
+	String name,
+	String description,
+	boolean required,
+	OptionGroupType optionGroupType,
+	int selectedNum,
+	Status status,
+	List<OptionResponseDto> options
+) {
+}
