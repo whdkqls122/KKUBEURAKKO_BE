@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.global.config;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.springframework.context.annotation.Bean;
@@ -14,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.global.exception.GlobalAccessDeniedHandler;
 import com.kkubeurakko.kkubeurakko_be.global.exception.GlobalAuthenticationEntryPoint;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.filter.JwtFilter;
@@ -49,9 +51,7 @@ public class SecurityConfig {
 				configuration.setAllowedHeaders(Collections.singletonList("*"));
 				configuration.setMaxAge(3600L);
 
-				configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
-				configuration.setExposedHeaders(Collections.singletonList("Authorization"));
-
+				configuration.setExposedHeaders(Arrays.asList("Set-Cookie", "Authorization"));
 				return configuration;
 			}))
 			.csrf((auth) -> auth.disable())
@@ -77,8 +77,10 @@ public class SecurityConfig {
 				.accessDeniedHandler(accessDeniedHandler)
 			)
 			.authorizeHttpRequests((auth) -> auth
-				.requestMatchers("/").permitAll()
+				.requestMatchers("/for_user").hasAnyRole(UserRole.CUSTOMER.toString(), UserRole.ADMIN.toString())
+				.requestMatchers("/for_admin").hasRole(UserRole.ADMIN.toString())
 				.requestMatchers(
+					"/",
 					"/swagger-ui/**",
 					"/v3/api-docs/**",
 					"/swagger-ui.html",
