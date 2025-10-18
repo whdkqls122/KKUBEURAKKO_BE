@@ -56,6 +56,9 @@ public class OptionGroups extends BaseEntity {
 	@Column(name = "option_group_type", nullable = false)
 	private OptionGroupType optionGroupType;
 
+	@Column(name = "selected_num", nullable = true)
+	private int selectedNum;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "menus_id", nullable = true)
 	private Menus menu;
