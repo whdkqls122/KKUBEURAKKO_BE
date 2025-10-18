@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class OptionGroupServiceImpl implements OptionGroupService {
 
-	private final OptionGroupRepository optionGroupsRepository;
+	private final OptionGroupRepository optionGroupRepository;
 
 	@Override
 	public void createOptionGroup(OptionGroupRequestDto requestDto) {
@@ -29,18 +29,18 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 			.selectedNum(requestDto.selectedNum())
 			.status(Status.ON_SALE)
 			.build();
-		optionGroupsRepository.save(optionGroup);
+		optionGroupRepository.save(optionGroup);
 	}
 
 	public OptionGroupResponseDto getOptionGroup(Long id) {
-		OptionGroups optionGroup = optionGroupsRepository.findById(id)
+		OptionGroups optionGroup = optionGroupRepository.findById(id)
 			.orElseThrow(() -> new IllegalArgumentException("해당 옵션 그룹이 없습니다. id=" + id));
 
 		return toResponseDto(optionGroup);
 	}
 
 	public List<OptionGroupResponseDto> getAllOptionGroups() {
-		return optionGroupsRepository.findAll().stream()
+		return optionGroupRepository.findAll().stream()
 			.map(this::toResponseDto)
 			.toList();
 	}
