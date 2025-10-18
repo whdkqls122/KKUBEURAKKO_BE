@@ -69,8 +69,10 @@ class OAuthTest {
 		lenient().when(redisTemplate.opsForValue()).thenReturn(valueOps);
 
 		successHandler = new CustomSuccessHandler(jwtUtil, refreshTokenRepository, objectMapper);
-		successHandler.setAccessTokenExpiry(1000 * 60 * 10);
-		successHandler.setRefreshTokenExpiry(1000 * 60 * 60 * 24);
+		org.springframework.test.util.ReflectionTestUtils.setField(successHandler, "accessTokenExpiry",
+			1000L * 60 * 10);
+		org.springframework.test.util.ReflectionTestUtils.setField(successHandler, "refreshTokenExpiry",
+			1000L * 60 * 60 * 24);
 		logoutFilter = new CustomLogoutFilter(jwtUtil, refreshTokenRepository, redisTemplate);
 	}
 
@@ -106,7 +108,7 @@ class OAuthTest {
 
 		// 요청 쿠키 모킹
 		Cookie cookie = new Cookie("Authorization", refreshToken);
-		when(request.getCookies()).thenReturn(new Cookie[]{cookie});
+		when(request.getCookies()).thenReturn(new Cookie[] {cookie});
 		when(request.getHeader("Authorization")).thenReturn("Bearer " + accessToken);
 		when(request.getRequestURI()).thenReturn("/logout");
 		when(request.getMethod()).thenReturn("POST");

@@ -40,7 +40,7 @@ class ReissueServiceImplTest {
 		MockitoAnnotations.openMocks(this);
 		// @Value로 주입되는 값 직접 설정
 		reissueService = new ReissueServiceImpl(jwtUtil, refreshTokenRepository);
-		reissueService.setAccessTokenExpiry(3600000L); // 1시간
+		org.springframework.test.util.ReflectionTestUtils.setField(reissueService, "accessTokenExpiry", 3600000L);
 	}
 
 	@Test
@@ -49,7 +49,7 @@ class ReissueServiceImplTest {
 		// given
 		String refreshToken = "refreshToken";
 		Cookie cookie = new Cookie("refresh", refreshToken);
-		when(request.getCookies()).thenReturn(new Cookie[]{cookie});
+		when(request.getCookies()).thenReturn(new Cookie[] {cookie});
 
 		when(jwtUtil.validateToken(refreshToken)).thenReturn(true);
 		when(jwtUtil.getUserNumber(refreshToken)).thenReturn("123");
@@ -80,7 +80,7 @@ class ReissueServiceImplTest {
 	@Test
 	@DisplayName("refresh 이름의 쿠키가 없을 때 예외가 제대로 발생하는지 검증한다.")
 	void testExceptionNotFoundCookie() {
-		Cookie[] cookies = { new Cookie("other", "token") };
+		Cookie[] cookies = {new Cookie("other", "token")};
 		when(request.getCookies()).thenReturn(cookies);
 
 		assertThrows(BadCredentialsException.class, () ->
@@ -93,7 +93,7 @@ class ReissueServiceImplTest {
 	void testNotValidRefreshToken() {
 		String refreshToken = "refresh_token";
 		Cookie cookie = new Cookie("refresh", refreshToken);
-		when(request.getCookies()).thenReturn(new Cookie[]{cookie});
+		when(request.getCookies()).thenReturn(new Cookie[] {cookie});
 
 		when(jwtUtil.validateToken(refreshToken)).thenReturn(true);
 		when(jwtUtil.getUserNumber(refreshToken)).thenReturn("123");
