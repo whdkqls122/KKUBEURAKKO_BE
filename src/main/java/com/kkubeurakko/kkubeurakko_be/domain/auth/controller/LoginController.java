@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.auth.controller;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,7 +23,7 @@ public class LoginController {
 
 	@PostMapping("")
 	public ResponseEntity<ApiResponse<Void>> adminLogin(
-		@Valid LoginRequestDto loginRequestDto,
+		@RequestBody @Valid LoginRequestDto loginRequestDto,
 		HttpServletResponse response
 	) {
 		String accessToken = loginService.adminLogin(loginRequestDto, response);
