@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.ReissueService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -17,6 +18,11 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/v1")
 public class ReissueController {
 	private final ReissueService reissueService;
+
+	@Operation(
+		summary = "AccessToken 재발급",
+		description = "저장되어있는 RefreshToken을 통해 AccessToken을 재발급 합니다."
+	)
 	@GetMapping("/reissue")
 	public ResponseEntity<ApiResponse<Void>> reissue(HttpServletRequest request) {
 		String newAccessToken = reissueService.reissue(request);

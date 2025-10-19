@@ -11,6 +11,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.LoginRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.LoginService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,10 @@ import lombok.RequiredArgsConstructor;
 public class LoginController {
 	private final LoginService loginService;
 
+	@Operation(
+		summary = "관리자 로그인",
+		description = "관리자가 로그인할 때 사용합니다."
+	)
 	@PostMapping("")
 	public ResponseEntity<ApiResponse<Void>> adminLogin(
 		@RequestBody @Valid LoginRequestDto loginRequestDto,
