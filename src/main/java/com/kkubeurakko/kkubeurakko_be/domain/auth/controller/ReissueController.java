@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class ReissueController {
 	private final ReissueService reissueService;
 
-	@Tag(name = "reissue", description = "AccessToken 재발급 API")
+	@Tag(name = "Reissue API", description = "AccessToken 재발급 API")
 	@Operation(
 		summary = "AccessToken 재발급",
 		description = "저장되어있는 RefreshToken을 통해 AccessToken을 재발급 합니다."
