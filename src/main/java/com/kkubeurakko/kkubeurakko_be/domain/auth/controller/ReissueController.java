@@ -10,6 +10,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.auth.service.ReissueService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class ReissueController {
 	private final ReissueService reissueService;
 
+	@Tag(name = "reissue", description = "AccessToken 재발급 API")
 	@Operation(
 		summary = "AccessToken 재발급",
 		description = "저장되어있는 RefreshToken을 통해 AccessToken을 재발급 합니다."
