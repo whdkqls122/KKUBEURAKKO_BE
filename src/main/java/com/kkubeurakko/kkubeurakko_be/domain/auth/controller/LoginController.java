@@ -19,11 +19,11 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Login API", description = "로그인 API")
 @RequestMapping("/v1/admin/login")
 public class LoginController {
 	private final LoginService loginService;
 
-	@Tag(name = "Login API", description = "로그인 API")
 	@Operation(
 		summary = "관리자 로그인",
 		description = "관리자가 로그인할 때 사용합니다."
