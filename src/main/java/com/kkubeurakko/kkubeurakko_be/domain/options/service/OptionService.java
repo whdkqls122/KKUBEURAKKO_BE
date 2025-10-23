@@ -6,4 +6,7 @@ public interface OptionService {
 
 	//옵션 생성
 	void createOption(OptionRequestDto requestDto);
+
+	//옵션 수정
+	void updateOption(Long optionId, OptionRequestDto requestDto);
 }
