@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "OptionGroup API", description = "메뉴 옵션 관련 API")
+@Tag(name = "Option API", description = "옵션 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/menu/option")
