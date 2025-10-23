@@ -33,7 +33,7 @@ public class Options extends BaseEntity {
 	@Column(name = "options_id")
 	private Long id;
 
-	@Column(name = "name", nullable = false, length = 30)
+	@Column(name = "name", nullable = false, length = 50)
 	private String name;
 
 	@Column(name = "price", nullable = false)
