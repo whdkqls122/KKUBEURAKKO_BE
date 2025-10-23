@@ -55,4 +55,7 @@ public class Options extends BaseEntity {
 		}
 	}
 
+	public void updateStatus(Status status) {
+		this.status = status;
+	}
 }

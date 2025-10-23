@@ -47,6 +47,14 @@ public class OptionServiceImpl implements OptionService {
 		optionRepository.save(option);
 	}
 
+	public void updateStatus(Long optionId, Status newStatus) {
+		Options option = optionRepository.findById(optionId)
+			.orElseThrow(() -> new IllegalArgumentException("해당 ID의 옵션이 존재하지 않습니다."));
+
+		option.updateStatus(newStatus);
+		optionRepository.save(option);
+	}
+
 	@Override
 	public void deleteOption(Long optionId) {
 		Options option = optionRepository.findById(optionId)
