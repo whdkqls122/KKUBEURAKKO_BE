@@ -9,4 +9,7 @@ public interface OptionService {
 
 	//옵션 수정
 	void updateOption(Long optionId, OptionRequestDto requestDto);
+
+	//옵션 삭제
+	void deleteOption(Long optionId);
 }
