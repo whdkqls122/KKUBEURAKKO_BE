@@ -1,6 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.domain.options.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -49,4 +50,13 @@ public class OptionController {
 		return ResponseEntity.ok(ApiResponse.success("옵션 수정이 완료되었습니다.", null));
 	}
 
+	@Operation(
+		summary = "옵션 삭제",
+		description = "해당 ID의 옵션을 삭제합니다."
+	)
+	@DeleteMapping("/{optionId}")
+	public ResponseEntity<ApiResponse<Void>> deleteOption(@PathVariable Long optionId) {
+		optionService.deleteOption(optionId);
+		return ResponseEntity.ok(ApiResponse.success("옵션이 삭제되었습니다.", null));
+	}
 }
