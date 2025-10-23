@@ -47,12 +47,9 @@ public class Options extends BaseEntity {
 	@JoinColumn(name = "option_groups_id", nullable = false)
 	private OptionGroups optionGroup;
 
-	public void update(String name, int price, OptionGroups optionGroup) {
+	public void update(String name, int price) {
 		this.name = name;
 		this.price = price;
-		if (optionGroup != null) {
-			this.optionGroup = optionGroup;
-		}
 	}
 
 	public void updateStatus(Status status) {

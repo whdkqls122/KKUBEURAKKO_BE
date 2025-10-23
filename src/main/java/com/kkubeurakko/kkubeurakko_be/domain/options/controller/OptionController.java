@@ -2,14 +2,17 @@ package com.kkubeurakko.kkubeurakko_be.domain.options.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.options.service.OptionService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
@@ -48,6 +51,19 @@ public class OptionController {
 
 		optionService.updateOption(optionId, requestDto);
 		return ResponseEntity.ok(ApiResponse.success("옵션 수정이 완료되었습니다.", null));
+	}
+
+	@Operation(
+		summary = "옵션 상태 변경",
+		description = "옵션의 판매 상태를 변경합니다."
+	)
+	@PatchMapping("/{optionId}/status")
+	public ResponseEntity<ApiResponse<Void>> updateOptionStatus(
+		@PathVariable Long optionId,
+		@RequestParam Status status) {
+
+		optionService.updateStatus(optionId, status);
+		return ResponseEntity.ok(ApiResponse.success("옵션 상태가 변경되었습니다.", null));
 	}
 
 	@Operation(

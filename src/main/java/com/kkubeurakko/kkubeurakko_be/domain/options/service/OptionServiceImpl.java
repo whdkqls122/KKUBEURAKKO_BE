@@ -37,13 +37,7 @@ public class OptionServiceImpl implements OptionService {
 		Options option = optionRepository.findById(optionId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 ID의 옵션이 존재하지 않습니다."));
 
-		OptionGroups optionGroup = null;
-		if (requestDto.optionGroupId() != null) {
-			optionGroup = optionGroupRepository.findById(requestDto.optionGroupId())
-				.orElseThrow(() -> new IllegalArgumentException("해당 ID의 옵션 그룹이 존재하지 않습니다."));
-		}
-
-		option.update(requestDto.name(), requestDto.price(), optionGroup);
+		option.update(requestDto.name(), requestDto.price());
 		optionRepository.save(option);
 	}
 
