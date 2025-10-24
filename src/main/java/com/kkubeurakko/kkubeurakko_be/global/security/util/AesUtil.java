@@ -92,8 +92,7 @@ public class AesUtil {
 			throw new RuntimeException("복호화 실패", e);
 		}
 	}
-
-	// 편의 메서드: AAD 없이 사용
+	
 	public String encryptToBase64(String plainText) {
 		return encryptToBase64(plainText, null);
 	}
