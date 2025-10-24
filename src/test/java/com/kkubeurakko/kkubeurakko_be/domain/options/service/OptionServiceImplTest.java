@@ -104,4 +104,39 @@ class OptionServiceImplTest {
 		assertEquals(0, updated.getPrice());
 	}
 
+	@Test
+	void updateStatus() {
+		// given
+		OptionGroups optionGroup = OptionGroups.builder()
+			.id(1L)
+			.name("맵기 선택")
+			.description("맵기 단계를 선택해 주세요")
+			.required(true)
+			.status(Status.ON_SALE)
+			.optionGroupType(com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType.SINGLE)
+			.build();
+
+		Options option = Options.builder()
+			.id(1L)
+			.name("순한맛")
+			.price(2000)
+			.status(Status.ON_SALE)
+			.optionGroup(optionGroup)
+			.build();
+
+		when(optionsRepository.findById(1L)).thenReturn(Optional.of(option));
+
+		// when
+		optionService.updateStatus(1L, Status.HIDE);
+
+		// then
+		ArgumentCaptor<Options> captor = ArgumentCaptor.forClass(Options.class);
+		verify(optionsRepository).save(captor.capture());
+
+		Options updated = captor.getValue();
+		System.out.println("변경된 상태 옵션: " + updated);
+
+		assertEquals(Status.HIDE, updated.getStatus());
+	}
+
 }
