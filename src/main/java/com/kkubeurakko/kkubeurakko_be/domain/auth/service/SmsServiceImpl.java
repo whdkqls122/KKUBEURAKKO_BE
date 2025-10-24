@@ -74,7 +74,7 @@ public class SmsServiceImpl implements SmsService {
 		}
 		return smsRepository.findById(phoneNum)
 			.orElseThrow(NullPointerException::new)
-			.getPhoneNum()
+			.getCertificationCode()
 			.equals(certificationCode);
 	}
 }
