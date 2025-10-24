@@ -139,4 +139,33 @@ class OptionServiceImplTest {
 		assertEquals(Status.HIDE, updated.getStatus());
 	}
 
+	@Test
+	void deleteOption() {
+		// given
+		OptionGroups optionGroup = OptionGroups.builder()
+			.id(1L)
+			.name("맵기 선택")
+			.description("맵기 단계를 선택해 주세요")
+			.required(true)
+			.status(Status.ON_SALE)
+			.optionGroupType(com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType.SINGLE)
+			.build();
+
+		Options option = Options.builder()
+			.id(1L)
+			.name("순한맛")
+			.price(2000)
+			.status(Status.ON_SALE)
+			.optionGroup(optionGroup)
+			.build();
+
+		when(optionsRepository.findById(1L)).thenReturn(Optional.of(option));
+
+		// when
+		optionService.deleteOption(1L);
+
+		// then
+		verify(optionsRepository, times(1)).delete(option);
+	}
+
 }
