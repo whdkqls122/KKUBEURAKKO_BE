@@ -46,6 +46,7 @@ public class SmsServiceImpl implements SmsService {
 	public void verifyCodeForCustomer(SmsVerifyDto smsVerifyDto, CustomOAuth2User customOAuth2User) {
 		try {
 			verifyPhone(smsVerifyDto);
+			userService.saveUserPhone(smsVerifyDto.phoneNum(), customOAuth2User);
 			log.info("인증 완료 후 사용자 전화번호 저장: {}", smsVerifyDto.phoneNum());
 		} catch (NullPointerException e) {
 			throw new RuntimeException("인증 실패");
