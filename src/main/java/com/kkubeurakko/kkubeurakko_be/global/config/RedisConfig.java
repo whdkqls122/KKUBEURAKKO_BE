@@ -9,7 +9,10 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
-@EnableRedisRepositories(basePackages = "com.kkubeurakko.kkubeurakko_be.global.jwt.repository")
+@EnableRedisRepositories(basePackages = {
+	"com.kkubeurakko.kkubeurakko_be.global.jwt.repository",
+	"com.kkubeurakko.kkubeurakko_be.domain.auth.repository"
+})
 public class RedisConfig {
 	@Bean
 	public RedisConnectionFactory redisConnectionFactory() {
@@ -20,7 +23,7 @@ public class RedisConfig {
 	public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
 		RedisTemplate<String, Object> template = new RedisTemplate<>();
 		template.setConnectionFactory(connectionFactory);
-		
+
 		template.setKeySerializer(new StringRedisSerializer());
 		template.setValueSerializer(new StringRedisSerializer());
 		return template;
