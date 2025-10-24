@@ -34,7 +34,7 @@ class OptionServiceImplTest {
 	}
 
 	@Test
-	void createOption_ShouldSaveOption() {
+	void createOption() {
 		// given
 		OptionGroups optionGroup = OptionGroups.builder()
 			.id(1L)
@@ -64,4 +64,44 @@ class OptionServiceImplTest {
 		assertEquals(2000, saved.getPrice());
 		assertEquals(optionGroup, saved.getOptionGroup());
 	}
+
+	@Test
+	void updateOption() {
+		// given
+		OptionGroups optionGroup = OptionGroups.builder()
+			.id(1L)
+			.name("맵기 선택")
+			.description("맵기 단계를 선택해 주세요")
+			.required(true)
+			.status(Status.ON_SALE)
+			.optionGroupType(com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType.SINGLE)
+			.build();
+
+		Options option = Options.builder()
+			.id(1L)
+			.name("순한맛")
+			.price(2000)
+			.status(Status.ON_SALE)
+			.optionGroup(optionGroup)
+			.build();
+
+		when(optionsRepository.findById(1L)).thenReturn(Optional.of(option));
+
+		//가격 변경
+		OptionRequestDto requestDto = new OptionRequestDto("순한맛", 0, 1L);
+
+		// when
+		optionService.updateOption(1L, requestDto);
+
+		// then
+		ArgumentCaptor<Options> captor = ArgumentCaptor.forClass(Options.class);
+		verify(optionsRepository).save(captor.capture());
+
+		Options updated = captor.getValue();
+		System.out.println("업데이트된 옵션: " + updated);
+
+		assertEquals("순한맛", updated.getName());
+		assertEquals(0, updated.getPrice());
+	}
+
 }
