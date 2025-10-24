@@ -33,8 +33,11 @@ public class Users extends BaseEntity {
 	@Column(name = "user_number")
 	private String userNumber;
 
-	@Column(name = "phone", length = 13, unique = true)
+	@Column(name = "phone", unique = true)
 	private String phone;
+
+	@Column(name = "phone_hash", unique = true)
+	private String phoneHash;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", nullable = false)
@@ -48,4 +51,8 @@ public class Users extends BaseEntity {
 
 	@OneToMany(mappedBy = "user")
 	private List<Orders> ordersList = new ArrayList<>();
+
+	public void updateUsersPhone(String phone) {
+		this.phone = phone;
+	}
 }
