@@ -83,10 +83,18 @@ $git checkout 내브랜치
    - `git commit -m` 
    - `git push origin 브랜치명`  
 
-⚠️rebase 취소 명령어
+* rebase 취소 명령어
 ` git rebase --abort `
 
-⚠️ 중요 공지
-git rebase develop 명령어 실행 전에,
-매 기능 push할 때마다 새로운 브랜치를 생성하면 오류를 방지할 수 있습니다.
+```  
+⚠️ 안전하게 강제 Push하기  
 
+강제 Push가 꼭 필요한 경우에는 --force-with-lease 옵션 사용
+
+git push origin <브랜치명> --force-with-lease
+  
+- 원격 브랜치가 로컬이 마지막으로 확인한 상태와 동일할 때만 Push   
+- 다른 사람이 이미 Push한 커밋이 있으면 실패 → 덮어쓰기 방지
+  
+```  
+  
