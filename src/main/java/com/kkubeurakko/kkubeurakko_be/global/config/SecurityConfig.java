@@ -87,7 +87,7 @@ public class SecurityConfig {
 					"/swagger-resources/**",
 					"/webjars/**",
 					"/v1/admin/login",
-					"/v1/menu/menu-group/**"
+					"/v1/menu/**"
 				).permitAll()
 				.anyRequest().authenticated()
 			)
