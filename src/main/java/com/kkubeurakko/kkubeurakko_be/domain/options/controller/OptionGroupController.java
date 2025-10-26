@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,7 +47,7 @@ public class OptionGroupController {
 	@GetMapping("/{optionGroupId}")
 	public ResponseEntity<ApiResponse<OptionGroupResponseDto>> getOptionGroup(@PathVariable Long optionGroupId) {
 		OptionGroupResponseDto responseDto = optionGroupService.getOptionGroup(optionGroupId);
-		return ResponseEntity.ok(ApiResponse.success("옵션 그룹 조회 성공", responseDto));
+		return ResponseEntity.ok(ApiResponse.success("해당 옵션 그룹이 조회되었습니다.", responseDto));
 	}
 
 	@Operation(
@@ -56,6 +57,15 @@ public class OptionGroupController {
 	@GetMapping
 	public ResponseEntity<ApiResponse<List<OptionGroupResponseDto>>> getAllOptionGroups() {
 		List<OptionGroupResponseDto> responseDtoList = optionGroupService.getAllOptionGroups();
-		return ResponseEntity.ok(ApiResponse.success("전체 옵션 그룹 조회 성공", responseDtoList));
+		return ResponseEntity.ok(ApiResponse.success("전체 옵션 그룹이 조회되었습니다.", responseDtoList));
+	}
+
+	@Operation(summary = "옵션 그룹 수정", description = "기존 옵션 그룹 내용을 수정합니다.")
+	@PutMapping("/{optionGroupId}")
+	public ResponseEntity<ApiResponse<Void>> updateOptionGroup(
+		@PathVariable Long id,
+		@Valid @RequestBody OptionGroupRequestDto requestDto) {
+		optionGroupService.updateOptionGroup(id, requestDto);
+		return ResponseEntity.ok(ApiResponse.success("옵션 그룹 수정이 완료되었습니다.", null));
 	}
 }
