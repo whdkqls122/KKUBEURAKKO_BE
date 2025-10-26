@@ -67,4 +67,11 @@ public class OptionGroups extends BaseEntity {
 	@Builder.Default //테스트 코드시 초기화하기 위함
 	private List<Options> options = new ArrayList<>();
 
+	public void update(String name, String description, boolean required, OptionGroupType type, Integer selectedNum) {
+		this.name = name;
+		this.description = description;
+		this.required = required;
+		this.optionGroupType = type;
+		this.selectedNum = selectedNum;
+	}
 }

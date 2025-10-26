@@ -45,6 +45,22 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 			.toList();
 	}
 
+	@Override
+	public void updateOptionGroup(Long id, OptionGroupRequestDto requestDto) {
+		OptionGroups optionGroup = optionGroupRepository.findById(id)
+			.orElseThrow(() -> new IllegalArgumentException("해당 옵션 그룹이 없습니다. id=" + id));
+
+		optionGroup.update(
+			requestDto.name(),
+			requestDto.description(),
+			requestDto.required(),
+			requestDto.optionGroupType(),
+			requestDto.selectedNum()
+		);
+
+		optionGroupRepository.save(optionGroup);
+	}
+
 	private OptionGroupResponseDto toResponseDto(OptionGroups optionGroup) {
 		return OptionGroupResponseDto.builder()
 			.id(optionGroup.getId())

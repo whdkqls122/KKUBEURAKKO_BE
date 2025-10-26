@@ -15,4 +15,7 @@ public interface OptionGroupService {
 
 	//옵션 그룹 전체 조회
 	List<OptionGroupResponseDto> getAllOptionGroups();
+
+	//옵션 그룹 수정
+	void updateOptionGroup(Long id, OptionGroupRequestDto requestDto);
 }
