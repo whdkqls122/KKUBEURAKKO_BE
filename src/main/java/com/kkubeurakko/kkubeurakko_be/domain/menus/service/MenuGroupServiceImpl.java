@@ -32,10 +32,12 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 
 	private List<MenuGroupResponseDto> toResponseDto(List<MenuGroups> menuGroupList) {
 		return menuGroupList.stream()
-			.map(menuGroups -> new MenuGroupResponseDto(
-				menuGroups.getId(),
-				menuGroups.getName()
-			))
+			.map(menuGroups -> MenuGroupResponseDto
+				.builder()
+				.menuGroupId(menuGroups.getId())
+				.name(menuGroups.getName())
+				.build()
+			)
 			.collect(Collectors.toList());
 	}
 }
