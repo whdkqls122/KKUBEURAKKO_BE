@@ -211,4 +211,43 @@ class OptionGroupServiceImplTest {
 		});
 	}
 
+	// 옵션 그룹 수정
+	@Test
+	void updateOptionGroup() {
+		// given
+		OptionGroups group = OptionGroups.builder()
+			.id(1L)
+			.name("맵기 선택")
+			.description("맵기 단계를 선택")
+			.required(true)
+			.optionGroupType(OptionGroupType.SINGLE)
+			.status(Status.ON_SALE)
+			.build();
+
+		when(optionGroupRepository.findById(1L)).thenReturn(Optional.of(group));
+
+		OptionGroupRequestDto updateDto = new OptionGroupRequestDto(
+			"매운맛 선택",
+			"매운 단계를 선택하세요",
+			false,
+			OptionGroupType.MULTI,
+			5
+		);
+
+		// when
+		optionGroupService.updateOptionGroup(1L, updateDto);
+
+		// then
+		ArgumentCaptor<OptionGroups> captor = ArgumentCaptor.forClass(OptionGroups.class);
+		verify(optionGroupRepository).save(captor.capture());
+
+		OptionGroups updated = captor.getValue();
+		System.out.println("업데이트된 옵션 그룹: " + updated);
+
+		assertEquals("매운맛 선택", updated.getName());
+		assertEquals("매운 단계를 선택하세요", updated.getDescription());
+		assertFalse(updated.isRequired());
+		assertEquals(OptionGroupType.MULTI, updated.getOptionGroupType());
+		assertEquals(5, updated.getSelectedNum());
+	}
 }

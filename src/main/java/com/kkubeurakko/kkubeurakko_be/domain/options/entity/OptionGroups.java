@@ -56,7 +56,7 @@ public class OptionGroups extends BaseEntity {
 	@Column(name = "option_group_type", nullable = false)
 	private OptionGroupType optionGroupType;
 
-	@Column(name = "selected_num", nullable = true)
+	@Column(name = "selected_num", nullable = false)
 	private int selectedNum;
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -67,11 +67,11 @@ public class OptionGroups extends BaseEntity {
 	@Builder.Default //테스트 코드시 초기화하기 위함
 	private List<Options> options = new ArrayList<>();
 
-	public void update(String name, String description, boolean required, OptionGroupType type, Integer selectedNum) {
+	public void update(String name, String description, boolean required, OptionGroupType type, int selectedNum) {
 		this.name = name;
 		this.description = description;
 		this.required = required;
 		this.optionGroupType = type;
-		this.selectedNum = selectedNum;
+		this.selectedNum = type.calculateSelectedNum(selectedNum, this.options);
 	}
 }

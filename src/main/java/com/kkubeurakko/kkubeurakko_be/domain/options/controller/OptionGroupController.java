@@ -63,9 +63,9 @@ public class OptionGroupController {
 	@Operation(summary = "옵션 그룹 수정", description = "기존 옵션 그룹 내용을 수정합니다.")
 	@PutMapping("/{optionGroupId}")
 	public ResponseEntity<ApiResponse<Void>> updateOptionGroup(
-		@PathVariable Long id,
+		@PathVariable Long optionGroupId,
 		@Valid @RequestBody OptionGroupRequestDto requestDto) {
-		optionGroupService.updateOptionGroup(id, requestDto);
+		optionGroupService.updateOptionGroup(optionGroupId, requestDto);
 		return ResponseEntity.ok(ApiResponse.success("옵션 그룹 수정이 완료되었습니다.", null));
 	}
 }
