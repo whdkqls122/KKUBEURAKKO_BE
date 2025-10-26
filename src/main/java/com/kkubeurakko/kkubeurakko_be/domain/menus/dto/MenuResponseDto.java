@@ -7,7 +7,7 @@ public record MenuResponseDto(
 	Long menu_id,
 	String name,
 	String description,
-	String price,
+	int price,
 	String img
 ) {
 }
