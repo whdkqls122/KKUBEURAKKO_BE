@@ -10,6 +10,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class OptionGroupServiceImpl implements OptionGroupService {
 
 	private final OptionGroupRepository optionGroupRepository;
+	private final OptionRepository optionRepository;
 
 	@Override
 	public void createOptionGroup(OptionGroupRequestDto requestDto) {
@@ -26,9 +28,10 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 			.description(requestDto.description())
 			.required(requestDto.required())
 			.optionGroupType(requestDto.optionGroupType())
-			.selectedNum(requestDto.selectedNum())
 			.status(Status.ON_SALE)
+			.selectedNum(requestDto.selectedNum())
 			.build();
+
 		optionGroupRepository.save(optionGroup);
 	}
 
