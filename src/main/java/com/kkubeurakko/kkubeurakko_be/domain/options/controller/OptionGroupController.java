@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.options.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,5 +68,12 @@ public class OptionGroupController {
 		@Valid @RequestBody OptionGroupRequestDto requestDto) {
 		optionGroupService.updateOptionGroup(optionGroupId, requestDto);
 		return ResponseEntity.ok(ApiResponse.success("옵션 그룹 수정이 완료되었습니다.", null));
+	}
+
+	@Operation(summary = "옵션 그룹 삭제", description = "기존 옵션 그룹을 삭제합니다.")
+	@DeleteMapping("/{id}")
+	public ResponseEntity<ApiResponse<Void>> deleteOptionGroup(@PathVariable Long id) {
+		optionGroupService.deleteOptionGroup(id);
+		return ResponseEntity.ok(ApiResponse.success("옵션 그룹 삭제가 완료되었습니다.", null));
 	}
 }
