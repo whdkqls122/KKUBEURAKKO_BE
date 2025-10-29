@@ -18,4 +18,7 @@ public interface OptionGroupService {
 
 	//옵션 그룹 수정
 	void updateOptionGroup(Long id, OptionGroupRequestDto requestDto);
+
+	//옵션 그룹 삭제
+	void deleteOptionGroup(Long id);
 }

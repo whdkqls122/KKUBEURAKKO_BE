@@ -64,6 +64,14 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 		optionGroupRepository.save(optionGroup);
 	}
 
+	@Override
+	public void deleteOptionGroup(Long id) {
+		OptionGroups optionGroup = optionGroupRepository.findById(id)
+			.orElseThrow(() -> new IllegalArgumentException("해당 옵션 그룹이 없습니다. id=" + id));
+
+		optionGroupRepository.delete(optionGroup);
+	}
+	
 	private OptionGroupResponseDto toResponseDto(OptionGroups optionGroup) {
 		return OptionGroupResponseDto.builder()
 			.id(optionGroup.getId())
