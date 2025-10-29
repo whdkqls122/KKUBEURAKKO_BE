@@ -250,4 +250,27 @@ class OptionGroupServiceImplTest {
 		assertEquals(OptionGroupType.MULTI, updated.getOptionGroupType());
 		assertEquals(5, updated.getSelectedNum());
 	}
+
+	// 옵션 그룹 삭제
+	@Test
+	void deleteOptionGroup_ShouldDeleteOptionGroup() {
+		// given
+		OptionGroups group = OptionGroups.builder()
+			.id(1L)
+			.name("맵기 선택")
+			.description("맵기 단계를 선택")
+			.required(true)
+			.optionGroupType(OptionGroupType.SINGLE)
+			.status(Status.ON_SALE)
+			.build();
+
+		when(optionGroupRepository.findById(1L)).thenReturn(Optional.of(group));
+
+		// when
+		optionGroupService.deleteOptionGroup(1L);
+
+		// then
+		verify(optionGroupRepository, times(1)).delete(group);
+		
+	}
 }
