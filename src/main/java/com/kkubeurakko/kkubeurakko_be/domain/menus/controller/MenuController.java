@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.service.MenuService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
@@ -34,6 +35,19 @@ public class MenuController {
 		return ResponseEntity.ok().body(ApiResponse.success(
 			"메뉴 그룹별 메뉴 조회 성공",
 			menuResponseDtoList
+		));
+	}
+
+	@Operation(
+		summary = "메뉴 상세 조회",
+		description = "메뉴의 상세정보를 조회합니다."
+	)
+	@GetMapping("/{menuId}")
+	public ResponseEntity<ApiResponse<MenuDetailResponseDto>> getMenuDetail(@PathVariable("menuId") Long menuId) {
+		MenuDetailResponseDto menuDetailResponseDto = menuService.getMenuDetail(menuId);
+		return ResponseEntity.ok().body(ApiResponse.success(
+			"메뉴 상세조회에 성공했습니다.",
+			menuDetailResponseDto
 		));
 	}
 }
