@@ -1,5 +1,8 @@
 package com.kkubeurakko.kkubeurakko_be.domain.menus.entity;
 
+import java.util.List;
+
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -12,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -51,4 +55,6 @@ public class Menus extends BaseEntity {
 	@JoinColumn(name = "menu_groups_id", nullable = false)
 	private MenuGroups menuGroup;
 
+	@OneToMany(mappedBy = "menu", fetch = FetchType.LAZY)
+	private List<OptionGroups> optionGroupList;
 }
