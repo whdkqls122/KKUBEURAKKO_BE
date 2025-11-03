@@ -36,7 +36,7 @@ public class MenuServiceImpl implements MenuService {
 	@Override
 	@Transactional(readOnly = true)
 	public MenuDetailResponseDto getMenuDetail(Long menuId) {
-		Menus menu = menuRepository.findMenuDetail(menuId)
+		Menus menu = menuRepository.findById(menuId)
 			.orElseThrow(() -> new NullPointerException("조회된 메뉴가 없습니다."));
 
 		return toResponseDto(menu);
