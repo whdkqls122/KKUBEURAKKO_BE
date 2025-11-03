@@ -38,7 +38,7 @@ public class MenuServiceImpl implements MenuService {
 	public MenuDetailResponseDto getMenuDetail(Long menuId) {
 		Menus menu = menuRepository.findMenuDetail(menuId)
 			.orElseThrow(() -> new NullPointerException("조회된 메뉴가 없습니다."));
-		
+
 		return toResponseDto(menu);
 	}
 
@@ -57,6 +57,7 @@ public class MenuServiceImpl implements MenuService {
 
 	private MenuDetailResponseDto toResponseDto(Menus menu) {
 		List<OptionGroupResponseDto> optionGroupResponseDtoList = menu.getOptionGroupList().stream()
+			.filter(og -> og.getStatus() == com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status.ON_SALE)
 			.map(og -> OptionGroupResponseDto.builder()
 				.id(og.getId())
 				.name(og.getName())
@@ -66,6 +67,7 @@ public class MenuServiceImpl implements MenuService {
 				.selectedNum(og.getSelectedNum())
 				.status(og.getStatus())
 				.options(og.getOptions().stream()
+					.filter(o -> o.getStatus() == com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status.ON_SALE)
 					.map(o -> OptionResponseDto.builder()
 						.id(o.getId())
 						.name(o.getName())
