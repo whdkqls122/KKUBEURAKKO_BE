@@ -42,7 +42,7 @@ public class MenuController {
 		summary = "메뉴 상세 조회",
 		description = "메뉴의 상세정보를 조회합니다."
 	)
-	@GetMapping("/{menuId}")
+	@GetMapping("/detail/{menuId}")
 	public ResponseEntity<ApiResponse<MenuDetailResponseDto>> getMenuDetail(@PathVariable("menuId") Long menuId) {
 		MenuDetailResponseDto menuDetailResponseDto = menuService.getMenuDetail(menuId);
 		return ResponseEntity.ok().body(ApiResponse.success(
