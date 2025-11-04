@@ -4,9 +4,12 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.service.MenuGroupService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
@@ -33,5 +36,15 @@ public class MenuGroupController {
 			"메뉴 그룹 조회 성공",
 			menuGroupResponseDtoList
 		));
+	}
+
+	@Operation(
+		summary = "메뉴 그룹 생성",
+		description = "새로운 메뉴 그룹을 등록합니다."
+	)
+	@PostMapping
+	public ResponseEntity<String> createMenuGroup(@RequestBody MenuGroupRequestDto requestDto) {
+		menuGroupService.createMenuGroup(requestDto);
+		return ResponseEntity.ok("메뉴 그룹 생성에 성공하였습니다.");
 	}
 }
