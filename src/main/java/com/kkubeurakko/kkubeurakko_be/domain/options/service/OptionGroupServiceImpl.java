@@ -78,7 +78,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 			.name(optionGroup.getName())
 			.description(optionGroup.getDescription())
 			.required(optionGroup.isRequired())
-			.status(optionGroup.getOptionStatus())
+			.optionStatus(optionGroup.getOptionStatus())
 			.optionGroupType(optionGroup.getOptionGroupType())
 			.selectedNum(optionGroup.getSelectedNum())
 			.options(
@@ -87,7 +87,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 						.id(option.getId())
 						.name(option.getName())
 						.price(option.getPrice())
-						.status(option.getOptionStatus())
+						.optionStatus(option.getOptionStatus())
 						.build())
 					.toList()
 			)
