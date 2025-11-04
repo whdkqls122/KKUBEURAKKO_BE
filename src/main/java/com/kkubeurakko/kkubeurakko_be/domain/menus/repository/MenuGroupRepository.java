@@ -10,5 +10,5 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 
 @Repository
 public interface MenuGroupRepository extends JpaRepository<MenuGroups, Long> {
-	List<MenuGroups> findByStatus(MenuStatus menuStatus);
+	List<MenuGroups> findByMenuStatus(MenuStatus menuStatus);
 }
