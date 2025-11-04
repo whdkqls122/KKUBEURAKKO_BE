@@ -16,9 +16,11 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 public interface MenuRepository extends JpaRepository<Menus, Long> {
 	List<Menus> findByMenuGroupIdAndMenuStatus(Long menuGroupId, MenuStatus menuStatus);
 
-	@Query("select m from Menus m "
-		+ "left join fetch m.optionGroupList og on og.optionStatus = :optionStatus "
-		+ "left join fetch og.options o on o.optionStatus = :optionStatus "
-		+ "where m.id = :menuId")
+	@Query("select distinct m from Menus m "
+		+ "left join m.optionGroupList og "
+		+ "left join og.options o "
+		+ "where m.id = :menuId "
+		+ "and og.optionStatus = :optionStatus "
+		+ "and o.optionStatus = :optionStatus")
 	Optional<Menus> findMenuDetail(@Param("menuId") Long menuId, @Param("optionStatus") OptionStatus optionStatus);
 }
