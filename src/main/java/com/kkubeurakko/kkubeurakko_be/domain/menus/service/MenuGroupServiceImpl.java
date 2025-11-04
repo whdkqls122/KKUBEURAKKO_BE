@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
-import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Status;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 
 	@Override
 	public List<MenuGroupResponseDto> getAllMenuGroupName() {
-		List<MenuGroups> menuGroupList = menuGroupRepository.findByStatus(Status.ON_SALE);
+		List<MenuGroups> menuGroupList = menuGroupRepository.findByStatus(MenuStatus.ON_SALE);
 		if (menuGroupList.isEmpty()) {
 			log.info("조회된 메뉴 그룹이 없음");
 			throw new RuntimeException("메뉴 그룹이 조회되지 않았습니다.");

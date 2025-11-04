@@ -8,12 +8,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
-import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Status;
 
 @Repository
 public interface MenuRepository extends JpaRepository<Menus, Long> {
-	List<Menus> findByMenuGroupIdAndStatus(Long menuGroupId, Status status);
+	List<Menus> findByMenuGroupIdAndStatus(Long menuGroupId, MenuStatus menuStatus);
 
 	// @EntityGraph(attributePaths =
 	// 	{"optionGroupList", "optionGroupList.options"},

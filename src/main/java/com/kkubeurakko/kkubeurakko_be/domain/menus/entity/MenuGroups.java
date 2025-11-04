@@ -40,7 +40,7 @@ public class MenuGroups extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)
-	private Status status;
+	private MenuStatus menuStatus;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "stroes_id", nullable = false)

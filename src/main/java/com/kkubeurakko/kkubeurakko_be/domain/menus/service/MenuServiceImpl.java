@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
-import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
@@ -25,7 +25,7 @@ public class MenuServiceImpl implements MenuService {
 
 	@Override
 	public List<MenuResponseDto> getAllMenuByMenuGroup(Long menuGroupId) {
-		List<Menus> menuList = menuRepository.findByMenuGroupIdAndStatus(menuGroupId, Status.ON_SALE);
+		List<Menus> menuList = menuRepository.findByMenuGroupIdAndStatus(menuGroupId, MenuStatus.ON_SALE);
 		if (menuList.isEmpty()) {
 			log.info("조회된 메뉴가 없음");
 			throw new RuntimeException("메뉴가 조회되지 않았습니다.");
