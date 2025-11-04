@@ -13,6 +13,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ public class MenuServiceImpl implements MenuService {
 
 	@Override
 	public List<MenuResponseDto> getAllMenuByMenuGroup(Long menuGroupId) {
-		List<Menus> menuList = menuRepository.findByMenuGroupIdAndStatus(menuGroupId, MenuStatus.ON_SALE);
+		List<Menus> menuList = menuRepository.findByMenuGroupIdAndMenuStatus(menuGroupId, MenuStatus.ON_SALE);
 		if (menuList.isEmpty()) {
 			log.info("조회된 메뉴가 없음");
 			throw new RuntimeException("메뉴가 조회되지 않았습니다.");
@@ -36,7 +37,7 @@ public class MenuServiceImpl implements MenuService {
 	@Override
 	@Transactional(readOnly = true)
 	public MenuDetailResponseDto getMenuDetail(Long menuId) {
-		Menus menu = menuRepository.findMenuDetail(menuId)
+		Menus menu = menuRepository.findMenuDetail(menuId, OptionStatus.ON_SALE)
 			.orElseThrow(() -> new NullPointerException("조회된 메뉴가 없습니다."));
 
 		return toResponseDto(menu);
@@ -64,13 +65,13 @@ public class MenuServiceImpl implements MenuService {
 				.required(og.isRequired())
 				.optionGroupType(og.getOptionGroupType())
 				.selectedNum(og.getSelectedNum())
-				.status(og.getOptionStatus())
+				.optionStatus(og.getOptionStatus())
 				.options(og.getOptions().stream()
 					.map(o -> OptionResponseDto.builder()
 						.id(o.getId())
 						.name(o.getName())
 						.price(o.getPrice())
-						.status(o.getOptionStatus())
+						.optionStatus(o.getOptionStatus())
 						.build())
 					.toList())
 				.build())

@@ -10,17 +10,15 @@ import org.springframework.stereotype.Repository;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 
 @Repository
 public interface MenuRepository extends JpaRepository<Menus, Long> {
-	List<Menus> findByMenuGroupIdAndStatus(Long menuGroupId, MenuStatus menuStatus);
+	List<Menus> findByMenuGroupIdAndMenuStatus(Long menuGroupId, MenuStatus menuStatus);
 
-	// @EntityGraph(attributePaths =
-	// 	{"optionGroupList", "optionGroupList.options"},
-	// 	type = EntityGraph.EntityGraphType.FETCH)
 	@Query("select m from Menus m "
-		+ "left join fetch m.optionGroupList og on og.status = com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus.ON_SALE "
-		+ "left join fetch og.options o on o.status = com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus.ON_SALE "
+		+ "left join fetch m.optionGroupList og on og.optionStatus = :optionStatus "
+		+ "left join fetch og.options o on o.optionStatus = :optionStatus "
 		+ "where m.id = :menuId")
-	Optional<Menus> findMenuDetail(@Param("menuId") Long menuId);
+	Optional<Menus> findMenuDetail(@Param("menuId") Long menuId, @Param("optionStatus") OptionStatus optionStatus);
 }

@@ -67,7 +67,7 @@ class MenuServiceImplTest {
 
 		List<Menus> mockMenus = Arrays.asList(menu1, menu2);
 
-		when(menuRepository.findByMenuGroupIdAndStatus(menuGroupId, MenuStatus.ON_SALE))
+		when(menuRepository.findByMenuGroupIdAndMenuStatus(menuGroupId, MenuStatus.ON_SALE))
 			.thenReturn(mockMenus);
 
 		// when
@@ -85,7 +85,7 @@ class MenuServiceImplTest {
 		assertThat(result.get(1).description()).isEqualTo("소금꾸브입니다.");
 		assertThat(result.get(1).price()).isEqualTo(19000);
 
-		verify(menuRepository, times(1)).findByMenuGroupIdAndStatus(menuGroupId, MenuStatus.ON_SALE);
+		verify(menuRepository, times(1)).findByMenuGroupIdAndMenuStatus(menuGroupId, MenuStatus.ON_SALE);
 	}
 
 	@Test
@@ -93,14 +93,14 @@ class MenuServiceImplTest {
 	void getAllMenuByMenuGroup_empty_throws() {
 		// given
 		Long menuGroupId = 1L;
-		when(menuRepository.findByMenuGroupIdAndStatus(menuGroupId, MenuStatus.ON_SALE))
-			.thenReturn(Arrays.asList());
+		when(menuRepository.findByMenuGroupIdAndMenuStatus(menuGroupId, MenuStatus.ON_SALE))
+			.thenReturn(List.of());
 		// when & then
 		assertThatThrownBy(() -> menuService.getAllMenuByMenuGroup(menuGroupId))
 			.isInstanceOf(RuntimeException.class)
 			.hasMessage("메뉴가 조회되지 않았습니다.");
 
-		verify(menuRepository, times(1)).findByMenuGroupIdAndStatus(menuGroupId, MenuStatus.ON_SALE);
+		verify(menuRepository, times(1)).findByMenuGroupIdAndMenuStatus(menuGroupId, MenuStatus.ON_SALE);
 	}
 
 	@Test
