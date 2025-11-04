@@ -152,13 +152,13 @@ class MenuServiceImplTest {
 			.build();
 
 		// given
-		when(menuRepository.findMenuDetail(1L)).thenReturn(Optional.of(menu));
+		when(menuRepository.findMenuDetail(1L, OptionStatus.ON_SALE)).thenReturn(Optional.of(menu));
 
 		// when
 		MenuDetailResponseDto result = menuService.getMenuDetail(1L);
 
 		// then
-		verify(menuRepository, times(1)).findMenuDetail(1L);
+		verify(menuRepository, times(1)).findMenuDetail(1L, OptionStatus.ON_SALE);
 		assertThat(result.menuId()).isEqualTo(1L);
 		assertThat(result.name()).isEqualTo("양념꾸브");
 		assertThat(result.optionGroupResponseDtoList()).hasSize(1);
@@ -176,7 +176,7 @@ class MenuServiceImplTest {
 	void getMenuDetail_notFound_throws() {
 		// given
 		Long menuId = 999L;
-		when(menuRepository.findMenuDetail(menuId))
+		when(menuRepository.findMenuDetail(menuId, OptionStatus.ON_SALE))
 			.thenReturn(java.util.Optional.empty());
 
 		// when & then
@@ -184,6 +184,6 @@ class MenuServiceImplTest {
 			.isInstanceOf(RuntimeException.class)
 			.hasMessage("조회된 메뉴가 없습니다.");
 
-		verify(menuRepository, times(1)).findMenuDetail(menuId);
+		verify(menuRepository, times(1)).findMenuDetail(menuId, OptionStatus.ON_SALE);
 	}
 }
