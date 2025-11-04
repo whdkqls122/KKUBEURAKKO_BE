@@ -4,8 +4,8 @@ import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionRepository;
 
@@ -26,7 +26,7 @@ public class OptionServiceImpl implements OptionService {
 		Options option = Options.builder()
 			.name(requestDto.name())
 			.price(requestDto.price())
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(optionGroup)
 			.build();
 		optionRepository.save(option);
@@ -41,11 +41,11 @@ public class OptionServiceImpl implements OptionService {
 		optionRepository.save(option);
 	}
 
-	public void updateStatus(Long optionId, Status newStatus) {
+	public void updateStatus(Long optionId, OptionStatus newOptionStatus) {
 		Options option = optionRepository.findById(optionId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 ID의 옵션이 존재하지 않습니다."));
 
-		option.updateStatus(newStatus);
+		option.updateStatus(newOptionStatus);
 		optionRepository.save(option);
 	}
 

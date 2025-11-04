@@ -13,8 +13,8 @@ import org.mockito.MockitoAnnotations;
 
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionRepository;
 
@@ -41,7 +41,7 @@ class OptionServiceImplTest {
 			.name("맵기 선택")
 			.description("맵기 단계를 선택해 주세요")
 			.required(true)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroupType(com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType.SINGLE)
 			.build();
 
@@ -73,7 +73,7 @@ class OptionServiceImplTest {
 			.name("맵기 선택")
 			.description("맵기 단계를 선택해 주세요")
 			.required(true)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroupType(com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType.SINGLE)
 			.build();
 
@@ -81,7 +81,7 @@ class OptionServiceImplTest {
 			.id(1L)
 			.name("순한맛")
 			.price(2000)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(optionGroup)
 			.build();
 
@@ -112,7 +112,7 @@ class OptionServiceImplTest {
 			.name("맵기 선택")
 			.description("맵기 단계를 선택해 주세요")
 			.required(true)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroupType(com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType.SINGLE)
 			.build();
 
@@ -120,14 +120,14 @@ class OptionServiceImplTest {
 			.id(1L)
 			.name("순한맛")
 			.price(2000)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(optionGroup)
 			.build();
 
 		when(optionsRepository.findById(1L)).thenReturn(Optional.of(option));
 
 		// when
-		optionService.updateStatus(1L, Status.HIDE);
+		optionService.updateStatus(1L, OptionStatus.HIDE);
 
 		// then
 		ArgumentCaptor<Options> captor = ArgumentCaptor.forClass(Options.class);
@@ -136,7 +136,7 @@ class OptionServiceImplTest {
 		Options updated = captor.getValue();
 		System.out.println("변경된 상태 옵션: " + updated);
 
-		assertEquals(Status.HIDE, updated.getStatus());
+		assertEquals(OptionStatus.HIDE, updated.getOptionStatus());
 	}
 
 	@Test
@@ -147,7 +147,7 @@ class OptionServiceImplTest {
 			.name("맵기 선택")
 			.description("맵기 단계를 선택해 주세요")
 			.required(true)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroupType(com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType.SINGLE)
 			.build();
 
@@ -155,7 +155,7 @@ class OptionServiceImplTest {
 			.id(1L)
 			.name("순한맛")
 			.price(2000)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(optionGroup)
 			.build();
 

@@ -1,7 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.domain.options.service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionRequestDto;
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 
 public interface OptionService {
 
@@ -12,7 +12,7 @@ public interface OptionService {
 	void updateOption(Long optionId, OptionRequestDto requestDto);
 
 	//옵션 상태 수정
-	void updateStatus(Long optionId, Status newStatus);
+	void updateStatus(Long optionId, OptionStatus newOptionStatus);
 
 	//옵션 삭제
 	void deleteOption(Long optionId);

@@ -50,7 +50,7 @@ public class OptionGroups extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)
-	private Status status;
+	private OptionStatus optionStatus;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "option_group_type", nullable = false)

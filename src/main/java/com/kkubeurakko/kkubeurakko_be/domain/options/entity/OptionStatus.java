@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum Status {
+public enum OptionStatus {
 	ON_SALE("판매중"),
 	HIDE("숨김");
 

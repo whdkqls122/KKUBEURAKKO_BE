@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionRequestDto;
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.service.OptionService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
@@ -60,9 +60,9 @@ public class OptionController {
 	@PatchMapping("/{optionId}/status")
 	public ResponseEntity<ApiResponse<Void>> updateOptionStatus(
 		@PathVariable Long optionId,
-		@RequestParam Status status) {
+		@RequestParam OptionStatus optionStatus) {
 
-		optionService.updateStatus(optionId, status);
+		optionService.updateStatus(optionId, optionStatus);
 		return ResponseEntity.ok(ApiResponse.success("옵션 상태가 변경되었습니다.", null));
 	}
 

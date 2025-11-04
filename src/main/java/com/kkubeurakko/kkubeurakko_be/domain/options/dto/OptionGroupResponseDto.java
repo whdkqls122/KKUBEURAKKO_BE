@@ -3,7 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.options.dto;
 import java.util.List;
 
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType;
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 
 import lombok.Builder;
 
@@ -15,7 +15,7 @@ public record OptionGroupResponseDto(
 	boolean required,
 	OptionGroupType optionGroupType,
 	int selectedNum,
-	Status status,
+	OptionStatus optionStatus,
 	List<OptionResponseDto> options
 ) {
 }

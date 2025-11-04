@@ -17,8 +17,8 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 
 class OptionGroupServiceImplTest {
@@ -60,7 +60,7 @@ class OptionGroupServiceImplTest {
 		assertTrue(saved.isRequired());
 		assertEquals(com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType.SINGLE,
 			saved.getOptionGroupType());
-		assertEquals(Status.ON_SALE, saved.getStatus());
+		assertEquals(OptionStatus.ON_SALE, saved.getOptionStatus());
 	}
 
 	//옵션 그룹 단건 조회
@@ -73,21 +73,21 @@ class OptionGroupServiceImplTest {
 			.description("맵기 단계를 선택")
 			.required(true)
 			.optionGroupType(OptionGroupType.SINGLE)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.build();
 
 		Options option1 = Options.builder()
 			.id(1L)
 			.name("순한맛")
 			.price(0)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(group)
 			.build();
 		Options option2 = Options.builder()
 			.id(2L)
 			.name("보통")
 			.price(500)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(group)
 			.build();
 
@@ -116,7 +116,7 @@ class OptionGroupServiceImplTest {
 		System.out.println("옵션 개수: " + responseDto.options().size());
 		System.out.println("옵션 목록:");
 		responseDto.options().forEach(opt ->
-			System.out.println(" - " + opt.name() + " (" + opt.price() + "원, 상태: " + opt.status() + ")")
+			System.out.println(" - " + opt.name() + " (" + opt.price() + "원, 상태: " + opt.optionStatus() + ")")
 		);
 	}
 
@@ -130,7 +130,7 @@ class OptionGroupServiceImplTest {
 			.description("맵기 단계를 선택")
 			.required(true)
 			.optionGroupType(OptionGroupType.SINGLE)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.options(new ArrayList<>())
 			.build();
 
@@ -138,7 +138,7 @@ class OptionGroupServiceImplTest {
 			.id(1L)
 			.name("순한맛")
 			.price(0)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(group1)
 			.build();
 
@@ -146,7 +146,7 @@ class OptionGroupServiceImplTest {
 			.id(2L)
 			.name("보통맛")
 			.price(500)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(group1)
 			.build();
 
@@ -159,7 +159,7 @@ class OptionGroupServiceImplTest {
 			.description("부위를 선택하세요")
 			.required(true)
 			.optionGroupType(OptionGroupType.SINGLE)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.options(new ArrayList<>())
 			.build();
 
@@ -167,7 +167,7 @@ class OptionGroupServiceImplTest {
 			.id(3L)
 			.name("뼈")
 			.price(0)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(group2)
 			.build();
 
@@ -175,7 +175,7 @@ class OptionGroupServiceImplTest {
 			.id(4L)
 			.name("콤보")
 			.price(2000)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(group2)
 			.build();
 
@@ -205,7 +205,7 @@ class OptionGroupServiceImplTest {
 			System.out.println("옵션 그룹 타입: " + group.optionGroupType());
 			System.out.println("옵션 목록:");
 			group.options().forEach(opt ->
-				System.out.println(" - " + opt.name() + " (" + opt.price() + "원, 상태: " + opt.status() + ")")
+				System.out.println(" - " + opt.name() + " (" + opt.price() + "원, 상태: " + opt.optionStatus() + ")")
 			);
 			System.out.println("------------------------------");
 		});
@@ -221,7 +221,7 @@ class OptionGroupServiceImplTest {
 			.description("맵기 단계를 선택")
 			.required(true)
 			.optionGroupType(OptionGroupType.SINGLE)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.build();
 
 		when(optionGroupRepository.findById(1L)).thenReturn(Optional.of(group));

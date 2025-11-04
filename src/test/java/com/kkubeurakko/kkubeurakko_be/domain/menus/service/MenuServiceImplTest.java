@@ -24,6 +24,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
 
 @ExtendWith(MockitoExtension.class)
@@ -110,21 +111,21 @@ class MenuServiceImplTest {
 			.id(1L)
 			.name("순한맛")
 			.price(1000)
-			.status(com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.build();
 
 		Options option2 = Options.builder()
 			.id(2L)
 			.name("중간맛")
 			.price(500)
-			.status(com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.build();
 
 		Options option3 = Options.builder()
 			.id(2L)
 			.name("매운맛")
 			.price(500)
-			.status(com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.build();
 
 		// OptionGroup 엔티티
@@ -135,7 +136,7 @@ class MenuServiceImplTest {
 			.required(true)
 			.selectedNum(1)
 			.optionGroupType(OptionGroupType.SINGLE)
-			.status(com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.options(List.of(option1, option2, option3))
 			.build();
 

@@ -41,7 +41,7 @@ public class Options extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)
-	private Status status;
+	private OptionStatus optionStatus;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "option_groups_id", nullable = false)
@@ -52,7 +52,7 @@ public class Options extends BaseEntity {
 		this.price = price;
 	}
 
-	public void updateStatus(Status status) {
-		this.status = status;
+	public void updateStatus(OptionStatus optionStatus) {
+		this.optionStatus = optionStatus;
 	}
 }

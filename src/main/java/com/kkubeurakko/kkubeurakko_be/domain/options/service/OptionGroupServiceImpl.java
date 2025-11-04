@@ -8,7 +8,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Status;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionRepository;
 
@@ -28,7 +28,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 			.description(requestDto.description())
 			.required(requestDto.required())
 			.optionGroupType(requestDto.optionGroupType())
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.selectedNum(requestDto.selectedNum())
 			.build();
 
@@ -78,7 +78,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 			.name(optionGroup.getName())
 			.description(optionGroup.getDescription())
 			.required(optionGroup.isRequired())
-			.status(optionGroup.getStatus())
+			.status(optionGroup.getOptionStatus())
 			.optionGroupType(optionGroup.getOptionGroupType())
 			.selectedNum(optionGroup.getSelectedNum())
 			.options(
@@ -87,7 +87,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 						.id(option.getId())
 						.name(option.getName())
 						.price(option.getPrice())
-						.status(option.getStatus())
+						.status(option.getOptionStatus())
 						.build())
 					.toList()
 			)
