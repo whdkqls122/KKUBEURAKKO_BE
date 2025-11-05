@@ -8,6 +8,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.addresses.repository.AddressReposit
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
+import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AddressServiceImpl implements AddressService {
 	private final UserService userService;
 	private final AddressRepository addressRepository;
+	private final AesUtil aesUtil;
 
 	@Override
 	public void createAddress(AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User) {
@@ -34,8 +36,8 @@ public class AddressServiceImpl implements AddressService {
 		return Addresses.builder()
 			.addressName(addressRequestDto.addressName())
 			.roadName(addressRequestDto.roadName())
-			.detailAddress(addressRequestDto.detailAddress())
-			.postalCode(addressRequestDto.postalCode())
+			.detailAddress(aesUtil.encryptToBase64(addressRequestDto.detailAddress()))
+			.postalCode(aesUtil.encryptToBase64(addressRequestDto.postalCode()))
 			.isPrimary(addressRequestDto.isPrimary())
 			.category(addressRequestDto.category())
 			.requestContent(addressRequestDto.requestContent())
