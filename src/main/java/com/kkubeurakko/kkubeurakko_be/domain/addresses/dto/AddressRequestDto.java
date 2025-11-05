@@ -24,7 +24,7 @@ public record AddressRequestDto(
 	@NotNull(message = "기본 주소 여부는 필수입니다.")
 	Boolean isPrimary,
 	@NotNull(message = "주소 카테고리는 필수입니다.")
-	AddressCategory addressCategory,
+	AddressCategory category,
 	@Size(max = 100, message = "배달 요청사항은 최대 100자까지 가능합니다.")
 	String requestContent,
 	@Size(max = 20, message = "공동 현관 비밀번호는 최대 20자까지 가능합니다.")
