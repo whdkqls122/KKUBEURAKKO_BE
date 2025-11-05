@@ -27,6 +27,7 @@ public class AddressServiceImpl implements AddressService {
 		Addresses addresses = toEntity(addressRequestDto, user);
 
 		addressRepository.save(addresses);
+		log.info("주소 저장 성공");
 	}
 
 	private Addresses toEntity(AddressRequestDto addressRequestDto, Users user) {
