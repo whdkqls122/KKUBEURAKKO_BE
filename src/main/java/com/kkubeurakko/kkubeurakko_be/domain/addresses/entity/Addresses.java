@@ -38,10 +38,10 @@ public class Addresses extends BaseEntity {
 	@Column(name = "road_name", nullable = false, length = 50)
 	private String roadName;
 
-	@Column(name = "detail_address", nullable = false, length = 20)
+	@Column(name = "detail_address", nullable = false)
 	private String detailAddress;
 
-	@Column(name = "postal_code", nullable = false, length = 5)
+	@Column(name = "postal_code", nullable = false)
 	private String postalCode;
 
 	@Column(name = "is_primary", nullable = false)
