@@ -2,7 +2,9 @@ package com.kkubeurakko.kkubeurakko_be.domain.addresses.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,6 +41,29 @@ public class AddressController {
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
 				"주소 등록이 완료되었습니다.",
+				null
+
+			)
+		);
+	}
+
+	@Operation(
+		summary = "주소 수정",
+		description = "주소를 수정하는 API입니다."
+	)
+	@PutMapping("/{addressId}")
+	public ResponseEntity<ApiResponse<Void>> updateAddress(
+		@PathVariable("addressId")
+		Long addressId,
+		@Valid @RequestBody
+		AddressRequestDto addressRequestDto,
+		@AuthenticationPrincipal
+		CustomOAuth2User customOAuth2User) {
+		addressService.updateAddress(addressId, addressRequestDto, customOAuth2User);
+
+		return ResponseEntity.ok().body(
+			ApiResponse.success(
+				"주소 수정이 완료되었습니다.",
 				null
 
 			)
