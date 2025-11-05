@@ -54,7 +54,7 @@ public class Addresses extends BaseEntity {
 	@Column(name = "request_content", length = 100)
 	private String requestContent;
 
-	@Column(name = "entrance_password", length = 20)
+	@Column(name = "entrance_password")
 	private String entrancePassword;
 
 	@Column(name = "directions_info", length = 100)
