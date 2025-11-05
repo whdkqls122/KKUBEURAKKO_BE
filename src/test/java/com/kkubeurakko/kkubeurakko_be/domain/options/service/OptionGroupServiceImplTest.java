@@ -261,7 +261,7 @@ class OptionGroupServiceImplTest {
 			.description("맵기 단계를 선택")
 			.required(true)
 			.optionGroupType(OptionGroupType.SINGLE)
-			.status(Status.ON_SALE)
+			.optionStatus(OptionStatus.ON_SALE)
 			.build();
 
 		when(optionGroupRepository.findById(1L)).thenReturn(Optional.of(group));
@@ -271,6 +271,6 @@ class OptionGroupServiceImplTest {
 
 		// then
 		verify(optionGroupRepository, times(1)).delete(group);
-		
+
 	}
 }
