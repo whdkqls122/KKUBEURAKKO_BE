@@ -46,6 +46,12 @@ public class UserServiceImpl implements UserService {
 		return userRepository.existsByPhoneHash(phonePhone);
 	}
 
+	@Override
+	public Users getUser(String userNumber) {
+		return userRepository.findByUserNumber(userNumber)
+			.orElseThrow(() -> new NullPointerException("해당 사용자 정보가 없습니다."));
+	}
+
 	private String hashPhone(String phone) {
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");
