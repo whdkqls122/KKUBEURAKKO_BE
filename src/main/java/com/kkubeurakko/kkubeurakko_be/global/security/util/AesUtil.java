@@ -43,7 +43,7 @@ public class AesUtil {
 		}
 	}
 
-	public String encryptToBase64(String plainText, byte[] optionalAad) {
+	private String encryptToBase64(String plainText, byte[] optionalAad) {
 		try {
 			byte[] iv = new byte[IV_LENGTH];
 			secureRandom.nextBytes(iv);
@@ -67,7 +67,7 @@ public class AesUtil {
 		}
 	}
 
-	public String decryptFromBase64(String base64IvAndCipherText, byte[] optionalAad) {
+	private String decryptFromBase64(String base64IvAndCipherText, byte[] optionalAad) {
 		try {
 			byte[] all = Base64.getDecoder().decode(base64IvAndCipherText);
 			if (all.length < IV_LENGTH + 1) {
@@ -92,7 +92,7 @@ public class AesUtil {
 			throw new RuntimeException("복호화 실패", e);
 		}
 	}
-	
+
 	public String encryptToBase64(String plainText) {
 		return encryptToBase64(plainText, null);
 	}
