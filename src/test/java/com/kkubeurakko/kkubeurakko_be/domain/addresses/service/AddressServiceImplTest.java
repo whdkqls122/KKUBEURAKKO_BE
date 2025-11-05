@@ -1,6 +1,9 @@
 package com.kkubeurakko.kkubeurakko_be.domain.addresses.service;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
+
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -67,5 +70,87 @@ class AddressServiceImplTest {
 
 		// then
 		verify(addressRepository, times(1)).save(any(Addresses.class));
+	}
+
+	@Test
+	@DisplayName("주소가 정상적으로 수정되는지 검증한다.")
+	void updateAddress() {
+		//given
+		Long addressId = 1L;
+		Users user = Users.builder()
+			.userNumber("123123")
+			.role(UserRole.CUSTOMER)
+			.phoneHash("123124123412")
+			.phone("1231234")
+			.build();
+
+		Addresses existingAddress = Addresses.builder()
+			.addressName("우리집")
+			.roadName("안양로 168번길 16")
+			.detailAddress("201호")
+			.postalCode("14033")
+			.category(AddressCategory.HOME)
+			.isPrimary(true)
+			.requestContent("노크 X")
+			.user(user)
+			.build();
+
+		when(addressRepository.findById(addressId)).thenReturn(Optional.of(existingAddress));
+		when(aesUtil.encryptToBase64("3동 309호")).thenReturn("암호화된 상세 주소");
+		when(aesUtil.encryptToBase64("14085")).thenReturn("암호화된 우편 번호");
+
+		AddressRequestDto request = AddressRequestDto.builder()
+			.addressName("새 집")
+			.roadName("경기도 안양시 만안구 덕천로 140 (안양동, 준마아파트)")
+			.detailAddress("3동 309호")
+			.postalCode("14085")
+			.isPrimary(true)
+			.category(AddressCategory.COMPANY)
+			.requestContent("문앞에 두세요")
+			.entrancePassword(null)
+			.directionInfo("왼쪽 골목")
+			.build();
+
+		CustomOAuth2User mockUser = mock(CustomOAuth2User.class);
+
+		// when
+		addressService.updateAddress(addressId, request, mockUser);
+
+		// then
+		verify(addressRepository).findById(addressId);
+		verify(aesUtil).encryptToBase64("3동 309호");
+		verify(aesUtil).encryptToBase64("14085");
+		verify(addressRepository).save(existingAddress);
+
+		assertThat(existingAddress.getAddressName()).isEqualTo("새 집");
+		assertThat(existingAddress.getDetailAddress()).isEqualTo("암호화된 상세 주소");
+		assertThat(existingAddress.getPostalCode()).isEqualTo("암호화된 우편 번호");
+		assertThat(existingAddress.isPrimary()).isTrue();
+		assertThat(existingAddress.getCategory()).isEqualTo(AddressCategory.COMPANY);
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 주소 id로 수정할 시 예외가 발생하는지 검증한다.")
+	void updateAddress_notFound() {
+		// given
+		when(addressRepository.findById(999L)).thenReturn(Optional.empty());
+		CustomOAuth2User mockUser = mock(CustomOAuth2User.class);
+
+		AddressRequestDto request = AddressRequestDto.builder()
+			.addressName("새 집")
+			.roadName("경기도 안양시 만안구 덕천로 140 (안양동, 준마아파트)")
+			.detailAddress("3동 309호")
+			.postalCode("14085")
+			.isPrimary(true)
+			.category(AddressCategory.COMPANY)
+			.requestContent("문앞에 두세요")
+			.entrancePassword(null)
+			.directionInfo("왼쪽 골목")
+			.build();
+
+		// when & then
+		assertThatThrownBy(() -> addressService.updateAddress(999L, request, mockUser))
+			.isInstanceOf(NullPointerException.class)
+			.hasMessageContaining("해당 주소 정보가 없습니다.");
 	}
 }
