@@ -5,4 +5,6 @@ import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 public interface AddressService {
 	void createAddress(AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User);
+
+	void updateAddress(Long id, AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User);
 }

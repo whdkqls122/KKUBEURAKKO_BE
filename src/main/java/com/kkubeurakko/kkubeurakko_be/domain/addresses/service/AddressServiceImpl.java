@@ -32,6 +32,27 @@ public class AddressServiceImpl implements AddressService {
 		log.info("주소 저장 성공");
 	}
 
+	@Override
+	public void updateAddress(Long id, AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User) {
+		Addresses addresses = addressRepository.findById(id)
+			.orElseThrow(() -> new NullPointerException("해당 주소 정보가 없습니다."));
+
+		addresses.update(
+			addressRequestDto.addressName(),
+			addressRequestDto.roadName(),
+			aesUtil.encryptToBase64(addressRequestDto.detailAddress()),
+			aesUtil.encryptToBase64(addressRequestDto.postalCode()),
+			addressRequestDto.isPrimary(),
+			addressRequestDto.category(),
+			addressRequestDto.requestContent(),
+			addressRequestDto.entrancePassword() != null ?
+				aesUtil.encryptToBase64(addressRequestDto.entrancePassword()) : null,
+			addressRequestDto.directionInfo()
+		);
+
+		addressRepository.save(addresses);
+	}
+
 	private Addresses toEntity(AddressRequestDto addressRequestDto, Users user) {
 		return Addresses.builder()
 			.addressName(addressRequestDto.addressName())
@@ -41,7 +62,10 @@ public class AddressServiceImpl implements AddressService {
 			.isPrimary(addressRequestDto.isPrimary())
 			.category(addressRequestDto.category())
 			.requestContent(addressRequestDto.requestContent())
-			.entrancePassword(addressRequestDto.entrancePassword())
+			.entrancePassword(
+				addressRequestDto.entrancePassword() != null ?
+					aesUtil.encryptToBase64(addressRequestDto.entrancePassword()) : null
+			)
 			.directionsInfo(addressRequestDto.directionInfo())
 			.user(user)
 			.build();
