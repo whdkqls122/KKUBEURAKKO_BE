@@ -41,7 +41,7 @@ public class AddressServiceImpl implements AddressService {
 			addressRequestDto.addressName(),
 			addressRequestDto.roadName(),
 			aesUtil.encryptToBase64(addressRequestDto.detailAddress()),
-			aesUtil.encryptToBase64(addressRequestDto.postalCode()),
+			addressRequestDto.postalCode(),
 			addressRequestDto.isPrimary(),
 			addressRequestDto.category(),
 			addressRequestDto.requestContent(),
@@ -58,7 +58,7 @@ public class AddressServiceImpl implements AddressService {
 			.addressName(addressRequestDto.addressName())
 			.roadName(addressRequestDto.roadName())
 			.detailAddress(aesUtil.encryptToBase64(addressRequestDto.detailAddress()))
-			.postalCode(aesUtil.encryptToBase64(addressRequestDto.postalCode()))
+			.postalCode(addressRequestDto.postalCode())
 			.isPrimary(addressRequestDto.isPrimary())
 			.category(addressRequestDto.category())
 			.requestContent(addressRequestDto.requestContent())
