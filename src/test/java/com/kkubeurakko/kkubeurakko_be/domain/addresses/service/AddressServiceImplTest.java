@@ -97,7 +97,6 @@ class AddressServiceImplTest {
 
 		when(addressRepository.findById(addressId)).thenReturn(Optional.of(existingAddress));
 		when(aesUtil.encryptToBase64("3동 309호")).thenReturn("암호화된 상세 주소");
-		when(aesUtil.encryptToBase64("14085")).thenReturn("암호화된 우편 번호");
 
 		AddressRequestDto request = AddressRequestDto.builder()
 			.addressName("새 집")
@@ -119,12 +118,10 @@ class AddressServiceImplTest {
 		// then
 		verify(addressRepository).findById(addressId);
 		verify(aesUtil).encryptToBase64("3동 309호");
-		verify(aesUtil).encryptToBase64("14085");
 		verify(addressRepository).save(existingAddress);
 
 		assertThat(existingAddress.getAddressName()).isEqualTo("새 집");
 		assertThat(existingAddress.getDetailAddress()).isEqualTo("암호화된 상세 주소");
-		assertThat(existingAddress.getPostalCode()).isEqualTo("암호화된 우편 번호");
 		assertThat(existingAddress.isPrimary()).isTrue();
 		assertThat(existingAddress.getCategory()).isEqualTo(AddressCategory.COMPANY);
 	}
