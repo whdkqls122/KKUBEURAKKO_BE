@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,15 +16,21 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 
 @ExtendWith(MockitoExtension.class)
 class MenuGroupServiceImplTest {
 	@Mock
 	private MenuGroupRepository menuGroupRepository;
+
+	@Mock
+	private StoreRepository storeRepository;
 
 	@InjectMocks
 	private MenuGroupServiceImpl menuGroupService;
@@ -31,7 +38,7 @@ class MenuGroupServiceImplTest {
 	@BeforeEach
 	void setup() {
 		MockitoAnnotations.openMocks(this);
-		menuGroupService = new MenuGroupServiceImpl(menuGroupRepository);
+		menuGroupService = new MenuGroupServiceImpl(menuGroupRepository, storeRepository);
 	}
 
 	@Test
@@ -84,5 +91,30 @@ class MenuGroupServiceImplTest {
 			.hasMessageContaining("메뉴 그룹이 조회되지 않았습니다.");
 
 		verify(menuGroupRepository, times(1)).findByMenuStatus(MenuStatus.ON_SALE);
+	}
+
+	@Test
+	@DisplayName("메뉴 그룹 생성이 정상적으로 수행되는지 검증한다.")
+	void createMenuGroup_ShouldCreateMenuGroupSuccessfully() {
+		// given
+		MenuGroupRequestDto dto = new MenuGroupRequestDto("인기메뉴", "꾸브라꼬 대표 인기 메뉴");
+		Stores mockStore = Stores.builder()
+			.id(1L)
+			.address("경기도 안양시 동안구 관양로 123")
+			.tel("031-111-2222")
+			.isOpen(true)
+			.minOrderPrice(12000)
+			.delivery_region("안양 전지역")
+			.build();
+
+		when(storeRepository.findById(1L)).thenReturn(Optional.of(mockStore));
+		when(menuGroupRepository.save(any(MenuGroups.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		// when
+		menuGroupService.createMenuGroup(dto);
+
+		// then
+		verify(storeRepository, times(1)).findById(1L);
+		verify(menuGroupRepository, times(1)).save(any(MenuGroups.class));
 	}
 }

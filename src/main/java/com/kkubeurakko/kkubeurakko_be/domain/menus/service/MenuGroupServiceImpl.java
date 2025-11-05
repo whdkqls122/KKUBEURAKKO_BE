@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class MenuGroupServiceImpl implements MenuGroupService {
+
 	private final MenuGroupRepository menuGroupRepository;
 	private final StoreRepository storeRepository;
 
