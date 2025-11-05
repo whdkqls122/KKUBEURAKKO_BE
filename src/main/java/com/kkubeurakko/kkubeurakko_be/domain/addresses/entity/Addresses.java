@@ -32,7 +32,7 @@ public class Addresses extends BaseEntity {
 	@Column(name = "addresses_id")
 	private Long id;
 
-	@Column(name = "address_name", nullable = false, length = 30)
+	@Column(name = "address_name", nullable = false, length = 50)
 	private String addressName;
 
 	@Column(name = "road_name", nullable = false, length = 50)
