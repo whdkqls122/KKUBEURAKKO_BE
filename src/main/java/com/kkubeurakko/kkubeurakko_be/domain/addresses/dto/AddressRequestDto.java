@@ -4,6 +4,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.AddressCategory;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
@@ -19,7 +20,7 @@ public record AddressRequestDto(
 	@Size(max = 20, message = "상세 주소는 최대 20자까지 가능합니다.")
 	String detailAddress,
 	@NotBlank(message = "상세 주소는 필수 입니다.")
-	@Size(max = 5, message = "상세 주소는 최대 20자까지 가능합니다.")
+	@Pattern(regexp = "\\d{5}", message = "우편번호는 숫자 5자리로 구성되어 있어야 합니다.")
 	String postalCode,
 	@NotNull(message = "기본 주소 여부는 필수입니다.")
 	Boolean isPrimary,
