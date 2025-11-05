@@ -19,6 +19,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
+import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
 
 @ExtendWith(MockitoExtension.class)
 class AddressServiceImplTest {
@@ -28,6 +29,8 @@ class AddressServiceImplTest {
 	@Mock
 	private UserService userService;
 	@Mock
+	private AesUtil aesUtil;
+	@Mock
 	private CustomOAuth2User customOAuth2User;
 	@InjectMocks
 	private AddressServiceImpl addressService;
@@ -35,7 +38,7 @@ class AddressServiceImplTest {
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
-		addressService = new AddressServiceImpl(userService, addressRepository);
+		addressService = new AddressServiceImpl(userService, addressRepository, aesUtil);
 	}
 
 	@Test
