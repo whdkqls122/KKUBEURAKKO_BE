@@ -1,8 +1,13 @@
 package com.kkubeurakko.kkubeurakko_be.domain.addresses.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.repository.AddressRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -53,9 +58,25 @@ public class AddressServiceImpl implements AddressService {
 		addressRepository.save(addresses);
 	}
 
+	@Override
+	@Transactional(readOnly = true)
+	public List<AddressResponseDto> getAllAddresses(CustomOAuth2User customOAuth2User) {
+		String userNumber = customOAuth2User.getName();
+		Users user = userService.getUser(userNumber);
+
+		List<Addresses> addressList = addressRepository.findAllByUser(user);
+		if (addressList.isEmpty()) {
+			log.info("등록된 주소가 없음");
+			return List.of();
+		}
+		log.info("주소 전체 목록 조회 완료");
+		return toResponseDto(addressList);
+	}
+
 	private Addresses toEntity(AddressRequestDto addressRequestDto, Users user) {
 		return Addresses.builder()
-			.addressName(addressRequestDto.addressName())
+			.addressName(addressRequestDto.addressName() != null ?
+				addressRequestDto.addressName() : addressRequestDto.roadName())    //지정된 주소 이름이 없다면 도로명 주소로
 			.roadName(addressRequestDto.roadName())
 			.detailAddress(aesUtil.encryptToBase64(addressRequestDto.detailAddress()))
 			.postalCode(addressRequestDto.postalCode())
@@ -69,5 +90,27 @@ public class AddressServiceImpl implements AddressService {
 			.directionsInfo(addressRequestDto.directionInfo())
 			.user(user)
 			.build();
+	}
+
+	private List<AddressResponseDto> toResponseDto(List<Addresses> addressesList) {
+		return addressesList.stream()
+			.map(addresses -> AddressResponseDto
+				.builder()
+				.id(addresses.getId())
+				.addressName(addresses.getAddressName())
+				.address(
+					addresses.getRoadName() + " "
+						+ aesUtil.decryptFromBase64(addresses.getDetailAddress())
+				)
+				.isPrimary(addresses.isPrimary())
+				.category(addresses.getCategory())
+				.requestContent(addresses.getRequestContent())
+				.entrancePassword(
+					addresses.getEntrancePassword() != null ?
+						aesUtil.decryptFromBase64(addresses.getEntrancePassword()) : null
+				)
+				.directionsInfo(addresses.getDirectionsInfo())
+				.build())
+			.collect(Collectors.toList());
 	}
 }
