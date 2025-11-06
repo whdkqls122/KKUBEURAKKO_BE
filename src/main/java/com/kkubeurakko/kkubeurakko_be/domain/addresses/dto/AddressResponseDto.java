@@ -7,6 +7,7 @@ import lombok.Builder;
 @Builder
 public record AddressResponseDto(
 	Long id,
+	String addressName,
 	String address,
 	boolean isPrimary,
 	AddressCategory category,
