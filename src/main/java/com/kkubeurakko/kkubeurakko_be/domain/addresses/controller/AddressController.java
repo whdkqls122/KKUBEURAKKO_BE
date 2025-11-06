@@ -130,7 +130,7 @@ public class AddressController {
 
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
-				"기본 주소 조회가 완료되었습니다.",
+				"주소 단건 조회가 완료되었습니다.",
 				addressResponseDto
 			)
 		);
@@ -152,7 +152,7 @@ public class AddressController {
 
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
-				"기본 주소 조회가 완료되었습니다.",
+				"주소 상세 조회가 완료되었습니다.",
 				addressDetailResponseDto
 			)
 		);
