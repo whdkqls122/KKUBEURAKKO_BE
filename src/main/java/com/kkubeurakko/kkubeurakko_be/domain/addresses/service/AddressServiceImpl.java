@@ -78,7 +78,7 @@ public class AddressServiceImpl implements AddressService {
 	@Transactional(readOnly = true)
 	public AddressResponseDto getAddress(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
-		Addresses address = addressRepository.findByUserAndPrimary(user, true)
+		Addresses address = addressRepository.findByUserAndIsPrimary(user, true)
 			.orElseThrow(() -> new IllegalArgumentException("조회된 기본 주소가 없습니다."));
 
 		return toResponseDto(address);
@@ -129,7 +129,7 @@ public class AddressServiceImpl implements AddressService {
 				.id(addresses.getId())
 				.addressName(addresses.getAddressName())
 				.address(resolveAddressName(addresses.getRoadName(), addresses.getDetailAddress()))
-				.isPrimary(addresses.isPrimary())
+				.isPrimary(addresses.getIsPrimary())
 				.category(addresses.getCategory())
 				.requestContent(addresses.getRequestContent())
 				.entrancePassword(
@@ -147,7 +147,7 @@ public class AddressServiceImpl implements AddressService {
 			.id(address.getId())
 			.addressName(address.getAddressName())
 			.address(resolveAddressName(address.getRoadName(), address.getDetailAddress()))
-			.isPrimary(address.isPrimary())
+			.isPrimary(address.getIsPrimary())
 			.category(address.getCategory())
 			.requestContent(address.getRequestContent())
 			.entrancePassword(
@@ -166,7 +166,7 @@ public class AddressServiceImpl implements AddressService {
 			.roadName(address.getRoadName())
 			.detailAddress(aesUtil.decryptFromBase64(address.getDetailAddress()))
 			.postalCode(address.getPostalCode())
-			.isPrimary(address.isPrimary())
+			.isPrimary(address.getIsPrimary())
 			.category(address.getCategory())
 			.requestContent(address.getRequestContent())
 			.entrancePassword(

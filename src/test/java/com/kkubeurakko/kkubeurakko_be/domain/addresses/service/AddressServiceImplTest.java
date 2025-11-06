@@ -125,7 +125,7 @@ class AddressServiceImplTest {
 
 		assertThat(existingAddress.getAddressName()).isEqualTo("새 집");
 		assertThat(existingAddress.getDetailAddress()).isEqualTo("암호화된 상세 주소");
-		assertThat(existingAddress.isPrimary()).isTrue();
+		assertThat(existingAddress.getIsPrimary()).isTrue();
 		assertThat(existingAddress.getCategory()).isEqualTo(AddressCategory.COMPANY);
 	}
 
@@ -253,7 +253,7 @@ class AddressServiceImplTest {
 
 		when(customOAuth2User.getName()).thenReturn(userNumber);
 		when(userService.getUser(userNumber)).thenReturn(user);
-		when(addressRepository.findByUserAndPrimary(user, true)).thenReturn(Optional.ofNullable(primaryAddress));
+		when(addressRepository.findByUserAndIsPrimary(user, true)).thenReturn(Optional.ofNullable(primaryAddress));
 		when(aesUtil.decryptFromBase64("201호")).thenReturn("201호");
 
 		// when
@@ -264,7 +264,7 @@ class AddressServiceImplTest {
 		assertThat(addressResponseDto.address()).isEqualTo("안양로 168번길 16 201호");
 		assertThat(addressResponseDto.isPrimary()).isTrue();
 
-		verify(addressRepository, times(1)).findByUserAndPrimary(user, true);
+		verify(addressRepository, times(1)).findByUserAndIsPrimary(user, true);
 	}
 
 	@Test
@@ -316,7 +316,7 @@ class AddressServiceImplTest {
 			.build();
 		when(customOAuth2User.getName()).thenReturn(userNumber);
 		when(userService.getUser(userNumber)).thenReturn(user);
-		when(addressRepository.findByUserAndPrimary(user, true)).thenReturn(Optional.empty());
+		when(addressRepository.findByUserAndIsPrimary(user, true)).thenReturn(Optional.empty());
 
 		// when & then
 		assertThatThrownBy(() -> addressService.getAddress(customOAuth2User))

@@ -45,7 +45,7 @@ public class Addresses extends BaseEntity {
 	private String postalCode;
 
 	@Column(name = "is_primary", nullable = false)
-	private boolean isPrimary;
+	private Boolean isPrimary;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "category", nullable = false)
