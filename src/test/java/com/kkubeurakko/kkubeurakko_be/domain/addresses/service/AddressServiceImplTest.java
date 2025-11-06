@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.AddressCategory;
@@ -343,4 +344,68 @@ class AddressServiceImplTest {
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("조회된 주소가 없습니다.");
 	}
+
+	@Test
+	@DisplayName("주소 상세 조회가 정상적으로 이루어지는지 검증한다.")
+	void getAddressDetail_success() {
+		// given
+		String userNumber = "123123";
+		Users user = Users.builder()
+			.userNumber("123123")
+			.role(UserRole.CUSTOMER)
+			.phoneHash("123124123412")
+			.phone("1231234")
+			.build();
+
+		Addresses address = Addresses.builder()
+			.id(1L)
+			.roadName("안양로 168번길 16")
+			.detailAddress("201호")
+			.addressName("우리 집")
+			.isPrimary(true)
+			.user(user)
+			.build();
+
+		when(customOAuth2User.getName()).thenReturn(userNumber);
+		when(userService.getUser(userNumber)).thenReturn(user);
+		when(addressRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(address));
+		when(aesUtil.decryptFromBase64("201호")).thenReturn("201호");
+
+		// when
+		AddressDetailResponseDto result = addressService.getAddressDetail(1L, customOAuth2User);
+
+		// then
+		assertThat(result.addressName()).isEqualTo("우리 집");
+		assertThat(result.roadName()).isEqualTo("안양로 168번길 16");
+		assertThat(result.detailAddress()).isEqualTo("201호");
+		assertThat(result.isPrimary()).isTrue();
+
+		verify(addressRepository, times(1)).findByIdAndUser(1L, user);
+		verify(aesUtil, times(1)).decryptFromBase64("201호");
+	}
+
+	@Test
+	@DisplayName("주소 상세 조회 시 해당 주소가 존재하지 않으면 예외가 발생하는지 검증한다.")
+	void getAddressDetail_notFound() {
+		// given
+		String userNumber = "123123";
+		Users user = Users.builder()
+			.userNumber("123123")
+			.role(UserRole.CUSTOMER)
+			.phoneHash("123124123412")
+			.phone("1231234")
+			.build();
+
+		when(customOAuth2User.getName()).thenReturn(userNumber);
+		when(userService.getUser(userNumber)).thenReturn(user);
+		when(addressRepository.findByIdAndUser(99L, user)).thenReturn(Optional.empty());
+
+		// when & then
+		assertThatThrownBy(() -> addressService.getAddressDetail(99L, customOAuth2User))
+			.isInstanceOf(IllegalArgumentException.class)
+			.hasMessage("조회된 주소가 없습니다.");
+
+		verify(addressRepository, times(1)).findByIdAndUser(99L, user);
+	}
+
 }
