@@ -10,7 +10,6 @@ import lombok.Builder;
 
 @Builder
 public record AddressRequestDto(
-	@NotBlank(message = "주소 이름은 필수입니다.")
 	@Size(max = 50, message = "주소 이름은 최대 50자까지 가능합니다.")
 	String addressName,
 	@NotBlank(message = "도로명 주소는 필수입니다.")
