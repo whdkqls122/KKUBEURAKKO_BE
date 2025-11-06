@@ -1,7 +1,10 @@
 package com.kkubeurakko.kkubeurakko_be.domain.addresses.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -9,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.service.AddressService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
@@ -35,7 +40,8 @@ public class AddressController {
 		@Valid @RequestBody
 		AddressRequestDto addressRequestDto,
 		@AuthenticationPrincipal
-		CustomOAuth2User customOAuth2User) {
+		CustomOAuth2User customOAuth2User
+	) {
 		addressService.createAddress(addressRequestDto, customOAuth2User);
 
 		return ResponseEntity.ok().body(
@@ -58,7 +64,8 @@ public class AddressController {
 		@Valid @RequestBody
 		AddressRequestDto addressRequestDto,
 		@AuthenticationPrincipal
-		CustomOAuth2User customOAuth2User) {
+		CustomOAuth2User customOAuth2User
+	) {
 		addressService.updateAddress(addressId, addressRequestDto, customOAuth2User);
 
 		return ResponseEntity.ok().body(
@@ -66,6 +73,87 @@ public class AddressController {
 				"주소 수정이 완료되었습니다.",
 				null
 
+			)
+		);
+	}
+
+	@Operation(
+		summary = "주소 전체 조회",
+		description = "주소 목록을 조회하는 API입니다."
+	)
+	@GetMapping("/addresslist")
+	public ResponseEntity<ApiResponse<List<AddressResponseDto>>> getAllAddresses(
+		@AuthenticationPrincipal
+		CustomOAuth2User customOAuth2User
+	) {
+		List<AddressResponseDto> addressResponseDtoList = addressService.getAllAddresses(customOAuth2User);
+
+		return ResponseEntity.ok().body(
+			ApiResponse.success(
+				"주소 목록 조회가 완료되었습니다.",
+				addressResponseDtoList
+			)
+		);
+	}
+
+	@Operation(
+		summary = "기본 주소 조회",
+		description = "기본 주소를 조회하는 API입니다."
+	)
+	@GetMapping("/primary")
+	public ResponseEntity<ApiResponse<AddressResponseDto>> getAddress(
+		@AuthenticationPrincipal
+		CustomOAuth2User customOAuth2User
+	) {
+		AddressResponseDto addressResponseDto = addressService.getAddress(customOAuth2User);
+
+		return ResponseEntity.ok().body(
+			ApiResponse.success(
+				"기본 주소 조회가 완료되었습니다.",
+				addressResponseDto
+			)
+		);
+	}
+
+	@Operation(
+		summary = "주소 단건 조회",
+		description = "특정 주소를 조회하는 API입니다."
+	)
+	@GetMapping("/{addressId}")
+	public ResponseEntity<ApiResponse<AddressResponseDto>> getAddress(
+		@PathVariable("addressId")
+		Long addressId,
+		@AuthenticationPrincipal
+		CustomOAuth2User customOAuth2User
+	) {
+		AddressResponseDto addressResponseDto = addressService.getAddress(addressId, customOAuth2User);
+
+		return ResponseEntity.ok().body(
+			ApiResponse.success(
+				"기본 주소 조회가 완료되었습니다.",
+				addressResponseDto
+			)
+		);
+	}
+
+	@Operation(
+		summary = "주소 상세 조회",
+		description = "특정 주소를 상세 조회하는 API입니다."
+	)
+	@GetMapping("/detail/{addressId}")
+	public ResponseEntity<ApiResponse<AddressDetailResponseDto>> getAddressDetail(
+		@PathVariable("addressId")
+		Long addressId,
+		@AuthenticationPrincipal
+		CustomOAuth2User customOAuth2User
+	) {
+		AddressDetailResponseDto addressDetailResponseDto =
+			addressService.getAddressDetail(addressId, customOAuth2User);
+
+		return ResponseEntity.ok().body(
+			ApiResponse.success(
+				"기본 주소 조회가 완료되었습니다.",
+				addressDetailResponseDto
 			)
 		);
 	}
