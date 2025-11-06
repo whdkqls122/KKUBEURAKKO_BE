@@ -98,10 +98,7 @@ public class AddressServiceImpl implements AddressService {
 				.builder()
 				.id(addresses.getId())
 				.addressName(addresses.getAddressName())
-				.address(
-					addresses.getRoadName() + " "
-						+ aesUtil.decryptFromBase64(addresses.getDetailAddress())
-				)
+				.address(resolveAddressName(addresses.getRoadName(), addresses.getDetailAddress()))
 				.isPrimary(addresses.isPrimary())
 				.category(addresses.getCategory())
 				.requestContent(addresses.getRequestContent())
@@ -112,5 +109,9 @@ public class AddressServiceImpl implements AddressService {
 				.directionsInfo(addresses.getDirectionsInfo())
 				.build())
 			.collect(Collectors.toList());
+	}
+
+	private String resolveAddressName(String roadName, String detailAddress) {
+		return roadName + " " + aesUtil.decryptFromBase64(detailAddress);
 	}
 }
