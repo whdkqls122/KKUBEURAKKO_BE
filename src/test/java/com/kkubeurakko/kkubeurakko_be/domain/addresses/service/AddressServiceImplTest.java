@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.addresses.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.AddressCategory;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.repository.AddressRepository;
@@ -149,5 +151,82 @@ class AddressServiceImplTest {
 		assertThatThrownBy(() -> addressService.updateAddress(999L, request, mockUser))
 			.isInstanceOf(NullPointerException.class)
 			.hasMessageContaining("해당 주소 정보가 없습니다.");
+	}
+
+	@Test
+	@DisplayName("주소 조회가 정상적으로 이루어지는지 검증한다.")
+	void getAllAddress() {
+		//given
+		String userNumber = "123123";
+		Users user = Users.builder()
+			.userNumber("123123")
+			.role(UserRole.CUSTOMER)
+			.phoneHash("123124123412")
+			.phone("1231234")
+			.build();
+
+		Addresses address1 = Addresses.builder()
+			.id(1L)
+			.addressName("우리집")
+			.roadName("안양로 168번길 16")
+			.detailAddress("201호")
+			.category(AddressCategory.HOME)
+			.isPrimary(false)
+			.user(user)
+			.build();
+
+		Addresses address2 = Addresses.builder()
+			.id(2L)
+			.addressName("회사")
+			.roadName("서울특별시 강남구 테헤란로 427")
+			.detailAddress("5층")
+			.category(AddressCategory.COMPANY)
+			.isPrimary(true)
+			.user(user)
+			.build();
+
+		when(customOAuth2User.getName()).thenReturn(userNumber);
+		when(userService.getUser(userNumber)).thenReturn(user);
+		when(addressRepository.findAllByUser(user)).thenReturn(List.of(address2, address1));
+
+		when(aesUtil.decryptFromBase64("201호")).thenReturn("201호");
+		when(aesUtil.decryptFromBase64("5층")).thenReturn("5층");
+
+		// when
+		List<AddressResponseDto> addressResponseDtoList = addressService.getAllAddresses(customOAuth2User);
+		assertThat(addressResponseDtoList).hasSize(2);
+		assertThat(addressResponseDtoList.get(0).addressName()).isEqualTo("회사");
+		assertThat(addressResponseDtoList.get(0).address()).isEqualTo("서울특별시 강남구 테헤란로 427 5층");
+		assertThat(addressResponseDtoList.get(0).isPrimary()).isTrue();
+		assertThat(addressResponseDtoList.get(1).addressName()).isEqualTo("우리집");
+		assertThat(addressResponseDtoList.get(1).address()).isEqualTo("안양로 168번길 16 201호");
+		assertThat(addressResponseDtoList.get(1).isPrimary()).isFalse();
+
+		verify(addressRepository, times(1)).findAllByUser(user);
+		verify(aesUtil, times(2)).decryptFromBase64(anyString());
+	}
+
+	@Test
+	@DisplayName("등록된 주소가 없을 경우 빈 리스트를 반환하는지 검증한다.")
+	void getAllAddresses_emptyList() {
+		// given
+		String userNumber = "001010";
+		Users user = Users.builder()
+			.userNumber("001010")
+			.role(UserRole.CUSTOMER)
+			.phoneHash("123124123412")
+			.phone("1231234")
+			.build();
+
+		when(customOAuth2User.getName()).thenReturn(userNumber);
+		when(userService.getUser(userNumber)).thenReturn(user);
+		when(addressRepository.findAllByUser(user)).thenReturn(List.of()); // 빈 리스트 반환
+
+		// when
+		List<AddressResponseDto> addressResponseDtoList = addressService.getAllAddresses(customOAuth2User);
+
+		// then
+		assertThat(addressResponseDtoList).isEmpty();
+		verify(addressRepository, times(1)).findAllByUser(user);
 	}
 }
