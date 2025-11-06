@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
@@ -85,11 +86,20 @@ public class AddressServiceImpl implements AddressService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public AddressResponseDto getAddress(Long id, CustomOAuth2User customOAuth2User) {
+	public AddressResponseDto getAddress(Long addressId, CustomOAuth2User customOAuth2User) {
+		Users user = userService.getUser(customOAuth2User.getName());
+		Addresses address = addressRepository.findByIdAndUser(addressId, user)
+			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
+		return toResponseDto(address);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public AddressDetailResponseDto getAddressDetail(Long id, CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 		Addresses address = addressRepository.findByIdAndUser(id, user)
 			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
-		return toResponseDto(address);
+		return toDetailResponseDto(address);
 	}
 
 	private Addresses toEntity(AddressRequestDto addressRequestDto, Users user) {
@@ -111,6 +121,7 @@ public class AddressServiceImpl implements AddressService {
 			.build();
 	}
 
+	//전체 목록 dto 변환
 	private List<AddressResponseDto> toResponseDto(List<Addresses> addressesList) {
 		return addressesList.stream()
 			.map(addresses -> AddressResponseDto
@@ -130,11 +141,31 @@ public class AddressServiceImpl implements AddressService {
 			.collect(Collectors.toList());
 	}
 
+	// 단건 조회 dto 변환
 	private AddressResponseDto toResponseDto(Addresses address) {
 		return AddressResponseDto.builder()
 			.id(address.getId())
 			.addressName(address.getAddressName())
 			.address(resolveAddressName(address.getRoadName(), address.getDetailAddress()))
+			.isPrimary(address.isPrimary())
+			.category(address.getCategory())
+			.requestContent(address.getRequestContent())
+			.entrancePassword(
+				address.getEntrancePassword() != null ?
+					aesUtil.decryptFromBase64(address.getEntrancePassword()) : null
+			)
+			.directionsInfo(address.getDirectionsInfo())
+			.build();
+	}
+
+	//상세조회 dto 변환
+	private AddressDetailResponseDto toDetailResponseDto(Addresses address) {
+		return AddressDetailResponseDto.builder()
+			.id(address.getId())
+			.addressName(address.getAddressName())
+			.roadName(address.getRoadName())
+			.detailAddress(aesUtil.decryptFromBase64(address.getDetailAddress()))
+			.postalCode(address.getPostalCode())
 			.isPrimary(address.isPrimary())
 			.category(address.getCategory())
 			.requestContent(address.getRequestContent())
