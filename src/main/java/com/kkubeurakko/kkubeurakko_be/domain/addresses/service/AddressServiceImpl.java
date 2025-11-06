@@ -73,6 +73,25 @@ public class AddressServiceImpl implements AddressService {
 		return toResponseDto(addressList);
 	}
 
+	@Override
+	@Transactional(readOnly = true)
+	public AddressResponseDto getAddress(CustomOAuth2User customOAuth2User) {
+		Users user = userService.getUser(customOAuth2User.getName());
+		Addresses address = addressRepository.findByUserAndPrimary(user, true)
+			.orElseThrow(() -> new IllegalArgumentException("조회된 기본 주소가 없습니다."));
+
+		return toResponseDto(address);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public AddressResponseDto getAddress(Long id, CustomOAuth2User customOAuth2User) {
+		Users user = userService.getUser(customOAuth2User.getName());
+		Addresses address = addressRepository.findByIdAndUser(id, user)
+			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
+		return toResponseDto(address);
+	}
+
 	private Addresses toEntity(AddressRequestDto addressRequestDto, Users user) {
 		return Addresses.builder()
 			.addressName(addressRequestDto.addressName() != null ?
@@ -109,6 +128,22 @@ public class AddressServiceImpl implements AddressService {
 				.directionsInfo(addresses.getDirectionsInfo())
 				.build())
 			.collect(Collectors.toList());
+	}
+
+	private AddressResponseDto toResponseDto(Addresses address) {
+		return AddressResponseDto.builder()
+			.id(address.getId())
+			.addressName(address.getAddressName())
+			.address(resolveAddressName(address.getRoadName(), address.getDetailAddress()))
+			.isPrimary(address.isPrimary())
+			.category(address.getCategory())
+			.requestContent(address.getRequestContent())
+			.entrancePassword(
+				address.getEntrancePassword() != null ?
+					aesUtil.decryptFromBase64(address.getEntrancePassword()) : null
+			)
+			.directionsInfo(address.getDirectionsInfo())
+			.build();
 	}
 
 	private String resolveAddressName(String roadName, String detailAddress) {

@@ -12,4 +12,8 @@ public interface AddressService {
 	void updateAddress(Long addressId, AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User);
 
 	List<AddressResponseDto> getAllAddresses(CustomOAuth2User customOAuth2User);
+
+	AddressResponseDto getAddress(CustomOAuth2User customOAuth2User);
+
+	AddressResponseDto getAddress(Long addressId, CustomOAuth2User customOAuth2User);
 }
