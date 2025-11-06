@@ -16,6 +16,7 @@ import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "MenuGroup API", description = "메뉴 그룹 관련 API")
@@ -43,7 +44,7 @@ public class MenuGroupController {
 		description = "새로운 메뉴 그룹을 등록합니다."
 	)
 	@PostMapping
-	public ResponseEntity<String> createMenuGroup(@RequestBody MenuGroupRequestDto requestDto) {
+	public ResponseEntity<String> createMenuGroup(@Valid @RequestBody MenuGroupRequestDto requestDto) {
 		menuGroupService.createMenuGroup(requestDto);
 		return ResponseEntity.ok("메뉴 그룹 생성에 성공하였습니다.");
 	}
