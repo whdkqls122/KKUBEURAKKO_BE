@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -154,6 +155,24 @@ public class AddressController {
 			ApiResponse.success(
 				"주소 상세 조회가 완료되었습니다.",
 				addressDetailResponseDto
+			)
+		);
+	}
+
+	@Operation(
+		summary = "주소 삭제",
+		description = "특정 주소를 삭제하는 API입니다."
+	)
+	@DeleteMapping("/{addressId}")
+	public ResponseEntity<ApiResponse<Void>> deleteAddress(
+		@PathVariable("addressId")
+		Long addressId
+	) {
+		addressService.deleteAddress(addressId);
+		return ResponseEntity.ok().body(
+			ApiResponse.success(
+				"주소 삭제가 완료되었습니다.",
+				null
 			)
 		);
 	}
