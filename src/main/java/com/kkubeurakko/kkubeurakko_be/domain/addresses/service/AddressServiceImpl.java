@@ -112,6 +112,14 @@ public class AddressServiceImpl implements AddressService {
 		return toDetailResponseDto(address);
 	}
 
+	@Override
+	public void deleteAddress(Long addressId) {
+		Addresses address = addressRepository.findById(addressId)
+			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
+
+		addressRepository.delete(address);
+	}
+
 	private Addresses toEntity(AddressRequestDto addressRequestDto, Users user) {
 		return Addresses.builder()
 			.addressName(addressRequestDto.addressName() != null ?

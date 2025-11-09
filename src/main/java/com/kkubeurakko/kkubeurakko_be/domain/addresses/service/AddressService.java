@@ -19,4 +19,6 @@ public interface AddressService {
 	AddressResponseDto getAddress(Long addressId, CustomOAuth2User customOAuth2User);
 
 	AddressDetailResponseDto getAddressDetail(Long addressId, CustomOAuth2User customOAuth2User);
+
+	void deleteAddress(Long addressId);
 }
