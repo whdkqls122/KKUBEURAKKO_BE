@@ -63,11 +63,9 @@ public class AddressController {
 		@PathVariable("addressId")
 		Long addressId,
 		@Valid @RequestBody
-		AddressRequestDto addressRequestDto,
-		@AuthenticationPrincipal
-		CustomOAuth2User customOAuth2User
+		AddressRequestDto addressRequestDto
 	) {
-		addressService.updateAddress(addressId, addressRequestDto, customOAuth2User);
+		addressService.updateAddress(addressId, addressRequestDto);
 
 		return ResponseEntity.ok().body(
 			ApiResponse.success(

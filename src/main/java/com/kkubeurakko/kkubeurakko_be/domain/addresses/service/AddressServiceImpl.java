@@ -47,7 +47,7 @@ public class AddressServiceImpl implements AddressService {
 	}
 
 	@Override
-	public void updateAddress(Long addressId, AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User) {
+	public void updateAddress(Long addressId, AddressRequestDto addressRequestDto) {
 		Addresses addresses = addressRepository.findById(addressId)
 			.orElseThrow(() -> new NullPointerException("해당 주소 정보가 없습니다."));
 		if (addresses.getIsPrimary() && !addressRequestDto.isPrimary()) {
