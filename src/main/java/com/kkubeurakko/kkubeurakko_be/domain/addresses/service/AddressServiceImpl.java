@@ -41,7 +41,7 @@ public class AddressServiceImpl implements AddressService {
 					log.info("기존 기본 주소 비활성화 완료");
 				});
 		} else if (!addressRepository.existsByUser(user)) {
-			throw new IllegalArgumentException("첫 등록시 기본 주소로 등록해주세요.");
+			throw new IllegalArgumentException("첫 등록 시에는 기본 주소로 등록해야 합니다.");
 		}
 		Addresses addresses = toEntity(addressRequestDto, user);
 
