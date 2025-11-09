@@ -1,10 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.global.exception;
 
-import java.nio.file.AccessDeniedException;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -30,20 +27,6 @@ public class GlobalExceptionHandler {
 		return ResponseEntity
 			.status(HttpStatus.BAD_REQUEST)
 			.body(new ErrorResponse(402, message));
-	}
-
-	@ExceptionHandler(AuthenticationException.class)
-	public ResponseEntity<ErrorResponse> handleAuth(AuthenticationException e) {
-		return ResponseEntity
-			.status(HttpStatus.UNAUTHORIZED)
-			.body(new ErrorResponse(401, "인증 정보가 부족합니다."));
-	}
-
-	@ExceptionHandler(AccessDeniedException.class)
-	public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException e) {
-		return ResponseEntity
-			.status(HttpStatus.FORBIDDEN)
-			.body(new ErrorResponse(403, "권한이 없습니다."));
 	}
 
 	@ExceptionHandler(EntityNotFoundException.class)
