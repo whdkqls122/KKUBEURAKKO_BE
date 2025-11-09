@@ -33,12 +33,15 @@ public class AddressServiceImpl implements AddressService {
 		String userNumber = customOAuth2User.getName();
 		Users user = userService.getUser(userNumber);
 		if (addressRequestDto.isPrimary()) {
-			log.info("이미 기본주소가 있음");
-			Addresses existsAddress = addressRepository.findByUserAndIsPrimary(user, true)
-				.orElseThrow(() -> new IllegalArgumentException("조회된 기본 주소가 없습니다."));
+			log.info("이미 기본 주소가 있음");
 
-			existsAddress.updatePrimary(false);
-			log.info("기본주소 업데이트 성공");
+			addressRepository.findByUserAndIsPrimary(user, true)
+				.ifPresent(existAddress -> {
+					existAddress.updatePrimary(false);
+					log.info("기존 기본 주소 비활성화 완료");
+				});
+		} else if (!addressRepository.existsByUser(user)) {
+			throw new IllegalArgumentException("첫 등록시 기본 주소로 등록해주세요.");
 		}
 		Addresses addresses = toEntity(addressRequestDto, user);
 
