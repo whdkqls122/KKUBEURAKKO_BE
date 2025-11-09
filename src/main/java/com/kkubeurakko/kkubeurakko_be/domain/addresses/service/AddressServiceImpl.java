@@ -28,10 +28,18 @@ public class AddressServiceImpl implements AddressService {
 	private final AesUtil aesUtil;
 
 	@Override
+	@Transactional
 	public void createAddress(AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User) {
 		String userNumber = customOAuth2User.getName();
 		Users user = userService.getUser(userNumber);
+		if (addressRequestDto.isPrimary()) {
+			log.info("이미 기본주소가 있음");
+			Addresses existsAddress = addressRepository.findByUserAndIsPrimary(user, true)
+				.orElseThrow(() -> new IllegalArgumentException("조회된 기본 주소가 없습니다."));
 
+			existsAddress.updatePrimary(false);
+			log.info("기본주소 업데이트 성공");
+		}
 		Addresses addresses = toEntity(addressRequestDto, user);
 
 		addressRepository.save(addresses);
@@ -42,7 +50,9 @@ public class AddressServiceImpl implements AddressService {
 	public void updateAddress(Long addressId, AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User) {
 		Addresses addresses = addressRepository.findById(addressId)
 			.orElseThrow(() -> new NullPointerException("해당 주소 정보가 없습니다."));
-
+		if (addresses.getIsPrimary() && !addressRequestDto.isPrimary()) {
+			throw new IllegalArgumentException("기본 주소는 1개 있어야 합니다.");
+		}
 		addresses.update(
 			addressRequestDto.addressName(),
 			addressRequestDto.roadName(),

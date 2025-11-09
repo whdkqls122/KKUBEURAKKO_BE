@@ -79,4 +79,8 @@ public class Addresses extends BaseEntity {
 		this.entrancePassword = entrancePassword;
 		this.directionsInfo = directionsInfo;
 	}
+
+	public void updatePrimary(boolean isPrimary) {
+		this.isPrimary = isPrimary;
+	}
 }
