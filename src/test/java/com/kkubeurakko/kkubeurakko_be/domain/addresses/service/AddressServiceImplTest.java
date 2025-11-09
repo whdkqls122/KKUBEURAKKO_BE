@@ -159,10 +159,8 @@ class AddressServiceImplTest {
 			.directionInfo("왼쪽 골목")
 			.build();
 
-		CustomOAuth2User mockUser = mock(CustomOAuth2User.class);
-
 		// when
-		addressService.updateAddress(addressId, request, mockUser);
+		addressService.updateAddress(addressId, request);
 
 		// then
 		verify(addressRepository).findById(addressId);
@@ -180,7 +178,6 @@ class AddressServiceImplTest {
 	void updateAddress_notFound() {
 		// given
 		when(addressRepository.findById(999L)).thenReturn(Optional.empty());
-		CustomOAuth2User mockUser = mock(CustomOAuth2User.class);
 
 		AddressRequestDto request = AddressRequestDto.builder()
 			.addressName("새 집")
@@ -195,7 +192,7 @@ class AddressServiceImplTest {
 			.build();
 
 		// when & then
-		assertThatThrownBy(() -> addressService.updateAddress(999L, request, mockUser))
+		assertThatThrownBy(() -> addressService.updateAddress(999L, request))
 			.isInstanceOf(NullPointerException.class)
 			.hasMessageContaining("해당 주소 정보가 없습니다.");
 	}
