@@ -76,6 +76,52 @@ class AddressServiceImplTest {
 	}
 
 	@Test
+	@DisplayName("새 기본주소 생성 시 기존 기본주소가 false로 변경되는지 검증한다.")
+	void createAddress_withExistingPrimary() {
+		// given
+		AddressRequestDto request = AddressRequestDto.builder()
+			.addressName("우리집")
+			.roadName("안양로 168번길 16")
+			.detailAddress("201호")
+			.postalCode("14033")
+			.category(AddressCategory.HOME)
+			.isPrimary(true)
+			.requestContent("노크 X")
+			.build();
+
+		Users user = Users.builder()
+			.userNumber("123123")
+			.role(UserRole.CUSTOMER)
+			.phoneHash("123124123412")
+			.phone("1231234")
+			.build();
+
+		Addresses oldPrimary = Addresses.builder()
+			.id(1L)
+			.addressName("새 집")
+			.roadName("경기도 안양시 만안구 덕천로 140 (안양동, 준마아파트)")
+			.detailAddress("3동 309호")
+			.postalCode("14085")
+			.isPrimary(true)
+			.category(AddressCategory.COMPANY)
+			.requestContent("문앞에 두세요")
+			.entrancePassword(null)
+			.directionsInfo("왼쪽 골목")
+			.build();
+
+		when(customOAuth2User.getName()).thenReturn("123123");
+		when(userService.getUser("123123")).thenReturn(user);
+		when(addressRepository.findByUserAndIsPrimary(user, true)).thenReturn(Optional.of(oldPrimary));
+
+		// when
+		addressService.createAddress(request, customOAuth2User);
+
+		// then
+		verify(addressRepository).save(any(Addresses.class));
+		assertThat(oldPrimary.getIsPrimary()).isFalse();
+	}
+
+	@Test
 	@DisplayName("주소가 정상적으로 수정되는지 검증한다.")
 	void updateAddress() {
 		//given
@@ -408,4 +454,37 @@ class AddressServiceImplTest {
 		verify(addressRepository, times(1)).findByIdAndUser(99L, user);
 	}
 
+	@Test
+	@DisplayName("주소가 정상적으로 삭제되는지 검증한다.")
+	void deleteAddress_success() {
+		// given
+		Addresses address = Addresses.builder()
+			.id(1L)
+			.roadName("안양로 168번길 16")
+			.detailAddress("201호")
+			.addressName("우리 집")
+			.isPrimary(true)
+			.build();
+
+		when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
+
+		// when
+		addressService.deleteAddress(1L);
+
+		// then
+		verify(addressRepository, times(1)).findById(1L);
+		verify(addressRepository, times(1)).delete(address);
+	}
+
+	@Test
+	@DisplayName("삭제하려는 주소가 존재하지 않을 경우 예외가 발생하는지 검증한다.")
+	void deleteAddress_notFound() {
+		// given
+		when(addressRepository.findById(999L)).thenReturn(Optional.empty());
+
+		// when & then
+		assertThatThrownBy(() -> addressService.deleteAddress(999L))
+			.isInstanceOf(IllegalArgumentException.class)
+			.hasMessage("조회된 주소가 없습니다.");
+	}
 }
