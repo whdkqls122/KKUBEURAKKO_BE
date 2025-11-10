@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
@@ -54,11 +55,11 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 
 	@Override
 	@Transactional
-	public void updateMenuGroup(Long menuGroupId, String name, String description) {
-		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupId)
+	public void updateMenuGroup(MenuGroupUpdateRequestDto menuGroupUpdateRequestDto) {
+		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupUpdateRequestDto.menuGroupId())
 			.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 메뉴 그룹입니다."));
 
-		menuGroup.updateMenuGroup(name, description);
+		menuGroup.updateMenuGroup(menuGroupUpdateRequestDto.name(), menuGroupUpdateRequestDto.description());
 	}
 
 	@Override

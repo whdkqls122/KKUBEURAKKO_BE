@@ -1,6 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.domain.menus.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
@@ -16,8 +17,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
@@ -117,4 +120,32 @@ class MenuGroupServiceImplTest {
 		verify(storeRepository, times(1)).findById(1L);
 		verify(menuGroupRepository, times(1)).save(any(MenuGroups.class));
 	}
+
+	@Test
+	@DisplayName("메뉴 그룹 수정 성공 테스트")
+	void updateMenuGroup_Success() {
+		// given
+		Long menuGroupId = 1L;
+		MenuGroupUpdateRequestDto dto = new MenuGroupUpdateRequestDto(menuGroupId, "수정된 이름", "수정된 설명");
+		Stores store = TestFixture.createStore();
+
+		MenuGroups existingMenuGroup = MenuGroups.builder()
+			.id(menuGroupId)
+			.name("기존 이름")
+			.description("기존 설명")
+			.menuStatus(MenuStatus.ON_SALE)
+			.store(store)
+			.build();
+
+		when(menuGroupRepository.findById(menuGroupId)).thenReturn(Optional.of(existingMenuGroup));
+
+		// when
+		menuGroupService.updateMenuGroup(dto);
+
+		// then
+		assertEquals("수정된 이름", existingMenuGroup.getName());
+		assertEquals("수정된 설명", existingMenuGroup.getDescription());
+		verify(menuGroupRepository, times(1)).findById(menuGroupId);
+	}
+
 }
