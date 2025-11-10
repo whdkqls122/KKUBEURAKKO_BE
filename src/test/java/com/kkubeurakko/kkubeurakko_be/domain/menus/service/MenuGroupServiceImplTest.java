@@ -122,7 +122,7 @@ class MenuGroupServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("메뉴 그룹 수정 성공 테스트")
+	@DisplayName("메뉴 그룹 수정이 정상적으로 수행하는지 검증한다.")
 	void updateMenuGroup_Success() {
 		// given
 		Long menuGroupId = 1L;
@@ -146,6 +146,30 @@ class MenuGroupServiceImplTest {
 		assertEquals("수정된 이름", existingMenuGroup.getName());
 		assertEquals("수정된 설명", existingMenuGroup.getDescription());
 		verify(menuGroupRepository, times(1)).findById(menuGroupId);
+	}
+
+	@Test
+	@DisplayName("메뉴 그룹 상태 변경이 정상적으로 수행하는지 검증한다.")
+	void changeMenuGroupStatus_ShouldUpdateStatus() {
+		// given
+		Stores store = TestFixture.createStore();
+
+		MenuGroups menuGroup = MenuGroups.builder()
+			.id(1L)
+			.name("인기 메뉴")
+			.description("꾸브라꼬 인기 메뉴 모음")
+			.menuStatus(MenuStatus.ON_SALE)
+			.store(store)
+			.build();
+
+		when(menuGroupRepository.findById(1L)).thenReturn(Optional.of(menuGroup));
+
+		// when
+		menuGroupService.updateMenuGroupStatus(1L, MenuStatus.HIDE);
+
+		// then
+		assertThat(menuGroup.getMenuStatus()).isEqualTo(MenuStatus.HIDE);
+		verify(menuGroupRepository, times(1)).findById(1L);
 	}
 
 }
