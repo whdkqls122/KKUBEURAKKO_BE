@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
-import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 
 public interface MenuGroupService {
@@ -14,7 +14,7 @@ public interface MenuGroupService {
 	void createMenuGroup(MenuGroupRequestDto dto);
 
 	//메뉴 그룹 정보 수정
-	void updateMenuGroup(MenuGroupUpdateRequestDto menuGroupUpdateRequestDto);
+	void updateMenuGroup(MenuGroupUpdateDto menuGroupUpdateDto);
 
 	//메뉴 그룹 상태 변경
 	void updateMenuGroupStatus(Long menuGroupId, MenuStatus status);

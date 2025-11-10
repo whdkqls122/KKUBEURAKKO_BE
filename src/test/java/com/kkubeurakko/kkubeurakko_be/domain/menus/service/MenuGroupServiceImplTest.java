@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
-import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
@@ -126,7 +126,7 @@ class MenuGroupServiceImplTest {
 	void updateMenuGroup_Success() {
 		// given
 		Long menuGroupId = 1L;
-		MenuGroupUpdateRequestDto dto = new MenuGroupUpdateRequestDto(menuGroupId, "수정된 이름", "수정된 설명");
+		MenuGroupUpdateDto dto = new MenuGroupUpdateDto(menuGroupId, "수정된 이름", "수정된 설명");
 		Stores store = TestFixture.createStore();
 
 		MenuGroups existingMenuGroup = MenuGroups.builder()

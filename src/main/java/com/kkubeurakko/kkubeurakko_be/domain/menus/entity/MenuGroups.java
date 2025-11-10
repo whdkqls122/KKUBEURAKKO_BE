@@ -51,4 +51,7 @@ public class MenuGroups extends BaseEntity {
 		this.description = description;
 	}
 
+	public void updateStatus(MenuStatus status) {
+		this.menuStatus = status;
+	}
 }

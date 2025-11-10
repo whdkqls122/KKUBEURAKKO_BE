@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
-import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
@@ -55,16 +55,20 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 
 	@Override
 	@Transactional
-	public void updateMenuGroup(MenuGroupUpdateRequestDto menuGroupUpdateRequestDto) {
-		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupUpdateRequestDto.menuGroupId())
+	public void updateMenuGroup(MenuGroupUpdateDto menuGroupUpdateDto) {
+		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupUpdateDto.menuGroupId())
 			.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 메뉴 그룹입니다."));
 
-		menuGroup.updateMenuGroup(menuGroupUpdateRequestDto.name(), menuGroupUpdateRequestDto.description());
+		menuGroup.updateMenuGroup(menuGroupUpdateDto.name(), menuGroupUpdateDto.description());
 	}
 
 	@Override
+	@Transactional
 	public void updateMenuGroupStatus(Long menuGroupId, MenuStatus status) {
+		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupId)
+			.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 메뉴 그룹입니다."));
 
+		menuGroup.updateStatus(status);
 	}
 
 	private List<MenuGroupResponseDto> toResponseDto(List<MenuGroups> menuGroupList) {
