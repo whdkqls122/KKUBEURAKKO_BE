@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
@@ -13,6 +14,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepositor
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,6 +50,20 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 			.build();
 
 		menuGroupRepository.save(menuGroup);
+	}
+
+	@Override
+	@Transactional
+	public void updateMenuGroup(Long menuGroupId, String name, String description) {
+		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupId)
+			.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 메뉴 그룹입니다."));
+
+		menuGroup.updateMenuGroup(name, description);
+	}
+
+	@Override
+	public void updateMenuGroupStatus(Long menuGroupId, MenuStatus status) {
+
 	}
 
 	private List<MenuGroupResponseDto> toResponseDto(List<MenuGroups> menuGroupList) {

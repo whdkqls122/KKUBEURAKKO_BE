@@ -45,4 +45,10 @@ public class MenuGroups extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "stroes_id", nullable = false)
 	private Stores store;
+
+	public void updateMenuGroup(String name, String description) {
+		this.name = name;
+		this.description = description;
+	}
+
 }
