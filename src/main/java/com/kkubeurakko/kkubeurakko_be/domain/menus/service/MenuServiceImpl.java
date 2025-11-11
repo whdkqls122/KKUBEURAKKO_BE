@@ -47,7 +47,7 @@ public class MenuServiceImpl implements MenuService {
 		return menuList.stream()
 			.map(menus -> MenuResponseDto
 				.builder()
-				.menu_id(menus.getId())
+				.menuId(menus.getId())
 				.description(menus.getDescription())
 				.name(menus.getName())
 				.img(menus.getImg())
