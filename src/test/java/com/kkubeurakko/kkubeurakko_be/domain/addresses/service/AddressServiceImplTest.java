@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressUpdateRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.AddressCategory;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.repository.AddressRepository;
@@ -147,12 +148,11 @@ class AddressServiceImplTest {
 		when(addressRepository.findById(addressId)).thenReturn(Optional.of(existingAddress));
 		when(aesUtil.encryptToBase64("3동 309호")).thenReturn("암호화된 상세 주소");
 
-		AddressRequestDto request = AddressRequestDto.builder()
+		AddressUpdateRequestDto request = AddressUpdateRequestDto.builder()
 			.addressName("새 집")
 			.roadName("경기도 안양시 만안구 덕천로 140 (안양동, 준마아파트)")
 			.detailAddress("3동 309호")
 			.postalCode("14085")
-			.isPrimary(true)
 			.category(AddressCategory.COMPANY)
 			.requestContent("문앞에 두세요")
 			.entrancePassword(null)
@@ -179,12 +179,11 @@ class AddressServiceImplTest {
 		// given
 		when(addressRepository.findById(999L)).thenReturn(Optional.empty());
 
-		AddressRequestDto request = AddressRequestDto.builder()
+		AddressUpdateRequestDto request = AddressUpdateRequestDto.builder()
 			.addressName("새 집")
 			.roadName("경기도 안양시 만안구 덕천로 140 (안양동, 준마아파트)")
 			.detailAddress("3동 309호")
 			.postalCode("14085")
-			.isPrimary(true)
 			.category(AddressCategory.COMPANY)
 			.requestContent("문앞에 두세요")
 			.entrancePassword(null)
