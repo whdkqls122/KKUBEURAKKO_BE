@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressUpdateRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.repository.AddressRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -50,23 +51,20 @@ public class AddressServiceImpl implements AddressService {
 	}
 
 	@Override
-	public void updateAddress(Long addressId, AddressRequestDto addressRequestDto) {
+	public void updateAddress(Long addressId, AddressUpdateRequestDto addressUpdateRequestDto) {
 		Addresses addresses = addressRepository.findById(addressId)
 			.orElseThrow(() -> new NullPointerException("해당 주소 정보가 없습니다."));
-		if (addresses.getIsPrimary() && !addressRequestDto.isPrimary()) {
-			throw new IllegalArgumentException("기본 주소는 1개 있어야 합니다.");
-		}
+
 		addresses.update(
-			addressRequestDto.addressName(),
-			addressRequestDto.roadName(),
-			aesUtil.encryptToBase64(addressRequestDto.detailAddress()),
-			addressRequestDto.postalCode(),
-			addressRequestDto.isPrimary(),
-			addressRequestDto.category(),
-			addressRequestDto.requestContent(),
-			addressRequestDto.entrancePassword() != null ?
-				aesUtil.encryptToBase64(addressRequestDto.entrancePassword()) : null,
-			addressRequestDto.directionInfo()
+			addressUpdateRequestDto.addressName(),
+			addressUpdateRequestDto.roadName(),
+			aesUtil.encryptToBase64(addressUpdateRequestDto.detailAddress()),
+			addressUpdateRequestDto.postalCode(),
+			addressUpdateRequestDto.category(),
+			addressUpdateRequestDto.requestContent(),
+			addressUpdateRequestDto.entrancePassword() != null ?
+				aesUtil.encryptToBase64(addressUpdateRequestDto.entrancePassword()) : null,
+			addressUpdateRequestDto.directionInfo()
 		);
 
 		addressRepository.save(addresses);

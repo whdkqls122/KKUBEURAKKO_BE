@@ -5,12 +5,13 @@ import java.util.List;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressUpdateRequestDto;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 public interface AddressService {
 	void createAddress(AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User);
 
-	void updateAddress(Long addressId, AddressRequestDto addressRequestDto);
+	void updateAddress(Long addressId, AddressUpdateRequestDto addressUpdateRequestDto);
 
 	List<AddressResponseDto> getAllAddresses(CustomOAuth2User customOAuth2User);
 

@@ -66,14 +66,13 @@ public class Addresses extends BaseEntity {
 
 	public void update(
 		String addressName, String roadName, String detailAddress,
-		String postalCode, Boolean isPrimary, AddressCategory category,
+		String postalCode, AddressCategory category,
 		String requestContent, String entrancePassword, String directionsInfo
 	) {
 		this.addressName = addressName;
 		this.roadName = roadName;
 		this.detailAddress = detailAddress;
 		this.postalCode = postalCode;
-		this.isPrimary = isPrimary;
 		this.category = category;
 		this.requestContent = requestContent;
 		this.entrancePassword = entrancePassword;
