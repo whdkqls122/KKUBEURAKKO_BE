@@ -21,8 +21,6 @@ public record AddressRequestDto(
 	@NotBlank(message = "상세 주소는 필수 입니다.")
 	@Pattern(regexp = "\\d{5}", message = "우편번호는 숫자 5자리로 구성되어 있어야 합니다.")
 	String postalCode,
-	@NotNull(message = "기본 주소 여부는 필수입니다.")
-	Boolean isPrimary,
 	@NotNull(message = "주소 카테고리는 필수입니다.")
 	AddressCategory category,
 	@Size(max = 100, message = "배달 요청사항은 최대 100자까지 가능합니다.")
