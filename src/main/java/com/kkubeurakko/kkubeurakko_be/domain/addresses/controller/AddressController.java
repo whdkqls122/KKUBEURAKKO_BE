@@ -115,27 +115,6 @@ public class AddressController {
 	}
 
 	@Operation(
-		summary = "주소 단건 조회",
-		description = "특정 주소를 조회하는 API입니다."
-	)
-	@GetMapping("/{addressId}")
-	public ResponseEntity<ApiResponse<AddressResponseDto>> getAddress(
-		@PathVariable("addressId")
-		Long addressId,
-		@AuthenticationPrincipal
-		CustomOAuth2User customOAuth2User
-	) {
-		AddressResponseDto addressResponseDto = addressService.getAddress(addressId, customOAuth2User);
-
-		return ResponseEntity.ok().body(
-			ApiResponse.success(
-				"주소 단건 조회가 완료되었습니다.",
-				addressResponseDto
-			)
-		);
-	}
-
-	@Operation(
 		summary = "주소 상세 조회",
 		description = "특정 주소를 상세 조회하는 API입니다."
 	)

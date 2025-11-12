@@ -93,15 +93,6 @@ public class AddressServiceImpl implements AddressService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public AddressResponseDto getAddress(Long addressId, CustomOAuth2User customOAuth2User) {
-		Users user = userService.getUser(customOAuth2User.getName());
-		Addresses address = addressRepository.findByIdAndUser(addressId, user)
-			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
-		return toResponseDto(address);
-	}
-
-	@Override
-	@Transactional(readOnly = true)
 	public AddressDetailResponseDto getAddressDetail(Long id, CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 		Addresses address = addressRepository.findByIdAndUser(id, user)
