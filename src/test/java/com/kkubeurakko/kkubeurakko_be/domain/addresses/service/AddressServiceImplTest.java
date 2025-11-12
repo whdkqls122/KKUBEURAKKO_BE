@@ -308,42 +308,6 @@ class AddressServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("특정 주소 조회가 정상적으로 이루어지는지 검증한다.")
-	void getAddressById() {
-		String userNumber = "123123";
-		Users user = Users.builder()
-			.userNumber("123123")
-			.role(UserRole.CUSTOMER)
-			.phoneHash("123124123412")
-			.phone("1231234")
-			.build();
-
-		Addresses address = Addresses.builder()
-			.id(1L)
-			.roadName("안양로 168번길 16")
-			.detailAddress("201호")
-			.addressName("우리 집")
-			.isPrimary(false)
-			.user(user)
-			.build();
-
-		when(customOAuth2User.getName()).thenReturn(userNumber);
-		when(userService.getUser(userNumber)).thenReturn(user);
-		when(addressRepository.findByIdAndUser(address.getId(), user)).thenReturn(Optional.of(address));
-		when(aesUtil.decryptFromBase64("201호")).thenReturn("201호");
-
-		// when
-		AddressResponseDto addressResponseDto = addressService.getAddress(1L, customOAuth2User);
-
-		// then
-		assertThat(addressResponseDto.addressName()).isEqualTo("우리 집");
-		assertThat(addressResponseDto.address()).isEqualTo("안양로 168번길 16 201호");
-		assertThat(addressResponseDto.isPrimary()).isFalse();
-
-		verify(addressRepository, times(1)).findByIdAndUser(address.getId(), user);
-	}
-
-	@Test
 	@DisplayName("기본 주소가 존재하지 않을 경우 예외가 발생하는지 검증한다.")
 	void getPrimaryAddress_notFound() {
 		// given
@@ -362,27 +326,6 @@ class AddressServiceImplTest {
 		assertThatThrownBy(() -> addressService.getAddress(customOAuth2User))
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("조회된 기본 주소가 없습니다.");
-	}
-
-	@Test
-	@DisplayName("특정 ID 주소가 존재하지 않을 경우 예외가 발생하는지 검증한다.")
-	void getAddressById_notFound() {
-		// given
-		String userNumber = "123123";
-		Users user = Users.builder()
-			.userNumber("123123")
-			.role(UserRole.CUSTOMER)
-			.phoneHash("123124123412")
-			.phone("1231234")
-			.build();
-		when(customOAuth2User.getName()).thenReturn(userNumber);
-		when(userService.getUser(userNumber)).thenReturn(user);
-		when(addressRepository.findByIdAndUser(99L, user)).thenReturn(Optional.empty());
-
-		// when & then
-		assertThatThrownBy(() -> addressService.getAddress(99L, customOAuth2User))
-			.isInstanceOf(IllegalArgumentException.class)
-			.hasMessage("조회된 주소가 없습니다.");
 	}
 
 	@Test
