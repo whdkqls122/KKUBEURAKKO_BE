@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressResponseDto;
-import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressUpdateRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.repository.AddressRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -33,16 +32,13 @@ public class AddressServiceImpl implements AddressService {
 	public void createAddress(AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User) {
 		String userNumber = customOAuth2User.getName();
 		Users user = userService.getUser(userNumber);
-		if (addressRequestDto.isPrimary()) {
-			log.info("이미 기본 주소가 있음");
 
+		if (addressRepository.existsByUser(user)) {
 			addressRepository.findByUserAndIsPrimary(user, true)
 				.ifPresent(existAddress -> {
 					existAddress.updatePrimary(false);
 					log.info("기존 기본 주소 비활성화 완료");
 				});
-		} else if (!addressRepository.existsByUser(user)) {
-			throw new IllegalArgumentException("첫 등록 시에는 기본 주소로 등록해야 합니다.");
 		}
 		Addresses addresses = toEntity(addressRequestDto, user);
 
@@ -51,7 +47,7 @@ public class AddressServiceImpl implements AddressService {
 	}
 
 	@Override
-	public void updateAddress(Long addressId, AddressUpdateRequestDto addressUpdateRequestDto) {
+	public void updateAddress(Long addressId, AddressRequestDto addressUpdateRequestDto) {
 		Addresses addresses = addressRepository.findById(addressId)
 			.orElseThrow(() -> new NullPointerException("해당 주소 정보가 없습니다."));
 
@@ -128,7 +124,7 @@ public class AddressServiceImpl implements AddressService {
 			.roadName(addressRequestDto.roadName())
 			.detailAddress(aesUtil.encryptToBase64(addressRequestDto.detailAddress()))
 			.postalCode(addressRequestDto.postalCode())
-			.isPrimary(addressRequestDto.isPrimary())
+			.isPrimary(true)
 			.category(addressRequestDto.category())
 			.requestContent(addressRequestDto.requestContent())
 			.entrancePassword(

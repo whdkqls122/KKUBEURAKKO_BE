@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressResponseDto;
-import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressUpdateRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.service.AddressService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
@@ -64,9 +63,9 @@ public class AddressController {
 		@PathVariable("addressId")
 		Long addressId,
 		@Valid @RequestBody
-		AddressUpdateRequestDto addressUpdateRequestDto
+		AddressRequestDto addressRequestDto
 	) {
-		addressService.updateAddress(addressId, addressUpdateRequestDto);
+		addressService.updateAddress(addressId, addressRequestDto);
 
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
