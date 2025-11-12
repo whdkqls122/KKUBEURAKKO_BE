@@ -67,6 +67,25 @@ public class AddressServiceImpl implements AddressService {
 	}
 
 	@Override
+	@Transactional
+	public void updatePrimary(Long addressId, CustomOAuth2User customOAuth2User) {
+		Addresses addresses = addressRepository.findById(addressId)
+			.orElseThrow(() -> new NullPointerException("해당 주소 정보가 없습니다."));
+
+		String userNumber = customOAuth2User.getName();
+		Users user = userService.getUser(userNumber);
+
+		if (addressRepository.existsByUser(user)) {
+			addressRepository.findByUserAndIsPrimary(user, true)
+				.ifPresent(existAddress -> {
+					existAddress.updatePrimary(false);
+					log.info("기존 기본 주소 비활성화 완료");
+				});
+		}
+		addresses.updatePrimary(true);
+	}
+
+	@Override
 	@Transactional(readOnly = true)
 	public List<AddressResponseDto> getAllAddresses(CustomOAuth2User customOAuth2User) {
 		String userNumber = customOAuth2User.getName();
