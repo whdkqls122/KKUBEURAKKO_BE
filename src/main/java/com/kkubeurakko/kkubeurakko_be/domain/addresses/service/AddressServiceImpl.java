@@ -39,7 +39,7 @@ public class AddressServiceImpl implements AddressService {
 					existAddress.updatePrimary(false);
 					log.info("기존 기본 주소 비활성화 완료");
 				});
-		} else {
+		} else if (countAddress > 5) {
 			throw new IllegalArgumentException("주소는 5개까지 등록이 가능합니다.");
 		}
 		Addresses addresses = toEntity(addressRequestDto, user);
