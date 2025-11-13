@@ -22,5 +22,5 @@ public interface AddressService {
 
 	void deleteAddress(Long addressId, CustomOAuth2User customOAuth2User);
 
-	void deleteOldAddress(Long addressId, CustomOAuth2User customOAuth2User);
+	void deleteOldAddress(CustomOAuth2User customOAuth2User);
 }

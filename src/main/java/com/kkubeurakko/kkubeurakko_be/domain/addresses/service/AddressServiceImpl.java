@@ -146,7 +146,7 @@ public class AddressServiceImpl implements AddressService {
 	}
 
 	@Override
-	public void deleteOldAddress(Long addressId, CustomOAuth2User customOAuth2User) {
+	public void deleteOldAddress(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 
 		Addresses address = addressRepository.findFirstByUserOrderByUpdateAtAsc(user)
