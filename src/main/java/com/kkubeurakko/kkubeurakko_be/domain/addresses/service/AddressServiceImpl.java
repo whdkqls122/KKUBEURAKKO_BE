@@ -153,6 +153,7 @@ public class AddressServiceImpl implements AddressService {
 			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
 
 		addressRepository.delete(address);
+		log.info("가장 오래전 사용된 주소 삭제 성공");
 	}
 
 	private Addresses toEntity(AddressRequestDto addressRequestDto, Users user) {
