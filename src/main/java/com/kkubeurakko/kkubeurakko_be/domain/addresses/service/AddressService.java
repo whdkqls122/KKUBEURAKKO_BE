@@ -20,5 +20,5 @@ public interface AddressService {
 
 	AddressDetailResponseDto getAddressDetail(Long addressId, CustomOAuth2User customOAuth2User);
 
-	void deleteAddress(Long addressId);
+	void deleteAddress(Long addressId, CustomOAuth2User customOAuth2User);
 }

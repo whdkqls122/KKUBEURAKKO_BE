@@ -120,9 +120,24 @@ public class AddressServiceImpl implements AddressService {
 	}
 
 	@Override
-	public void deleteAddress(Long addressId) {
+	public void deleteAddress(Long addressId, CustomOAuth2User customOAuth2User) {
+		Users user = userService.getUser(customOAuth2User.getName());
+
 		Addresses address = addressRepository.findById(addressId)
 			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
+
+		if (address.getIsPrimary()) {
+			log.info("기본 주소 삭제");
+			addressRepository.findFirstByUserOrderByIdDesc(user)
+				.ifPresentOrElse(
+					latest -> {
+						latest.updatePrimary(true);
+						log.info("새 기본 주소 [{}]로 설정 완료", latest.getId());
+					},
+					() -> log.info("남은 주소 없음 — 기본 주소 설정 스킵")
+				);
+			log.info("가장 최근 등록 주소로 기본 주소 변경");
+		}
 
 		addressRepository.delete(address);
 	}
