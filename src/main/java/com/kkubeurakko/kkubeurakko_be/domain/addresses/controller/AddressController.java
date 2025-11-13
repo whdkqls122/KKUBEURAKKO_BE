@@ -77,6 +77,27 @@ public class AddressController {
 	}
 
 	@Operation(
+		summary = "기본 주소 여부 수정",
+		description = "사용 주소 변경시 기본 주소를 변경하는 API입니다."
+	)
+	@PutMapping("/{addressId}/primary")
+	public ResponseEntity<ApiResponse<Void>> updatePrimary(
+		@PathVariable("addressId")
+		Long addressId,
+		@AuthenticationPrincipal
+		CustomOAuth2User customOAuth2User
+	) {
+		addressService.updatePrimary(addressId, customOAuth2User);
+
+		return ResponseEntity.ok().body(
+			ApiResponse.success(
+				"기본 주소 수정이 완료되었습니다.",
+				null
+			)
+		);
+	}
+
+	@Operation(
 		summary = "주소 전체 조회",
 		description = "주소 목록을 조회하는 API입니다."
 	)
