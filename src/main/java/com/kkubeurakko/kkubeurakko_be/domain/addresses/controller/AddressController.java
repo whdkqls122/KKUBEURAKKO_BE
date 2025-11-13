@@ -178,8 +178,8 @@ public class AddressController {
 	}
 
 	@Operation(
-		summary = "주소 삭제",
-		description = "특정 주소를 삭제하는 API입니다."
+		summary = "가장 오래된 주소 삭제",
+		description = "가장 오래전 사용된 주소를 삭제하는 API입니다."
 	)
 	@DeleteMapping("")
 	public ResponseEntity<ApiResponse<Void>> deleteOldAddress(
