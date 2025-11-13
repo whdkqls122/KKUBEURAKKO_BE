@@ -145,6 +145,16 @@ public class AddressServiceImpl implements AddressService {
 		}
 	}
 
+	@Override
+	public void deleteOldAddress(Long addressId, CustomOAuth2User customOAuth2User) {
+		Users user = userService.getUser(customOAuth2User.getName());
+
+		Addresses address = addressRepository.findFirstByUserOrderByUpdateAtAsc(user)
+			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
+
+		addressRepository.delete(address);
+	}
+
 	private Addresses toEntity(AddressRequestDto addressRequestDto, Users user) {
 		return Addresses.builder()
 			.addressName(addressRequestDto.addressName() != null ?
