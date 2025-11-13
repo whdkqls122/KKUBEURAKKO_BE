@@ -460,10 +460,18 @@ class AddressServiceImplTest {
 			.isPrimary(true)
 			.build();
 
-		when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
+		Users user = Users.builder()
+			.userNumber("123123")
+			.role(UserRole.CUSTOMER)
+			.phoneHash("123124123412")
+			.phone("1231234")
+			.build();
 
+		when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
+		when(customOAuth2User.getName()).thenReturn(user.getUserNumber());
+		when(userService.getUser(user.getUserNumber())).thenReturn(user);
 		// when
-		addressService.deleteAddress(1L);
+		addressService.deleteAddress(1L, customOAuth2User);
 
 		// then
 		verify(addressRepository, times(1)).findById(1L);
@@ -477,7 +485,7 @@ class AddressServiceImplTest {
 		when(addressRepository.findById(999L)).thenReturn(Optional.empty());
 
 		// when & then
-		assertThatThrownBy(() -> addressService.deleteAddress(999L))
+		assertThatThrownBy(() -> addressService.deleteAddress(999L, customOAuth2User))
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("조회된 주소가 없습니다.");
 	}
