@@ -164,9 +164,11 @@ public class AddressController {
 	@DeleteMapping("/{addressId}")
 	public ResponseEntity<ApiResponse<Void>> deleteAddress(
 		@PathVariable("addressId")
-		Long addressId
+		Long addressId,
+		@AuthenticationPrincipal
+		CustomOAuth2User customOAuth2User
 	) {
-		addressService.deleteAddress(addressId);
+		addressService.deleteAddress(addressId, customOAuth2User);
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
 				"주소 삭제가 완료되었습니다.",
