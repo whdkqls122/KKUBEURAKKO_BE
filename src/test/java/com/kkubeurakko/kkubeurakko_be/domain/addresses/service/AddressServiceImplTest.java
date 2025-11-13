@@ -109,7 +109,7 @@ class AddressServiceImplTest {
 
 		when(customOAuth2User.getName()).thenReturn("123123");
 		when(userService.getUser("123123")).thenReturn(user);
-		when(addressRepository.existsByUser(user)).thenReturn(true);
+		when(addressRepository.countByUser(user)).thenReturn(1);
 		when(addressRepository.findByUserAndIsPrimary(user, true)).thenReturn(Optional.of(oldPrimary));
 
 		// when
