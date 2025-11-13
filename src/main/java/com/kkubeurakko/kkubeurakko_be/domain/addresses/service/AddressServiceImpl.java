@@ -120,13 +120,16 @@ public class AddressServiceImpl implements AddressService {
 	}
 
 	@Override
+	@Transactional
 	public void deleteAddress(Long addressId, CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
-
 		Addresses address = addressRepository.findById(addressId)
 			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
+		boolean isPrimary = address.getIsPrimary();
 
-		if (address.getIsPrimary()) {
+		addressRepository.delete(address);
+
+		if (isPrimary) {
 			log.info("기본 주소 삭제");
 			addressRepository.findFirstByUserOrderByIdDesc(user)
 				.ifPresentOrElse(
@@ -138,8 +141,6 @@ public class AddressServiceImpl implements AddressService {
 				);
 			log.info("가장 최근 등록 주소로 기본 주소 변경");
 		}
-
-		addressRepository.delete(address);
 	}
 
 	private Addresses toEntity(AddressRequestDto addressRequestDto, Users user) {
