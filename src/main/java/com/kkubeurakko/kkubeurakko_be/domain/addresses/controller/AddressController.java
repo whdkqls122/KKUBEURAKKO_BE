@@ -176,4 +176,22 @@ public class AddressController {
 			)
 		);
 	}
+
+	@Operation(
+		summary = "주소 삭제",
+		description = "특정 주소를 삭제하는 API입니다."
+	)
+	@DeleteMapping("")
+	public ResponseEntity<ApiResponse<Void>> deleteOldAddress(
+		@AuthenticationPrincipal
+		CustomOAuth2User customOAuth2User
+	) {
+		addressService.deleteOldAddress(customOAuth2User);
+		return ResponseEntity.ok().body(
+			ApiResponse.success(
+				"주소 삭제가 완료되었습니다.",
+				null
+			)
+		);
+	}
 }

@@ -515,7 +515,7 @@ class AddressServiceImplTest {
 		when(addressRepository.findFirstByUserOrderByUpdateAtAsc(user)).thenReturn(Optional.of(oldAddress));
 
 		// when
-		addressService.deleteOldAddress(1L, customOAuth2User);
+		addressService.deleteOldAddress(customOAuth2User);
 
 		// then
 		verify(addressRepository, times(1)).findFirstByUserOrderByUpdateAtAsc(user);
