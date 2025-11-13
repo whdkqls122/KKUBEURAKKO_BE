@@ -121,6 +121,63 @@ class AddressServiceImplTest {
 	}
 
 	@Test
+	@DisplayName("기본주소가 정상적으로 업데이트 되는지 검증한다.")
+	void updatePrimary() {
+		//given
+		Users user = Users.builder()
+			.userNumber("123123")
+			.role(UserRole.CUSTOMER)
+			.phoneHash("123124123412")
+			.phone("1231234")
+			.build();
+
+		Addresses existingAddress = Addresses.builder()
+			.id(1L)
+			.addressName("우리집")
+			.roadName("안양로 168번길 16")
+			.detailAddress("201호")
+			.postalCode("14033")
+			.category(AddressCategory.HOME)
+			.isPrimary(true)
+			.requestContent("노크 X")
+			.user(user)
+			.build();
+
+		Addresses newAddress = Addresses.builder()
+			.id(2L)
+			.addressName("새 집")
+			.roadName("경기도 안양시 만안구 덕천로 140 (안양동, 준마아파트)")
+			.detailAddress("3동 309호")
+			.postalCode("14085")
+			.category(AddressCategory.COMPANY)
+			.requestContent("문앞에 두세요")
+			.entrancePassword(null)
+			.directionsInfo("왼쪽 골목")
+			.build();
+
+		CustomOAuth2User mockUser = mock(CustomOAuth2User.class);
+		when(mockUser.getName()).thenReturn("123123");
+
+		when(addressRepository.findById(2L)).thenReturn(Optional.of(newAddress)); // 새 주소 조회 성공
+		when(userService.getUser("123123")).thenReturn(user);
+		when(addressRepository.existsByUser(user)).thenReturn(true);
+		when(addressRepository.findByUserAndIsPrimary(user, true)).thenReturn(Optional.of(existingAddress));
+
+		// when
+		addressService.updatePrimary(2L, mockUser);
+
+		// then
+		// 기존 주소는 false로, 새 주소는 true로 변경됐는지 확인
+		assertThat(existingAddress.getIsPrimary()).isFalse();
+		assertThat(newAddress.getIsPrimary()).isTrue();
+
+		// 호출 검증
+		verify(addressRepository).findById(2L);
+		verify(addressRepository).findByUserAndIsPrimary(user, true);
+		verify(userService).getUser("123123");
+	}
+
+	@Test
 	@DisplayName("주소가 정상적으로 수정되는지 검증한다.")
 	void updateAddress() {
 		//given
