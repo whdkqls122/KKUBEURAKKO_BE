@@ -489,4 +489,36 @@ class AddressServiceImplTest {
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("조회된 주소가 없습니다.");
 	}
+
+	@Test
+	@DisplayName("가장 오래된 주소가 정상적으로 삭제되는지 검증한다.")
+	void deleteOldAddress() {
+		// given
+		Users user = Users.builder()
+			.userNumber("123123")
+			.role(UserRole.CUSTOMER)
+			.phone("01012345678")
+			.phoneHash("hashed")
+			.build();
+
+		Addresses oldAddress = Addresses.builder()
+			.id(1L)
+			.roadName("안양로 168번길 16")
+			.detailAddress("201호")
+			.addressName("오래된 주소")
+			.isPrimary(false)
+			.user(user)
+			.build();
+
+		when(customOAuth2User.getName()).thenReturn("123123");
+		when(userService.getUser("123123")).thenReturn(user);
+		when(addressRepository.findFirstByUserOrderByUpdateAtAsc(user)).thenReturn(Optional.of(oldAddress));
+
+		// when
+		addressService.deleteOldAddress(1L, customOAuth2User);
+
+		// then
+		verify(addressRepository, times(1)).findFirstByUserOrderByUpdateAtAsc(user);
+		verify(addressRepository, times(1)).delete(oldAddress);
+	}
 }
