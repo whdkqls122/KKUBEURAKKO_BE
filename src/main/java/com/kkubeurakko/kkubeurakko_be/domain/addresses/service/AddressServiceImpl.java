@@ -32,13 +32,15 @@ public class AddressServiceImpl implements AddressService {
 	public void createAddress(AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User) {
 		String userNumber = customOAuth2User.getName();
 		Users user = userService.getUser(userNumber);
-
-		if (addressRepository.existsByUser(user)) {
+		int countAddress = addressRepository.countByUser(user);
+		if (countAddress > 0 && countAddress < 5) {
 			addressRepository.findByUserAndIsPrimary(user, true)
 				.ifPresent(existAddress -> {
 					existAddress.updatePrimary(false);
 					log.info("기존 기본 주소 비활성화 완료");
 				});
+		} else {
+			throw new IllegalArgumentException("주소는 5개까지 등록이 가능합니다.");
 		}
 		Addresses addresses = toEntity(addressRequestDto, user);
 
