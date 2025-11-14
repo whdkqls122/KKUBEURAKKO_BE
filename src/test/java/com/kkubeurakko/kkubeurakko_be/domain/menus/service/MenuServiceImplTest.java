@@ -75,12 +75,12 @@ class MenuServiceImplTest {
 
 		// then
 		assertThat(result).hasSize(2);
-		assertThat(result.get(0).menu_id()).isEqualTo(1L);
+		assertThat(result.get(0).menuId()).isEqualTo(1L);
 		assertThat(result.get(0).name()).isEqualTo("양념꾸브");
 		assertThat(result.get(0).description()).isEqualTo("양념꾸브입니다.");
 		assertThat(result.get(0).price()).isEqualTo(18000);
 
-		assertThat(result.get(1).menu_id()).isEqualTo(2L);
+		assertThat(result.get(1).menuId()).isEqualTo(2L);
 		assertThat(result.get(1).name()).isEqualTo("소금꾸브");
 		assertThat(result.get(1).description()).isEqualTo("소금꾸브입니다.");
 		assertThat(result.get(1).price()).isEqualTo(19000);
