@@ -249,7 +249,7 @@ class AddressServiceImplTest {
 
 		// when & then
 		assertThatThrownBy(() -> addressService.updateAddress(999L, request))
-			.isInstanceOf(EntityNotFoundException.class)
+			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessageContaining("해당 주소 정보가 없습니다.");
 	}
 
@@ -444,7 +444,7 @@ class AddressServiceImplTest {
 
 		// when & then
 		assertThatThrownBy(() -> addressService.getAddressDetail(99L, customOAuth2User))
-			.isInstanceOf(EntityNotFoundException.class)
+			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("조회된 주소가 없습니다.");
 
 		verify(addressRepository, times(1)).findByIdAndUser(99L, user);
@@ -488,7 +488,7 @@ class AddressServiceImplTest {
 
 		// when & then
 		assertThatThrownBy(() -> addressService.deleteAddress(999L, customOAuth2User))
-			.isInstanceOf(EntityNotFoundException.class)
+			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("조회된 주소가 없습니다.");
 	}
 
