@@ -52,7 +52,7 @@ public class AddressServiceImpl implements AddressService {
 	@Override
 	public void updateAddress(Long addressId, AddressRequestDto addressUpdateRequestDto) {
 		Addresses addresses = addressRepository.findById(addressId)
-			.orElseThrow(() -> new EntityNotFoundException("해당 주소 정보가 없습니다."));
+			.orElseThrow(() -> new IllegalArgumentException("해당 주소 정보가 없습니다."));
 
 		addresses.update(
 			addressUpdateRequestDto.addressName(),
@@ -73,7 +73,7 @@ public class AddressServiceImpl implements AddressService {
 	@Transactional
 	public void updatePrimary(Long addressId, CustomOAuth2User customOAuth2User) {
 		Addresses addresses = addressRepository.findById(addressId)
-			.orElseThrow(() -> new EntityNotFoundException("해당 주소 정보가 없습니다."));
+			.orElseThrow(() -> new IllegalArgumentException("해당 주소 정보가 없습니다."));
 
 		String userNumber = customOAuth2User.getName();
 		Users user = userService.getUser(userNumber);
@@ -118,7 +118,7 @@ public class AddressServiceImpl implements AddressService {
 	public AddressDetailResponseDto getAddressDetail(Long id, CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 		Addresses address = addressRepository.findByIdAndUser(id, user)
-			.orElseThrow(() -> new EntityNotFoundException("조회된 주소가 없습니다."));
+			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
 		return toDetailResponseDto(address);
 	}
 
@@ -127,7 +127,7 @@ public class AddressServiceImpl implements AddressService {
 	public void deleteAddress(Long addressId, CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 		Addresses address = addressRepository.findById(addressId)
-			.orElseThrow(() -> new EntityNotFoundException("조회된 주소가 없습니다."));
+			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
 		boolean isPrimary = address.getIsPrimary();
 
 		addressRepository.delete(address);
