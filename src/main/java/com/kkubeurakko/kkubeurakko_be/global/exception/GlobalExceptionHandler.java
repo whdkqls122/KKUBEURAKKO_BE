@@ -36,6 +36,13 @@ public class GlobalExceptionHandler {
 			.body(new ErrorResponse(404, "존재하지 않는 리소스입니다."));
 	}
 
+	@ExceptionHandler(RuntimeException.class)
+	public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException e) {
+		return ResponseEntity
+			.status(HttpStatus.INTERNAL_SERVER_ERROR)
+			.body(new ErrorResponse(500, e.getMessage()));
+	}
+
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorResponse> handleException(Exception e) {
 		return ResponseEntity
