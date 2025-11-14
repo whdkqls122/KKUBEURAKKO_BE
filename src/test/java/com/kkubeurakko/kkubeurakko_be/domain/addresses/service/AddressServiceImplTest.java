@@ -27,6 +27,8 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @ExtendWith(MockitoExtension.class)
 class AddressServiceImplTest {
 	@Mock
@@ -247,7 +249,7 @@ class AddressServiceImplTest {
 
 		// when & then
 		assertThatThrownBy(() -> addressService.updateAddress(999L, request))
-			.isInstanceOf(NullPointerException.class)
+			.isInstanceOf(EntityNotFoundException.class)
 			.hasMessageContaining("해당 주소 정보가 없습니다.");
 	}
 
@@ -381,7 +383,7 @@ class AddressServiceImplTest {
 
 		// when & then
 		assertThatThrownBy(() -> addressService.getAddress(customOAuth2User))
-			.isInstanceOf(IllegalArgumentException.class)
+			.isInstanceOf(EntityNotFoundException.class)
 			.hasMessage("조회된 기본 주소가 없습니다.");
 	}
 
@@ -442,7 +444,7 @@ class AddressServiceImplTest {
 
 		// when & then
 		assertThatThrownBy(() -> addressService.getAddressDetail(99L, customOAuth2User))
-			.isInstanceOf(IllegalArgumentException.class)
+			.isInstanceOf(EntityNotFoundException.class)
 			.hasMessage("조회된 주소가 없습니다.");
 
 		verify(addressRepository, times(1)).findByIdAndUser(99L, user);
@@ -486,7 +488,7 @@ class AddressServiceImplTest {
 
 		// when & then
 		assertThatThrownBy(() -> addressService.deleteAddress(999L, customOAuth2User))
-			.isInstanceOf(IllegalArgumentException.class)
+			.isInstanceOf(EntityNotFoundException.class)
 			.hasMessage("조회된 주소가 없습니다.");
 	}
 
