@@ -101,7 +101,7 @@ public class AddressController {
 		summary = "주소 전체 조회",
 		description = "주소 목록을 조회하는 API입니다."
 	)
-	@GetMapping("/addresslist")
+	@GetMapping("/addresses")
 	public ResponseEntity<ApiResponse<List<AddressResponseDto>>> getAllAddresses(
 		@AuthenticationPrincipal
 		CustomOAuth2User customOAuth2User
