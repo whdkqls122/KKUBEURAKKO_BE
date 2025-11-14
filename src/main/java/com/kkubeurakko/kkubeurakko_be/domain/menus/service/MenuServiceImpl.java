@@ -29,7 +29,7 @@ public class MenuServiceImpl implements MenuService {
 		List<Menus> menuList = menuRepository.findByMenuGroupIdAndMenuStatus(menuGroupId, MenuStatus.ON_SALE);
 		if (menuList.isEmpty()) {
 			log.info("조회된 메뉴가 없음");
-			throw new RuntimeException("메뉴가 조회되지 않았습니다.");
+			throw new IllegalArgumentException("메뉴가 조회되지 않았습니다.");
 		}
 		return toResponseDto(menuList);
 	}
@@ -38,7 +38,7 @@ public class MenuServiceImpl implements MenuService {
 	@Transactional(readOnly = true)
 	public MenuDetailResponseDto getMenuDetail(Long menuId) {
 		Menus menu = menuRepository.findMenuDetail(menuId, OptionStatus.ON_SALE)
-			.orElseThrow(() -> new NullPointerException("조회된 메뉴가 없습니다."));
+			.orElseThrow(() -> new IllegalArgumentException("조회된 메뉴가 없습니다."));
 
 		return toResponseDto(menu);
 	}
