@@ -13,6 +13,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 
 import lombok.RequiredArgsConstructor;
@@ -57,25 +58,31 @@ public class MenuServiceImpl implements MenuService {
 	}
 
 	private MenuDetailResponseDto toResponseDto(Menus menu) {
-		List<OptionGroupResponseDto> optionGroupResponseDtoList = menu.getOptionGroupList().stream()
-			.map(og -> OptionGroupResponseDto.builder()
-				.id(og.getId())
-				.name(og.getName())
-				.description(og.getDescription())
-				.required(og.isRequired())
-				.optionGroupType(og.getOptionGroupType())
-				.selectedNum(og.getSelectedNum())
-				.optionStatus(og.getOptionStatus())
-				.options(og.getOptions().stream()
-					.map(o -> OptionResponseDto.builder()
-						.id(o.getId())
-						.name(o.getName())
-						.price(o.getPrice())
-						.optionStatus(o.getOptionStatus())
-						.build())
-					.toList())
-				.build())
-			.toList();
+		List<OptionGroupResponseDto> optionGroupResponseDtoList =
+			menu.getMenuOptionGroups().stream()
+				.map(mog -> {
+					OptionGroups og = mog.getOptionGroup();
+					return OptionGroupResponseDto.builder()
+						.id(og.getId())
+						.name(og.getName())
+						.description(og.getDescription())
+						.required(og.isRequired())
+						.optionGroupType(og.getOptionGroupType())
+						.selectedNum(og.getSelectedNum())
+						.optionStatus(og.getOptionStatus())
+						.options(
+							og.getOptions().stream()
+								.map(o -> OptionResponseDto.builder()
+									.id(o.getId())
+									.name(o.getName())
+									.price(o.getPrice())
+									.optionStatus(o.getOptionStatus())
+									.build())
+								.toList()
+						)
+						.build();
+				})
+				.toList();
 
 		return MenuDetailResponseDto.builder()
 			.menuId(menu.getId())

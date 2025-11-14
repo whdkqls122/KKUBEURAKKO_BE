@@ -1,10 +1,11 @@
 package com.kkubeurakko.kkubeurakko_be.domain.menus.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -55,6 +56,7 @@ public class Menus extends BaseEntity {
 	@JoinColumn(name = "menu_groups_id", nullable = false)
 	private MenuGroups menuGroup;
 
-	@OneToMany(mappedBy = "menu", fetch = FetchType.LAZY)
-	private List<OptionGroups> optionGroupList;
+	@OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
+	@Builder.Default
+	private List<MenuOptionGroups> menuOptionGroups = new ArrayList<>();
 }
