@@ -16,6 +16,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,7 +52,7 @@ public class AddressServiceImpl implements AddressService {
 	@Override
 	public void updateAddress(Long addressId, AddressRequestDto addressUpdateRequestDto) {
 		Addresses addresses = addressRepository.findById(addressId)
-			.orElseThrow(() -> new NullPointerException("해당 주소 정보가 없습니다."));
+			.orElseThrow(() -> new EntityNotFoundException("해당 주소 정보가 없습니다."));
 
 		addresses.update(
 			addressUpdateRequestDto.addressName(),
@@ -72,7 +73,7 @@ public class AddressServiceImpl implements AddressService {
 	@Transactional
 	public void updatePrimary(Long addressId, CustomOAuth2User customOAuth2User) {
 		Addresses addresses = addressRepository.findById(addressId)
-			.orElseThrow(() -> new NullPointerException("해당 주소 정보가 없습니다."));
+			.orElseThrow(() -> new EntityNotFoundException("해당 주소 정보가 없습니다."));
 
 		String userNumber = customOAuth2User.getName();
 		Users user = userService.getUser(userNumber);
@@ -107,7 +108,7 @@ public class AddressServiceImpl implements AddressService {
 	public AddressResponseDto getAddress(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 		Addresses address = addressRepository.findByUserAndIsPrimary(user, true)
-			.orElseThrow(() -> new IllegalArgumentException("조회된 기본 주소가 없습니다."));
+			.orElseThrow(() -> new EntityNotFoundException("조회된 기본 주소가 없습니다."));
 
 		return toResponseDto(address);
 	}
@@ -117,7 +118,7 @@ public class AddressServiceImpl implements AddressService {
 	public AddressDetailResponseDto getAddressDetail(Long id, CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 		Addresses address = addressRepository.findByIdAndUser(id, user)
-			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
+			.orElseThrow(() -> new EntityNotFoundException("조회된 주소가 없습니다."));
 		return toDetailResponseDto(address);
 	}
 
@@ -126,7 +127,7 @@ public class AddressServiceImpl implements AddressService {
 	public void deleteAddress(Long addressId, CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 		Addresses address = addressRepository.findById(addressId)
-			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
+			.orElseThrow(() -> new EntityNotFoundException("조회된 주소가 없습니다."));
 		boolean isPrimary = address.getIsPrimary();
 
 		addressRepository.delete(address);
@@ -150,7 +151,7 @@ public class AddressServiceImpl implements AddressService {
 		Users user = userService.getUser(customOAuth2User.getName());
 
 		Addresses address = addressRepository.findFirstByUserOrderByUpdateAtAsc(user)
-			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
+			.orElseThrow(() -> new EntityNotFoundException("조회된 주소가 없습니다."));
 
 		addressRepository.delete(address);
 		log.info("가장 오래전 사용된 주소 삭제 성공");
