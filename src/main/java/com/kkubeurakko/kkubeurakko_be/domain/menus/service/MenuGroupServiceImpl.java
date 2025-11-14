@@ -32,7 +32,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 		List<MenuGroups> menuGroupList = menuGroupRepository.findByMenuStatus(MenuStatus.ON_SALE);
 		if (menuGroupList.isEmpty()) {
 			log.info("조회된 메뉴 그룹이 없음");
-			throw new RuntimeException("메뉴 그룹이 조회되지 않았습니다.");
+			throw new EntityNotFoundException("메뉴 그룹이 조회되지 않았습니다.");
 		}
 		log.info("메뉴 그룹 조회 성공");
 		return toResponseDto(menuGroupList);
