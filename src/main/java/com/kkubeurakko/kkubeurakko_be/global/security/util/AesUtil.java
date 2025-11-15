@@ -12,6 +12,10 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.kkubeurakko.kkubeurakko_be.global.security.exception.AESDecryptException;
+import com.kkubeurakko.kkubeurakko_be.global.security.exception.AESEncryptException;
+import com.kkubeurakko.kkubeurakko_be.global.security.exception.InvalidAESKeyFormatException;
+
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +43,7 @@ public class AesUtil {
 			this.keySpec = new SecretKeySpec(keyBytes, "AES");
 			log.info("키 생성 완료");
 		} catch (IllegalArgumentException e) {
-			throw new RuntimeException("잘못된 키 형식", e);
+			throw new InvalidAESKeyFormatException(e.getMessage(), e);
 		}
 	}
 
@@ -63,7 +67,7 @@ public class AesUtil {
 
 			return Base64.getEncoder().encodeToString(out);
 		} catch (Exception e) {
-			throw new RuntimeException("암호화 실패", e);
+			throw new AESEncryptException("AES암호화에 실패하였습니다.", e);
 		}
 	}
 
@@ -89,7 +93,7 @@ public class AesUtil {
 			return new String(plain, StandardCharsets.UTF_8);
 		} catch (Exception e) {
 			log.error("AES 복호화 중 오류 발생: {}", e.getMessage());
-			throw new RuntimeException("복호화 실패", e);
+			throw new AESDecryptException("AES복호화에 실패 하였습니다", e);
 		}
 	}
 
