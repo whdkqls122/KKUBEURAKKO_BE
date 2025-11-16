@@ -14,7 +14,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
+import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MenuServiceImpl implements MenuService {
 	private final MenuRepository menuRepository;
+	private final OptionGroupRepository optionGroupRepository;
 
 	@Override
 	public List<MenuResponseDto> getAllMenuByMenuGroup(Long menuGroupId) {
@@ -38,10 +39,12 @@ public class MenuServiceImpl implements MenuService {
 	@Override
 	@Transactional(readOnly = true)
 	public MenuDetailResponseDto getMenuDetail(Long menuId) {
-		Menus menu = menuRepository.findMenuDetail(menuId, OptionStatus.ON_SALE)
-			.orElseThrow(() -> new IllegalArgumentException("조회된 메뉴가 없습니다."));
+		Menus menu = menuRepository.findById(menuId)
+			.orElseThrow(() -> new NullPointerException("조회된 메뉴가 없습니다."));
 
-		return toResponseDto(menu);
+		List<OptionGroups> optionGroups = optionGroupRepository.findAllByMenuId(menuId);
+
+		return toResponseDto(menu, optionGroups);
 	}
 
 	private List<MenuResponseDto> toResponseDto(List<Menus> menuList) {
@@ -57,32 +60,8 @@ public class MenuServiceImpl implements MenuService {
 			.collect(Collectors.toList());
 	}
 
-	private MenuDetailResponseDto toResponseDto(Menus menu) {
-		List<OptionGroupResponseDto> optionGroupResponseDtoList =
-			menu.getMenuOptionGroups().stream()
-				.map(mog -> {
-					OptionGroups og = mog.getOptionGroup();
-					return OptionGroupResponseDto.builder()
-						.id(og.getId())
-						.name(og.getName())
-						.description(og.getDescription())
-						.required(og.isRequired())
-						.optionGroupType(og.getOptionGroupType())
-						.selectedNum(og.getSelectedNum())
-						.optionStatus(og.getOptionStatus())
-						.options(
-							og.getOptions().stream()
-								.map(o -> OptionResponseDto.builder()
-									.id(o.getId())
-									.name(o.getName())
-									.price(o.getPrice())
-									.optionStatus(o.getOptionStatus())
-									.build())
-								.toList()
-						)
-						.build();
-				})
-				.toList();
+	private MenuDetailResponseDto toResponseDto(Menus menu, List<OptionGroups> optionGroups) {
+		List<OptionGroupResponseDto> optionGroupResponseDtoList = toOptionGroupDtoList(optionGroups);
 
 		return MenuDetailResponseDto.builder()
 			.menuId(menu.getId())
@@ -92,5 +71,29 @@ public class MenuServiceImpl implements MenuService {
 			.img(menu.getImg())
 			.optionGroupResponseDtoList(optionGroupResponseDtoList)
 			.build();
+	}
+
+	private List<OptionGroupResponseDto> toOptionGroupDtoList(List<OptionGroups> optionGroups) {
+		return optionGroups.stream()
+			.map(og -> OptionGroupResponseDto.builder()
+				.id(og.getId())
+				.name(og.getName())
+				.description(og.getDescription())
+				.required(og.isRequired())
+				.optionGroupType(og.getOptionGroupType())
+				.selectedNum(og.getSelectedNum())
+				.optionStatus(og.getOptionStatus())
+				.options(
+					og.getOptions().stream()
+						.map(o -> OptionResponseDto.builder()
+							.id(o.getId())
+							.name(o.getName())
+							.price(o.getPrice())
+							.optionStatus(o.getOptionStatus())
+							.build())
+						.toList()
+				)
+				.build())
+			.toList();
 	}
 }
