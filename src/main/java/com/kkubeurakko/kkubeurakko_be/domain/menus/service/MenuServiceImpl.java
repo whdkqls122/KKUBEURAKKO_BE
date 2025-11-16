@@ -40,7 +40,7 @@ public class MenuServiceImpl implements MenuService {
 	@Transactional(readOnly = true)
 	public MenuDetailResponseDto getMenuDetail(Long menuId) {
 		Menus menu = menuRepository.findById(menuId)
-			.orElseThrow(() -> new NullPointerException("조회된 메뉴가 없습니다."));
+			.orElseThrow(() -> new IllegalArgumentException("조회된 메뉴가 없습니다."));
 
 		List<OptionGroups> optionGroups = optionGroupRepository.findAllByMenuId(menuId);
 
