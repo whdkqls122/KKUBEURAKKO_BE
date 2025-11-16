@@ -26,6 +26,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
+import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 
 @ExtendWith(MockitoExtension.class)
 class MenuServiceImplTest {
@@ -33,13 +34,16 @@ class MenuServiceImplTest {
 	@Mock
 	private MenuRepository menuRepository;
 
+	@Mock
+	private OptionGroupRepository optionGroupRepository;
+
 	@InjectMocks
 	private MenuServiceImpl menuService;
 
 	@BeforeEach
 	void setup() {
 		MockitoAnnotations.openMocks(this);
-		menuService = new MenuServiceImpl(menuRepository);
+		menuService = new MenuServiceImpl(menuRepository, optionGroupRepository);
 	}
 
 	@Test
@@ -148,27 +152,31 @@ class MenuServiceImplTest {
 			.price(18000)
 			.img("example1.jpg")
 			.menuStatus(MenuStatus.ON_SALE)
-			.optionGroupList(List.of(optionGroup))
 			.build();
 
+		List<OptionGroups> optionGroups = List.of(optionGroup);
+
 		// given
-		when(menuRepository.findMenuDetail(1L, OptionStatus.ON_SALE)).thenReturn(Optional.of(menu));
+		when(menuRepository.findById(1L)).thenReturn(Optional.of(menu));
+		when(optionGroupRepository.findAllByMenuId(1L)).thenReturn(optionGroups);
 
 		// when
 		MenuDetailResponseDto result = menuService.getMenuDetail(1L);
 
 		// then
-		verify(menuRepository, times(1)).findMenuDetail(1L, OptionStatus.ON_SALE);
+		verify(menuRepository, times(1)).findById(1L);
+		verify(optionGroupRepository, times(1)).findAllByMenuId(1L);
+
 		assertThat(result.menuId()).isEqualTo(1L);
 		assertThat(result.name()).isEqualTo("양념꾸브");
 		assertThat(result.optionGroupResponseDtoList()).hasSize(1);
 
-		OptionGroupResponseDto optionGroupResponseDto = result.optionGroupResponseDtoList().get(0);
-		assertThat(optionGroupResponseDto.name()).isEqualTo("맵기 선택");
-		assertThat(optionGroupResponseDto.options()).hasSize(3);
-		assertThat(optionGroupResponseDto.options().get(0).name()).isEqualTo("순한맛");
-		assertThat(optionGroupResponseDto.options().get(1).name()).isEqualTo("중간맛");
-		assertThat(optionGroupResponseDto.options().get(2).name()).isEqualTo("매운맛");
+		OptionGroupResponseDto dto = result.optionGroupResponseDtoList().get(0);
+		assertThat(dto.name()).isEqualTo("맵기 선택");
+		assertThat(dto.options()).hasSize(3);
+		assertThat(dto.options().get(0).name()).isEqualTo("순한맛");
+		assertThat(dto.options().get(1).name()).isEqualTo("중간맛");
+		assertThat(dto.options().get(2).name()).isEqualTo("매운맛");
 	}
 
 	@Test
@@ -176,14 +184,14 @@ class MenuServiceImplTest {
 	void getMenuDetail_notFound_throws() {
 		// given
 		Long menuId = 999L;
-		when(menuRepository.findMenuDetail(menuId, OptionStatus.ON_SALE))
-			.thenReturn(java.util.Optional.empty());
+		when(menuRepository.findById(menuId)).thenReturn(Optional.empty());
 
 		// when & then
 		assertThatThrownBy(() -> menuService.getMenuDetail(menuId))
-			.isInstanceOf(RuntimeException.class)
+			.isInstanceOf(NullPointerException.class)
 			.hasMessage("조회된 메뉴가 없습니다.");
 
-		verify(menuRepository, times(1)).findMenuDetail(menuId, OptionStatus.ON_SALE);
+		verify(menuRepository, times(1)).findById(menuId);
 	}
+
 }
