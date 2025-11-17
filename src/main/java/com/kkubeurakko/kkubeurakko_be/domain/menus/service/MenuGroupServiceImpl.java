@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupWithMenusDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
@@ -71,6 +72,15 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 		menuGroup.updateStatus(status);
 	}
 
+	@Transactional(readOnly = true)
+	public List<MenuGroupWithMenusDto> getAllMenuGroupsWithMenus(Long storeId) {
+		List<MenuGroups> groups = menuGroupRepository.findAllByStoreIdWithMenus(storeId);
+
+		return groups.stream()
+			.map(this::toMenuGroupWithMenusDto)
+			.toList();
+	}
+
 	private List<MenuGroupResponseDto> toResponseDto(List<MenuGroups> menuGroupList) {
 		return menuGroupList.stream()
 			.map(menuGroups -> MenuGroupResponseDto
@@ -81,4 +91,5 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 			)
 			.collect(Collectors.toList());
 	}
+
 }
