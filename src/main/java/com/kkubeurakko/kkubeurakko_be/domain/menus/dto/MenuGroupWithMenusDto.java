@@ -2,11 +2,13 @@ package com.kkubeurakko.kkubeurakko_be.domain.menus.dto;
 
 import java.util.List;
 
+import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
+
 public record MenuGroupWithMenusDto(
 	Long id,
 	String name,
 	String description,
-	String status,
-	List<MenuResponseDto> menus
+	MenuStatus menuStatus,
+	List<MenuSummaryDto> menus
 ) {
 }

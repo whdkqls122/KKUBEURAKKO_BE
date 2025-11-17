@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupWithMenusDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.service.MenuGroupService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
@@ -75,5 +76,15 @@ public class MenuGroupController {
 		@RequestParam MenuStatus menuStatus) {
 		menuGroupService.updateMenuGroupStatus(menuGroupId, menuStatus);
 		return ResponseEntity.ok(ApiResponse.success("메뉴 그룹 상태가 변경되었습니다.", null));
+	}
+
+	@Operation(
+		summary = "메뉴 그룹 전체 조회",
+		description = "메뉴 그룹과 그룹에 포함되는 메뉴를 전체 조회합니다. "
+	)
+	@GetMapping
+	public ResponseEntity<List<MenuGroupWithMenusDto>> getAllMenuGroups(@PathVariable Long storeId) {
+		List<MenuGroupWithMenusDto> result = menuGroupService.getAllMenuGroupsWithMenus(storeId);
+		return ResponseEntity.ok(result);
 	}
 }

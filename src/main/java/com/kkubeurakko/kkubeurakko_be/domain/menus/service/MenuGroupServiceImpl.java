@@ -10,8 +10,10 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupWithMenusDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuSummaryDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
@@ -92,4 +94,28 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 			.collect(Collectors.toList());
 	}
 
+	private MenuGroupWithMenusDto toMenuGroupWithMenusDto(MenuGroups group) {
+		List<Menus> menus = group.getMenus() != null ? group.getMenus() : List.of();
+
+		return new MenuGroupWithMenusDto(
+			group.getId(),
+			group.getName(),
+			group.getDescription(),
+			group.getMenuStatus(),
+			menus.stream()
+				.map(this::toMenuSummaryDto)
+				.toList()
+		);
+	}
+
+	private MenuSummaryDto toMenuSummaryDto(Menus menu) {
+		return new MenuSummaryDto(
+			menu.getId(),
+			menu.getName(),
+			menu.getDescription(),
+			menu.getPrice(),
+			menu.getImg(),
+			menu.getMenuStatus()
+		);
+	}
 }
