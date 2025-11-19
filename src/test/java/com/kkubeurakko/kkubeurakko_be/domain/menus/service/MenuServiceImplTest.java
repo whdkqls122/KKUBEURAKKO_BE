@@ -16,8 +16,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
@@ -27,6 +29,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 
 @ExtendWith(MockitoExtension.class)
 class MenuServiceImplTest {
@@ -44,6 +47,24 @@ class MenuServiceImplTest {
 	void setup() {
 		MockitoAnnotations.openMocks(this);
 		menuService = new MenuServiceImpl(menuRepository, optionGroupRepository);
+	}
+
+	private Stores store;
+	private MenuGroups group;
+	private Menus menu;
+	private OptionGroups optionGroup;
+	private Options option1;
+	private Options option2;
+
+	@BeforeEach
+	void setUp() {
+		store = TestFixture.createStore();
+		group = TestFixture.createMenuGroup(1L, store);
+		menu = TestFixture.createMenu(1L, group);
+
+		optionGroup = TestFixture.createOptionGroup(1L);
+		option1 = TestFixture.createOption(1L, "순한맛", 0, optionGroup);
+		option2 = TestFixture.createOption(2L, "매운맛", 500, optionGroup);
 	}
 
 	@Test
@@ -194,4 +215,24 @@ class MenuServiceImplTest {
 		verify(menuRepository, times(1)).findById(menuId);
 	}
 
+	@Test
+	@DisplayName("메뉴 상세 조회가 정상적으로 수행되는지 검증한다.")
+	void getMenuDetail_success() {
+		// given
+		when(menuRepository.findById(1L)).thenReturn(Optional.of(menu));
+		when(optionGroupRepository.findAllByMenuId(1L)).thenReturn(List.of(optionGroup));
+
+		// when
+		MenuDetailResponseDto dto = menuService.getMenuDetail(1L);
+
+		// then
+		assertThat(dto).isNotNull();
+		assertThat(dto.name()).isEqualTo("양념꾸브");
+		assertThat(dto.optionGroupResponseDtoList()).hasSize(1);
+		assertThat(dto.optionGroupResponseDtoList().get(0).options()).hasSize(2);
+
+		// verify
+		verify(menuRepository, times(1)).findById(1L);
+		verify(optionGroupRepository, times(1)).findAllByMenuId(1L);
+	}
 }
