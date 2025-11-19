@@ -82,7 +82,7 @@ public class MenuGroupController {
 		summary = "메뉴 그룹 전체 조회",
 		description = "메뉴 그룹과 그룹에 포함되는 메뉴를 전체 조회합니다. "
 	)
-	@GetMapping
+	@GetMapping("/{storeId}")
 	public ResponseEntity<List<MenuGroupWithMenusDto>> getAllMenuGroups(@PathVariable Long storeId) {
 		List<MenuGroupWithMenusDto> result = menuGroupService.getAllMenuGroupsWithMenus(storeId);
 		return ResponseEntity.ok(result);
