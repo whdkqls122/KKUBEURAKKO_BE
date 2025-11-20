@@ -176,4 +176,26 @@ class MenuGroupServiceImplTest {
 		verify(menuGroupRepository, times(1)).findById(1L);
 	}
 
+	@Test
+	@DisplayName("메뉴 그룹 삭제 시, 연결된 메뉴들과 매핑 삭제 후 메뉴 그룹이 삭제되는지 검증한다.")
+	void deleteMenuGroup_success() {
+		// given
+		Stores store = TestFixture.createStore();
+		MenuGroups group = TestFixture.createMenuGroup(1L, store);
+
+		TestFixture.createMenu(10L, group);
+		TestFixture.createMenu(20L, group);
+
+		when(menuGroupRepository.findById(1L))
+			.thenReturn(Optional.of(group));
+
+		// when
+		menuGroupService.deleteMenuGroup(1L);
+
+		// then
+		verify(menuRepository, times(1)).deleteAll(group.getMenus());
+		verify(menuGroupRepository, times(1)).delete(group);
+		verify(menuGroupRepository, times(1)).findById(1L);
+	}
+
 }

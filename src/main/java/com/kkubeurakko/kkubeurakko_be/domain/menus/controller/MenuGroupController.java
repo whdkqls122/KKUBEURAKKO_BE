@@ -94,8 +94,8 @@ public class MenuGroupController {
 		description = "메뉴 그룹과 그룹에 포함되는 메뉴를 삭제합니다. "
 	)
 	@DeleteMapping("/{menuGroupId}")
-	public ResponseEntity<Void> deleteMenuGroup(@PathVariable Long menuGroupId) {
+	public ResponseEntity<ApiResponse<Void>> deleteMenuGroup(@PathVariable Long menuGroupId) {
 		menuGroupService.deleteMenuGroup(menuGroupId);
-		return ResponseEntity.noContent().build();
+		return ResponseEntity.ok(ApiResponse.success("메뉴 그룹 삭제가 완료되었습니다.", null));
 	}
 }
