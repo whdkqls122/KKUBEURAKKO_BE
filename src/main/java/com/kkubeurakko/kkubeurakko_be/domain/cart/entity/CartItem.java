@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.cart.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
@@ -45,5 +46,15 @@ public class CartItem {
 	private int quantity;
 
 	@OneToMany(mappedBy = "cartItem", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<CartItemOption> optionList;
+	@Builder.Default
+	private List<CartItemOption> optionList = new ArrayList<>();
+
+	public void setCart(Cart cart) {
+		this.cart = cart;
+	}
+
+	public void addOption(CartItemOption cartItemOption) {
+		this.optionList.add(cartItemOption);
+		cartItemOption.setCartItem(this);
+	}
 }

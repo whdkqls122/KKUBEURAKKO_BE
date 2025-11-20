@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.cart.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -37,5 +38,11 @@ public class Cart {
 	private Users user;
 
 	@OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<CartItem> cartItemList;
+	@Builder.Default
+	private List<CartItem> cartItemList = new ArrayList<>();
+
+	public void addCartItem(CartItem cartItem) {
+		this.cartItemList.add(cartItem);
+		cartItem.setCart(this);
+	}
 }

@@ -36,4 +36,8 @@ public class CartItemOption {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "option_id")
 	private Options option;
+
+	public void setCartItem(CartItem cartItem) {
+		this.cartItem = cartItem;
+	}
 }
