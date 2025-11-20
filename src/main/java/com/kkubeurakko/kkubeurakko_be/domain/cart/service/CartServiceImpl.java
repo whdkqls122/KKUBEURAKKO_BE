@@ -58,25 +58,16 @@ public class CartServiceImpl implements CartService {
 		Users user = userService.getUser(customOAuth2User.getName());
 
 		Cart cart = cartRepository.findByUser(user)
-			.orElseGet(() -> {
-				Cart newCart = Cart.builder()
-					.user(user)
-					.build();
-				return cartRepository.save(newCart);
-			});
+			.orElseGet(() -> createCartForUser(user));
 
 		Menus menu = menuRepository.findById(cartRequestDto.menuId())
 			.orElseThrow(() -> new IllegalArgumentException("조회된 메뉴가 없습니다."));
 
-		CartItem cartItem = toEntity(cart, menu, cartRequestDto);
-		cart.addCartItem(cartItem);
+		if (increaseQuantityIfExists(cart, menu, cartRequestDto)) {
+			return;
+		}
 
-		cartItemRepository.save(cartItem);
-
-		List<CartItemOption> cartItemOptionList = toEntity(cartItem, cartRequestDto);
-		cartItemOptionList.forEach(cartItem::addOption);
-
-		cartItemOptionRepository.saveAll(cartItemOptionList);
+		createNewCartItem(cart, menu, cartRequestDto);
 	}
 
 	@Override
@@ -109,6 +100,47 @@ public class CartServiceImpl implements CartService {
 		}
 
 		cart.removeCartItem(cartItem);
+	}
+
+	private Cart createCartForUser(Users user) {
+		Cart cart = Cart.builder()
+			.user(user)
+			.build();
+		return cartRepository.save(cart);
+	}
+
+	private boolean increaseQuantityIfExists(Cart cart, Menus menu, CartRequestDto cartRequestDto) {
+		for (CartItem existItem : cart.getCartItemList()) {
+			if (existItem.getMenu().equals(menu)) {
+				List<Long> existOpionIdList = existItem.getOptionList().stream()
+					.map(opt -> opt.getOption().getId())
+					.sorted()
+					.toList();
+
+				List<Long> newOptionIdList = cartRequestDto.optionIdList().stream()
+					.sorted()
+					.toList();
+
+				if (existOpionIdList.equals(newOptionIdList)) {
+					existItem.update(
+						existItem.getQuantity() + cartRequestDto.quantity(),
+						existItem.getOptionList()
+					);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private void createNewCartItem(Cart cart, Menus menu, CartRequestDto cartRequestDto) {
+		CartItem cartItem = toEntity(cart, menu, cartRequestDto);
+		cart.addCartItem(cartItem);
+		cartItemRepository.save(cartItem);
+
+		List<CartItemOption> cartItemOptionList = toEntity(cartItem, cartRequestDto);
+		cartItemOptionList.forEach(cartItem::addOption);
+		cartItemOptionRepository.saveAll(cartItemOptionList);
 	}
 
 	private CartItem toEntity(Cart cart, Menus menu, CartRequestDto cartRequestDto) {
