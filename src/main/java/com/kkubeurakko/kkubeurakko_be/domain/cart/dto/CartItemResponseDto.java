@@ -11,6 +11,8 @@ public record CartItemResponseDto(
 	String menuName,
 	int quantity,
 	int totalPrice,
+	int menuPrice,
+	String imgUrl,
 	List<CartItemOptionResponseDto> optionResponseDtoList
 ) {
 }

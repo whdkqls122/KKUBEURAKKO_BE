@@ -189,6 +189,8 @@ public class CartServiceImpl implements CartService {
 					.menuName(cartItem.getMenu().getName())
 					.quantity(cartItem.getQuantity())
 					.totalPrice(totalPrice)
+					.menuPrice(cartItem.getMenu().getPrice())
+					.imgUrl(cartItem.getMenu().getImg())
 					.optionResponseDtoList(options)
 					.build();
 			})
