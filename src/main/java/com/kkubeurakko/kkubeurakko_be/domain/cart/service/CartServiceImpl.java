@@ -40,9 +40,11 @@ public class CartServiceImpl implements CartService {
 		Users user = userService.getUser(customOAuth2User.getName());
 
 		Cart cart = cartRepository.findByUser(user)
-			.orElseGet(() -> Cart.builder()
-				.user(user)
-				.build()
+			.orElseGet(() -> cartRepository.save(
+					Cart.builder()
+						.user(user)
+						.build()
+				)
 			);
 
 		return CartResponseDto.builder()
