@@ -68,17 +68,33 @@ public class CartServiceImpl implements CartService {
 	@Override
 	@Transactional
 	public void updateCartItem(Long cartItemId, CartRequestDto cartRequestDto, CustomOAuth2User customOAuth2User) {
+		Users user = userService.getUser(customOAuth2User.getName());
 		CartItem cartItem = cartItemRepository.findById(cartItemId)
 			.orElseThrow(() -> new IllegalArgumentException("조회된 장바구니 메뉴가 없습니다."));
 
+		if (!cartItem.getCart().getUser().equals(user)) {
+			throw new IllegalArgumentException("본인의 장바구니가 아닙니다.");
+		}
 		List<CartItemOption> cartItemOptionList = toEntity(cartItem, cartRequestDto);
 
 		cartItem.update(cartRequestDto.quantity(), cartItemOptionList);
 	}
 
 	@Override
+	@Transactional
 	public void deleteCartItem(Long cartItemId, CustomOAuth2User customOAuth2User) {
+		Users user = userService.getUser(customOAuth2User.getName());
 
+		CartItem cartItem = cartItemRepository.findById(cartItemId)
+			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 장바구니 메뉴입니다."));
+
+		Cart cart = cartItem.getCart();
+
+		if (!cart.getUser().equals(user)) {
+			throw new IllegalArgumentException("본인의 장바구니가 아닙니다.");
+		}
+
+		cart.removeCartItem(cartItem);
 	}
 
 	private CartItem toEntity(Cart cart, Menus menu, CartRequestDto cartRequestDto) {

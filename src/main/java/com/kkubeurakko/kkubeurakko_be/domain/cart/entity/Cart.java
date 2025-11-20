@@ -45,4 +45,8 @@ public class Cart {
 		this.cartItemList.add(cartItem);
 		cartItem.setCart(this);
 	}
+
+	public void removeCartItem(CartItem cartItem) {
+		this.cartItemList.remove(cartItem);
+	}
 }
