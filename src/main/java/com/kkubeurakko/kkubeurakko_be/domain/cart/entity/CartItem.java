@@ -57,4 +57,16 @@ public class CartItem {
 		this.optionList.add(cartItemOption);
 		cartItemOption.setCartItem(this);
 	}
+
+	public void update(int quantity, List<CartItemOption> cartItemOptionList) {
+		this.quantity = quantity;
+		this.clearOptions();
+		for (CartItemOption option : cartItemOptionList) {
+			this.addOption(option);
+		}
+	}
+
+	private void clearOptions() {
+		this.optionList.clear();
+	}
 }
