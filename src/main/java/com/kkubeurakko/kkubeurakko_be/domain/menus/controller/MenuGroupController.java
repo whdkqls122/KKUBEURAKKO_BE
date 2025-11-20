@@ -89,6 +89,10 @@ public class MenuGroupController {
 		return ResponseEntity.ok(result);
 	}
 
+	@Operation(
+		summary = "메뉴 그룹 삭제",
+		description = "메뉴 그룹과 그룹에 포함되는 메뉴를 삭제합니다. "
+	)
 	@DeleteMapping("/{menuGroupId}")
 	public ResponseEntity<Void> deleteMenuGroup(@PathVariable Long menuGroupId) {
 		menuGroupService.deleteMenuGroup(menuGroupId);

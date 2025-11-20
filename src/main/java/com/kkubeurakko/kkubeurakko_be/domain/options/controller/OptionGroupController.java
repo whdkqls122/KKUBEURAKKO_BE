@@ -71,9 +71,9 @@ public class OptionGroupController {
 	}
 
 	@Operation(summary = "옵션 그룹 삭제", description = "기존 옵션 그룹을 삭제합니다.")
-	@DeleteMapping("/{id}")
-	public ResponseEntity<ApiResponse<Void>> deleteOptionGroup(@PathVariable Long id) {
-		optionGroupService.deleteOptionGroup(id);
+	@DeleteMapping("/{optionGroupId}")
+	public ResponseEntity<ApiResponse<Void>> deleteOptionGroup(@PathVariable Long optionGroupId) {
+		optionGroupService.deleteOptionGroup(optionGroupId);
 		return ResponseEntity.ok(ApiResponse.success("옵션 그룹 삭제가 완료되었습니다.", null));
 	}
 }
