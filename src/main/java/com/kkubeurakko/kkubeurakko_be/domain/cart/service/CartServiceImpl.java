@@ -5,8 +5,10 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartItemOptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartItemResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItem;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItemOption;
@@ -33,8 +35,20 @@ public class CartServiceImpl implements CartService {
 	private final CartItemOptionRepository cartItemOptionRepository;
 
 	@Override
-	public List<CartItemResponseDto> getCartList(CustomOAuth2User customOAuth2User) {
-		return null;
+	@Transactional(readOnly = true)
+	public CartResponseDto getCartList(CustomOAuth2User customOAuth2User) {
+		Users user = userService.getUser(customOAuth2User.getName());
+
+		Cart cart = cartRepository.findByUser(user)
+			.orElseGet(() -> Cart.builder()
+				.user(user)
+				.build()
+			);
+
+		return CartResponseDto.builder()
+			.cartId(cart.getId())
+			.cartItemResponseDtoList(toResponseDto(cart))
+			.build();
 	}
 
 	//메서드 정리하기
@@ -114,6 +128,35 @@ public class CartServiceImpl implements CartService {
 					.option(option)
 					.build()
 			)
+			.toList();
+	}
+
+	private List<CartItemResponseDto> toResponseDto(Cart cart) {
+		return cart.getCartItemList().stream()
+			.map(cartItem -> {
+				List<CartItemOptionResponseDto> options = cartItem.getOptionList().stream()
+					.map(opt -> new CartItemOptionResponseDto(
+						opt.getOption().getId(),
+						opt.getOption().getName(),
+						opt.getOption().getPrice()
+					))
+					.toList();
+
+				int totalPrice = (
+					cartItem.getMenu().getPrice() +
+						options.stream().mapToInt(CartItemOptionResponseDto::price).sum()
+				)
+					* cartItem.getQuantity();
+
+				return CartItemResponseDto.builder()
+					.cartItemId(cartItem.getId())
+					.menuId(cartItem.getMenu().getId())
+					.menuName(cartItem.getMenu().getName())
+					.quantity(cartItem.getQuantity())
+					.totalPrice(totalPrice)
+					.optionResponseDtoList(options)
+					.build();
+			})
 			.toList();
 	}
 }
