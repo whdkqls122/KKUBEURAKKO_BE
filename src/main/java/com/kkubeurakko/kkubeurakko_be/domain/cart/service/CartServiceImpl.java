@@ -135,11 +135,12 @@ public class CartServiceImpl implements CartService {
 		return cart.getCartItemList().stream()
 			.map(cartItem -> {
 				List<CartItemOptionResponseDto> options = cartItem.getOptionList().stream()
-					.map(opt -> new CartItemOptionResponseDto(
-						opt.getOption().getId(),
-						opt.getOption().getName(),
-						opt.getOption().getPrice()
-					))
+					.map(opt -> CartItemOptionResponseDto.builder()
+						.optionId(opt.getOption().getId())
+						.optionName(opt.getOption().getName())
+						.price(opt.getOption().getPrice())
+						.build()
+					)
 					.toList();
 
 				int totalPrice = (
