@@ -21,5 +21,8 @@ public interface MenuGroupService {
 	void updateMenuGroupStatus(Long menuGroupId, MenuStatus status);
 
 	//메뉴 그룹, 메뉴 전체 조회
-	public List<MenuGroupWithMenusDto> getAllMenuGroupsWithMenus(Long storeId);
+	List<MenuGroupWithMenusDto> getAllMenuGroupsWithMenus(Long storeId);
+
+	//메뉴 그룹 삭제
+	void deleteMenuGroup(Long menuGroupId);
 }

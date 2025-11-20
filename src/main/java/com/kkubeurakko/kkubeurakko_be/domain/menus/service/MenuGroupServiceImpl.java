@@ -15,6 +15,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 
@@ -29,6 +30,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 
 	private final MenuGroupRepository menuGroupRepository;
 	private final StoreRepository storeRepository;
+	private final MenuRepository menuRepository;
 
 	@Override
 	public List<MenuGroupResponseDto> getAllMenuGroupName() {
@@ -74,6 +76,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 		menuGroup.updateStatus(status);
 	}
 
+	@Override
 	@Transactional(readOnly = true)
 	public List<MenuGroupWithMenusDto> getAllMenuGroupsWithMenus(Long storeId) {
 		List<MenuGroups> groups = menuGroupRepository.findAllByStoreIdWithMenus(storeId);
@@ -81,6 +84,17 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 		return groups.stream()
 			.map(this::toMenuGroupWithMenusDto)
 			.toList();
+	}
+
+	@Override
+	@Transactional
+	public void deleteMenuGroup(Long menuGroupId) {
+		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupId)
+			.orElseThrow(() -> new RuntimeException("메뉴 그룹이 존재하지 않습니다."));
+
+		List<Menus> menus = menuGroup.getMenus();
+		menuRepository.deleteAll(menus);
+		menuGroupRepository.delete(menuGroup);
 	}
 
 	private List<MenuGroupResponseDto> toResponseDto(List<MenuGroups> menuGroupList) {

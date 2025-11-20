@@ -24,6 +24,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 
@@ -35,13 +36,16 @@ class MenuGroupServiceImplTest {
 	@Mock
 	private StoreRepository storeRepository;
 
+	@Mock
+	private MenuRepository menuRepository;
+
 	@InjectMocks
 	private MenuGroupServiceImpl menuGroupService;
 
 	@BeforeEach
 	void setup() {
 		MockitoAnnotations.openMocks(this);
-		menuGroupService = new MenuGroupServiceImpl(menuGroupRepository, storeRepository);
+		menuGroupService = new MenuGroupServiceImpl(menuGroupRepository, storeRepository, menuRepository);
 	}
 
 	@Test
