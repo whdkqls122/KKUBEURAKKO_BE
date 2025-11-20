@@ -23,9 +23,11 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CartServiceImpl implements CartService {
 	private final CartRepository cartRepository;
 	private final UserService userService;
@@ -46,7 +48,7 @@ public class CartServiceImpl implements CartService {
 						.build()
 				)
 			);
-
+		log.info("장바구니 조회 완료");
 		return CartResponseDto.builder()
 			.cartId(cart.getId())
 			.cartItemResponseDtoList(toResponseDto(cart))
@@ -61,11 +63,15 @@ public class CartServiceImpl implements CartService {
 
 		Cart cart = cartRepository.findByUser(user)
 			.orElseGet(() -> createCartForUser(user));
+		log.info("장바구니 생성 완료");
 
 		Menus menu = menuRepository.findById(cartRequestDto.menuId())
 			.orElseThrow(() -> new IllegalArgumentException("조회된 메뉴가 없습니다."));
 
+		log.info("장바구니에 담을 메뉴 조회 완료");
+
 		if (increaseQuantityIfExists(cart, menu, cartRequestDto)) {
+			log.info("동일한 메뉴 요청으로 인한 수량만 증가");
 			return;
 		}
 
@@ -85,6 +91,7 @@ public class CartServiceImpl implements CartService {
 		List<CartItemOption> cartItemOptionList = toEntity(cartItem, cartRequestDto);
 
 		cartItem.update(cartRequestDto.quantity(), cartItemOptionList);
+		log.info("장바구니 메뉴 수정 완료");
 	}
 
 	@Override
@@ -102,6 +109,7 @@ public class CartServiceImpl implements CartService {
 		}
 
 		cart.removeCartItem(cartItem);
+		log.info("장바구니 메뉴 삭제 완료");
 	}
 
 	private Cart createCartForUser(Users user) {
@@ -143,6 +151,7 @@ public class CartServiceImpl implements CartService {
 		List<CartItemOption> cartItemOptionList = toEntity(cartItem, cartRequestDto);
 		cartItemOptionList.forEach(cartItem::addOption);
 		cartItemOptionRepository.saveAll(cartItemOptionList);
+		log.info("장바구니 메뉴 등록 완료");
 	}
 
 	private CartItem toEntity(Cart cart, Menus menu, CartRequestDto cartRequestDto) {
