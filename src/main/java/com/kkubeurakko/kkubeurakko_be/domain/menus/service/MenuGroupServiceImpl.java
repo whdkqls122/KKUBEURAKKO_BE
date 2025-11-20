@@ -90,7 +90,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 	@Transactional
 	public void deleteMenuGroup(Long menuGroupId) {
 		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupId)
-			.orElseThrow(() -> new RuntimeException("메뉴 그룹이 존재하지 않습니다."));
+			.orElseThrow(() -> new EntityNotFoundException("메뉴 그룹이 존재하지 않습니다."));
 
 		List<Menus> menus = menuGroup.getMenus();
 		menuRepository.deleteAll(menus);
