@@ -66,8 +66,14 @@ public class CartServiceImpl implements CartService {
 	}
 
 	@Override
-	public void updateCartItem(Long cartItemId, CustomOAuth2User customOAuth2User) {
+	@Transactional
+	public void updateCartItem(Long cartItemId, CartRequestDto cartRequestDto, CustomOAuth2User customOAuth2User) {
+		CartItem cartItem = cartItemRepository.findById(cartItemId)
+			.orElseThrow(() -> new IllegalArgumentException("조회된 장바구니 메뉴가 없습니다."));
 
+		List<CartItemOption> cartItemOptionList = toEntity(cartItem, cartRequestDto);
+
+		cartItem.update(cartRequestDto.quantity(), cartItemOptionList);
 	}
 
 	@Override
