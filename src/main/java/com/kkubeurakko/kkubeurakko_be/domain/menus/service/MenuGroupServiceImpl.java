@@ -95,27 +95,30 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 	}
 
 	private MenuGroupWithMenusDto toMenuGroupWithMenusDto(MenuGroups group) {
+
 		List<Menus> menus = group.getMenus() != null ? group.getMenus() : List.of();
 
-		return new MenuGroupWithMenusDto(
-			group.getId(),
-			group.getName(),
-			group.getDescription(),
-			group.getMenuStatus(),
-			menus.stream()
-				.map(this::toMenuSummaryDto)
-				.toList()
-		);
+		return MenuGroupWithMenusDto.builder()
+			.id(group.getId())
+			.name(group.getName())
+			.description(group.getDescription())
+			.menuStatus(group.getMenuStatus())
+			.menus(
+				menus.stream()
+					.map(this::toMenuSummaryDto)
+					.toList()
+			)
+			.build();
 	}
 
 	private MenuSummaryDto toMenuSummaryDto(Menus menu) {
-		return new MenuSummaryDto(
-			menu.getId(),
-			menu.getName(),
-			menu.getDescription(),
-			menu.getPrice(),
-			menu.getImg(),
-			menu.getMenuStatus()
-		);
+		return MenuSummaryDto.builder()
+			.id(menu.getId())
+			.name(menu.getName())
+			.description(menu.getDescription())
+			.price(menu.getPrice())
+			.img(menu.getImg())
+			.menuStatus(menu.getMenuStatus())
+			.build();
 	}
 }
