@@ -9,4 +9,7 @@ public interface MenuService {
 	List<MenuResponseDto> getAllMenuByMenuGroup(Long menuGroupId);
 
 	MenuDetailResponseDto getMenuDetail(Long menuId);
+
+	//메뉴에 옵션 그룹 추가/갱신
+	void updateOptionGroups(Long menuId, List<Long> optionGroupIds);
 }

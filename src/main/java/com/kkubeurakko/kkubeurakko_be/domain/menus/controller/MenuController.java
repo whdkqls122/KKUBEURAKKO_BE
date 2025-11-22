@@ -5,9 +5,12 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AddOptionGroupsRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.service.MenuService;
@@ -50,4 +53,18 @@ public class MenuController {
 			menuDetailResponseDto
 		));
 	}
+
+	@Operation(
+		summary = "메뉴 옵션 그룹 추가",
+		description = "메뉴에 연결할 옵션 그룹 정보를 갱신합니다."
+	)
+	@PutMapping("/{menuId}/option-groups")
+	public ResponseEntity<ApiResponse<Void>> updateOptionGroups(
+		@PathVariable Long menuId,
+		@RequestBody AddOptionGroupsRequestDto request
+	) {
+		menuService.updateOptionGroups(menuId, request.optionGroupIds());
+		return ResponseEntity.ok(ApiResponse.success("옵션 그룹이 메뉴에 추가되었습니다.", null));
+	}
+
 }

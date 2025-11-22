@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.menus.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
 
 import jakarta.persistence.CascadeType;
@@ -59,4 +60,19 @@ public class Menus extends BaseEntity {
 	@OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default
 	private List<MenuOptionGroups> menuOptionGroups = new ArrayList<>();
+
+	public void addOptionGroup(OptionGroups optionGroup) {
+		MenuOptionGroups menuOptionGroup = MenuOptionGroups.builder()
+			.menu(this)
+			.optionGroup(optionGroup)
+			.build();
+
+		this.menuOptionGroups.add(menuOptionGroup);
+		optionGroup.getMenuOptionGroups().add(menuOptionGroup);
+	}
+
+	public void clearOptionGroups() {
+		this.menuOptionGroups.clear(); // orphanRemoval = true → DB 자동 삭제
+	}
+
 }

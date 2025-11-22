@@ -16,6 +16,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,6 +46,18 @@ public class MenuServiceImpl implements MenuService {
 		List<OptionGroups> optionGroups = optionGroupRepository.findAllByMenuId(menuId);
 
 		return toResponseDto(menu, optionGroups);
+	}
+
+	@Override
+	@Transactional
+	public void updateOptionGroups(Long menuId, List<Long> optionGroupIds) {
+		Menus menu = menuRepository.findById(menuId)
+			.orElseThrow(() -> new EntityNotFoundException("메뉴가 존재하지 않습니다."));
+
+		menu.clearOptionGroups();
+		
+		List<OptionGroups> optionGroups = optionGroupRepository.findAllById(optionGroupIds);
+		optionGroups.forEach(menu::addOptionGroup);
 	}
 
 	private List<MenuResponseDto> toResponseDto(List<Menus> menuList) {
