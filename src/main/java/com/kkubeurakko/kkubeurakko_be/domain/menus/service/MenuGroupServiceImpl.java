@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.menus.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -87,13 +88,14 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 	}
 
 	@Override
-	@Transactional
 	public void deleteMenuGroup(Long menuGroupId) {
 		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupId)
 			.orElseThrow(() -> new EntityNotFoundException("메뉴 그룹이 존재하지 않습니다."));
 
-		List<Menus> menus = menuGroup.getMenus();
-		menuRepository.deleteAll(menus);
+		for (Menus menu : new ArrayList<>(menuGroup.getMenus())) {
+			menuGroup.removeMenu(menu);
+		}
+
 		menuGroupRepository.delete(menuGroup);
 	}
 

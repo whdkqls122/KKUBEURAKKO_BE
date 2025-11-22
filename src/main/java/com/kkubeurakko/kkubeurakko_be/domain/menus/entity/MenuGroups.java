@@ -6,6 +6,7 @@ import java.util.List;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -50,7 +51,10 @@ public class MenuGroups extends BaseEntity {
 	@JoinColumn(name = "stroes_id", nullable = false)
 	private Stores store;
 
-	@OneToMany(mappedBy = "menuGroup", fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "menuGroup",
+		fetch = FetchType.LAZY,
+		cascade = CascadeType.ALL,
+		orphanRemoval = true)
 	@Builder.Default
 	private List<Menus> menus = new ArrayList<>();
 
@@ -62,4 +66,9 @@ public class MenuGroups extends BaseEntity {
 	public void updateStatus(MenuStatus status) {
 		this.menuStatus = status;
 	}
+
+	public void removeMenu(Menus menu) {
+		this.menus.remove(menu);
+	}
+
 }
