@@ -1,4 +1,4 @@
-package com.kkubeurakko.kkubeurakko_be.domain.payments;
+package com.kkubeurakko.kkubeurakko_be.domain.payments.entity;
 
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
@@ -10,7 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -43,6 +42,5 @@ public class Payments extends BaseEntity {
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "orders_id")
 	private Orders order;
-
 
 }
