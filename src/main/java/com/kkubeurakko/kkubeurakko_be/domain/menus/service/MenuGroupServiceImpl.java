@@ -16,7 +16,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
-import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 
@@ -31,7 +30,6 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 
 	private final MenuGroupRepository menuGroupRepository;
 	private final StoreRepository storeRepository;
-	private final MenuRepository menuRepository;
 
 	@Override
 	public List<MenuGroupResponseDto> getAllMenuGroupName() {
