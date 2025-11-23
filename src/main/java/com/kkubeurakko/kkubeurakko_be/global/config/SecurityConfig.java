@@ -45,7 +45,7 @@ public class SecurityConfig {
 			.cors(corsCustomizer -> corsCustomizer.configurationSource(request -> {
 				CorsConfiguration configuration = new CorsConfiguration();
 
-				configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+				configuration.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
 				configuration.setAllowedMethods(Collections.singletonList("*"));
 				configuration.setAllowCredentials(true);
 				configuration.setAllowedHeaders(Collections.singletonList("*"));
@@ -87,7 +87,8 @@ public class SecurityConfig {
 					"/swagger-resources/**",
 					"/webjars/**",
 					"/v1/admin/login",
-					"/v1/menu/**"
+					"/v1/menu/**",
+					"/v1/reissue"
 				).permitAll()
 				.anyRequest().authenticated()
 			)

@@ -1,16 +1,13 @@
 package com.kkubeurakko.kkubeurakko_be.global.oauth.handler;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.entity.RefreshToken;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenRepository;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
@@ -50,23 +47,16 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 
 		boolean firstLogin = customUserDetails.getUserDto().isFirstLogin();
 
-		String access = jwtUtil.createAccessToken(userNumber, role, accessTokenExpiry);
 		String refresh = jwtUtil.createRefreshToken(userNumber, role, refreshTokenExpiry);
 
 		saveRefreshToken(userNumber, refresh);
 
 		response.addCookie(createCookie(refresh));
 
-		response.setStatus(HttpServletResponse.SC_OK);
-		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-		response.setCharacterEncoding("UTF-8");
-		response.setHeader("Authorization", access);
-		Map<String, Object> tokenResponse = Map.of(
-			"firstLogin", firstLogin
-		);
-		log.info("토큰 발급 및 로그인 처리 완료:{}", userNumber + " " + firstLogin);
-		// objectMapper로 바로 쓰기
-		objectMapper.writeValue(response.getWriter(), tokenResponse);
+		String redirectUrl = "http://localhost:5173/home?success=" + true + "&firstLogin=" + firstLogin;
+		//실사용 url
+		// String redirectUrl = "https://kkubeurakko-anyang.shop/home?success=" + true + "&firstLogin=" + firstLogin;		log.info("로그인 성공");
+		response.sendRedirect(redirectUrl);
 	}
 
 	private Cookie createCookie(String value) {
