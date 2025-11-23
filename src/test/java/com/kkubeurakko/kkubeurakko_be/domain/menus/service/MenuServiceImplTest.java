@@ -250,7 +250,6 @@ class MenuServiceImplTest {
 		menu.addOptionGroup(old1);
 		menu.addOptionGroup(old2);
 
-		// 새 옵션 그룹 2개
 		OptionGroups new1 = TestFixture.createOptionGroup(3L);
 		OptionGroups new2 = TestFixture.createOptionGroup(4L);
 
@@ -268,7 +267,7 @@ class MenuServiceImplTest {
 		assertThat(menu.getMenuOptionGroups())
 			.extracting(mog -> mog.getOptionGroup().getId())
 			.containsExactlyInAnyOrder(3L, 4L);
-		
+
 		verify(menuRepository, times(1)).findById(1L);
 		verify(optionGroupRepository, times(1)).findAllById(idList);
 	}

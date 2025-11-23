@@ -72,7 +72,7 @@ public class Menus extends BaseEntity {
 	}
 
 	public void clearOptionGroups() {
-		this.menuOptionGroups.clear(); // orphanRemoval = true → DB 자동 삭제
+		this.menuOptionGroups.clear();
 	}
 
 }
