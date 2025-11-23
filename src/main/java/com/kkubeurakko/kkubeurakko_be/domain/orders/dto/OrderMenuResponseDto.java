@@ -6,6 +6,6 @@ public record OrderMenuResponseDto(
 	String name,
 	int quantity,
 	int totalPrice,
-	List<OrderItemsOptionResponseDto> orderItemsOptionDtoList
+	List<OrderItemsOptionResponseDto> optionList
 ) {
 }

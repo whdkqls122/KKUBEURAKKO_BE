@@ -17,7 +17,7 @@ public record OrderDetailResponseDto(
 	int completionTime,
 	String address,
 	String phoneNum,
-	List<OrderMenuResponseDto> orderMenuResponseDtoList,
+	List<OrderMenuResponseDto> orderMenuList,
 	PaymentResponseDto paymentResponseDto
 ) {
 }
