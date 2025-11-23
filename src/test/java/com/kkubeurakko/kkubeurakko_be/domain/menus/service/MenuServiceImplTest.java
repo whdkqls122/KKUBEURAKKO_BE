@@ -235,4 +235,41 @@ class MenuServiceImplTest {
 		verify(menuRepository, times(1)).findById(1L);
 		verify(optionGroupRepository, times(1)).findAllByMenuId(1L);
 	}
+
+	@Test
+	@DisplayName("메뉴의 옵션 그룹이 새 옵션 그룹으로 업데이트되는지 검증한다.")
+	void updateOptionGroups_success() {
+		// given
+		Stores store = TestFixture.createStore();
+		MenuGroups group = TestFixture.createMenuGroup(1L, store);
+		Menus menu = TestFixture.createMenu(1L, group);
+
+		OptionGroups old1 = TestFixture.createOptionGroup(1L);
+		OptionGroups old2 = TestFixture.createOptionGroup(2L);
+
+		menu.addOptionGroup(old1);
+		menu.addOptionGroup(old2);
+
+		// 새 옵션 그룹 2개
+		OptionGroups new1 = TestFixture.createOptionGroup(3L);
+		OptionGroups new2 = TestFixture.createOptionGroup(4L);
+
+		List<Long> idList = List.of(3L, 4L);
+		List<OptionGroups> newGroups = List.of(new1, new2);
+
+		when(menuRepository.findById(1L)).thenReturn(Optional.of(menu));
+		when(optionGroupRepository.findAllById(idList)).thenReturn(newGroups);
+
+		// when
+		menuService.updateOptionGroups(1L, idList);
+
+		// then
+		assertThat(menu.getMenuOptionGroups()).hasSize(2);
+		assertThat(menu.getMenuOptionGroups())
+			.extracting(mog -> mog.getOptionGroup().getId())
+			.containsExactlyInAnyOrder(3L, 4L);
+		
+		verify(menuRepository, times(1)).findById(1L);
+		verify(optionGroupRepository, times(1)).findAllById(idList);
+	}
 }
