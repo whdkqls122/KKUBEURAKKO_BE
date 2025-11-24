@@ -11,8 +11,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderMenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItems;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderItemOptionRepository;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderItemRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.dto.PaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -29,8 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OrderServiceImpl implements OrderService {
 	private final OrderRepository orderRepository;
-	private final OrderItemRepository orderItemRepository;
-	private final OrderItemOptionRepository orderItemOptionRepository;
 	private final UserService userService;
 	private final AesUtil aesUtil;
 
