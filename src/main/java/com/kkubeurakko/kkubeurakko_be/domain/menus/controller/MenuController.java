@@ -75,8 +75,12 @@ public class MenuController {
 		description = "관리자 측에서 메뉴를 조회합니다."
 	)
 	@GetMapping("/detail/admin/{menuId}")
-	public AdminMenuDetailDto getMenuDetailAdmin(@PathVariable Long menuId) {
-		return menuService.getMenuDetailForAdmin(menuId);
+	public ResponseEntity<ApiResponse<AdminMenuDetailDto>> getMenuDetailAdmin(@PathVariable Long menuId) {
+		AdminMenuDetailDto adminMenuDetailDto = menuService.getMenuDetailForAdmin(menuId);
+		return ResponseEntity.ok().body(ApiResponse.success(
+			"관리자 메뉴 상세조회에 성공했습니다.",
+			adminMenuDetailDto
+		));
 	}
 
 	@Operation(
@@ -84,10 +88,11 @@ public class MenuController {
 		description = "관리자 측에서 메뉴를 수정합니다."
 	)
 	@PutMapping("/admin/{menuId}")
-	public void updateMenu(
+	public ResponseEntity<ApiResponse<Void>> updateMenu(
 		@PathVariable Long menuId,
 		@RequestBody AdminMenuUpdateDto request
 	) {
 		menuService.updateMenu(menuId, request);
+		return ResponseEntity.ok(ApiResponse.success("메뉴가 수정되었습니다.", null));
 	}
 }
