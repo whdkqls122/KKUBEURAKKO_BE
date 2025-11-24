@@ -8,6 +8,9 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.dto.PaymentResponseDto;
 
+import lombok.Builder;
+
+@Builder
 public record OrderDetailResponseDto(
 	Long id,
 	OrderType orderType,
