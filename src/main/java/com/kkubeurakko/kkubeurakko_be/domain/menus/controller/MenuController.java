@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AddOptionGroupsRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuDetailDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.service.MenuService;
@@ -25,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/v1/menu")
 public class MenuController {
+
 	private final MenuService menuService;
 
 	@Operation(
@@ -65,6 +67,15 @@ public class MenuController {
 	) {
 		menuService.updateOptionGroups(menuId, request.optionGroupIds());
 		return ResponseEntity.ok(ApiResponse.success("옵션 그룹이 메뉴에 추가되었습니다.", null));
+	}
+
+	@Operation(
+		summary = "관리자 메뉴 단일 조회",
+		description = "관리자 측에서 메뉴를 조회합니다."
+	)
+	@GetMapping("/detail/admin/{menuId}")
+	public AdminMenuDetailDto getMenuDetailAdmin(@PathVariable Long menuId) {
+		return menuService.getMenuDetailForAdmin(menuId);
 	}
 
 }
