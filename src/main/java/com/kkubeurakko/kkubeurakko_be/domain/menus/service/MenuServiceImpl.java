@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuDetailDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
@@ -66,27 +67,37 @@ public class MenuServiceImpl implements MenuService {
 	public AdminMenuDetailDto getMenuDetailForAdmin(Long menuId) {
 
 		Menus menu = menuRepository.findById(menuId)
-			.orElseThrow(() -> new IllegalArgumentException("해당 메뉴가 존재하지 않습니다."));
+			.orElseThrow(() -> new EntityNotFoundException("메뉴가 존재하지 않습니다."));
 
 		List<OptionGroups> optionGroups = optionGroupRepository.findAllByMenuId(menuId);
-		
-		List<AdminMenuDetailDto.OptionGroupSimpleDto> optionGroupDtos =
-			optionGroups.stream()
-				.map(og -> new AdminMenuDetailDto.OptionGroupSimpleDto(
-					og.getId(),
-					og.getName()
-				))
-				.toList();
 
-		return new AdminMenuDetailDto(
-			menu.getId(),
-			menu.getName(),
-			menu.getDescription(),
-			menu.getPrice(),
-			menu.getMenuStatus(),
-			menu.getImg(),
-			optionGroupDtos
+		return AdminMenuDetailDto(menu, optionGroups);
+	}
+
+	@Override
+	public void updateMenu(Long menuId, AdminMenuUpdateDto request) {
+
+		Menus menu = menuRepository.findById(menuId)
+			.orElseThrow(() -> new EntityNotFoundException("메뉴가 존재하지 않습니다."));
+
+		menu.update(
+			request.name(),
+			request.description(),
+			request.price(),
+			request.status(),
+			request.img()
 		);
+
+		menu.clearOptionGroups();
+
+		List<Long> optionGroupIds = request.optionGroupIds();
+		if (optionGroupIds == null || optionGroupIds.isEmpty())
+			return;
+
+		List<OptionGroups> optionGroups =
+			optionGroupRepository.findAllById(optionGroupIds);
+
+		optionGroups.forEach(menu::addOptionGroup);
 	}
 
 	private List<MenuResponseDto> toResponseDto(List<Menus> menuList) {
@@ -137,5 +148,27 @@ public class MenuServiceImpl implements MenuService {
 				)
 				.build())
 			.toList();
+	}
+
+	private AdminMenuDetailDto AdminMenuDetailDto(Menus menu, List<OptionGroups> optionGroups) {
+
+		List<AdminMenuDetailDto.OptionGroupSimpleDto> optionGroupDtos =
+			optionGroups.stream()
+				.map(og -> AdminMenuDetailDto.OptionGroupSimpleDto.builder()
+					.id(og.getId())
+					.name(og.getName())
+					.build()
+				)
+				.toList();
+
+		return AdminMenuDetailDto.builder()
+			.menuId(menu.getId())
+			.name(menu.getName())
+			.description(menu.getDescription())
+			.price(menu.getPrice())
+			.status(menu.getMenuStatus())
+			.img(menu.getImg())
+			.optionGroups(optionGroupDtos)
+			.build();
 	}
 }
