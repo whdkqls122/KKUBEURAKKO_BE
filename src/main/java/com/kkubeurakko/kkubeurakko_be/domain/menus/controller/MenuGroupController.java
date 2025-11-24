@@ -52,9 +52,9 @@ public class MenuGroupController {
 		description = "새로운 메뉴 그룹을 등록합니다."
 	)
 	@PostMapping
-	public ResponseEntity<String> createMenuGroup(@Valid @RequestBody MenuGroupRequestDto requestDto) {
+	public ResponseEntity<ApiResponse<Void>> createMenuGroup(@Valid @RequestBody MenuGroupRequestDto requestDto) {
 		menuGroupService.createMenuGroup(requestDto);
-		return ResponseEntity.ok("메뉴 그룹 생성에 성공하였습니다.");
+		return ResponseEntity.ok(ApiResponse.success("메뉴 그룹 생성에 성공하였습니다.", null));
 	}
 
 	@Operation(

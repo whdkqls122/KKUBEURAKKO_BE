@@ -75,6 +75,7 @@ public class MenuServiceImpl implements MenuService {
 	}
 
 	@Override
+	@Transactional
 	public void updateMenu(Long menuId, AdminMenuUpdateDto request) {
 
 		Menus menu = menuRepository.findById(menuId)
