@@ -33,6 +33,12 @@ public class Payments extends BaseEntity {
 	@Column(name = "total_amount", nullable = false)
 	private int totalAmount;
 
+	@Column(name = "final_amount", nullable = false)
+	private int finalAmount;
+
+	@Column(name = "discount_amount", nullable = false)
+	private int discountAmount;
+
 	@Column(name = "transaction_id", nullable = false, length = 50)
 	private String transactionId;
 
