@@ -1,6 +1,9 @@
 package com.kkubeurakko.kkubeurakko_be;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
@@ -9,7 +12,15 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItems;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItemsOptions;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
+import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
+import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 
 public class TestFixture {
 
@@ -78,5 +89,91 @@ public class TestFixture {
 			.optionGroupType(OptionGroupType.SINGLE)
 			.optionStatus(OptionStatus.ON_SALE)
 			.build();
+	}
+
+	public static Users createUser(String userNumber, String phone) {
+		return Users.builder()
+			.userNumber(userNumber)
+			.role(UserRole.CUSTOMER)
+			.phone(phone)
+			.build();
+	}
+
+	public static OrderItemsOptions createOrderItemOption(Long id, Options option, OrderItems parent) {
+		return OrderItemsOptions.builder()
+			.id(id)
+			.option(option)
+			.orderItems(parent)
+			.build();
+	}
+
+	public static OrderItems createOrderItem(Long id, Menus menu, List<Options> options, Orders parent) {
+
+		OrderItems item = OrderItems.builder()
+			.id(id)
+			.menu(menu)
+			.quantity(2)
+			.totalPrice(menu.getPrice() * 2)
+			.order(parent)
+			.orderItemOptionList(new ArrayList<>())
+			.build();
+
+		List<OrderItemsOptions> optionEntities = options.stream()
+			.map(opt -> OrderItemsOptions.builder()
+				.id(opt.getId())
+				.option(opt)
+				.orderItems(item)
+				.build()
+			).toList();
+
+		item.getOrderItemOptionList().addAll(optionEntities);
+
+		return item;
+	}
+
+	public static Orders createOrderWithPayment(Long id, Users user, List<Menus> menus,
+		List<List<Options>> optionsPerMenu) {
+		Orders order = Orders.builder()
+			.id(id)
+			.user(user)
+			.orderItemList(new ArrayList<>())
+			.orderType(OrderType.DELIVERY)
+			.status(Status.COMPLETED)
+			.completionTime(20)
+			.address("서울시 강남구")
+			.orderDate(LocalDateTime.now())
+			.build();
+
+		// OrderItems 생성 및 추가
+		for (int i = 0; i < menus.size(); i++) {
+			OrderItems item = createOrderItem(
+				id + 100 + i,
+				menus.get(i),
+				optionsPerMenu.get(i),
+				order
+			);
+			order.getOrderItemList().add(item);
+		}
+
+		// Payment 생성
+		Payments payment = Payments.builder()
+			.id(id + 1000)
+			.order(order)
+			.totalAmount(order.getOrderItemList().stream().mapToInt(OrderItems::getTotalPrice).sum())
+			.paymentsType("CARD")
+			.transactionId("T" + id + "PAY")
+			.build();
+
+		// Builder 사용으로 Orders에 Payment 포함
+		// Orders 엔티티에 payments 필드가 final이나 builder 미포함이면, OrderService 테스트에서는 reflection 또는 getter를 통한 세팅 필요
+		try {
+			java.lang.reflect.Field paymentField = Orders.class.getDeclaredField("payments");
+			paymentField.setAccessible(true);
+			paymentField.set(order, payment);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
+		return order;
 	}
 }
