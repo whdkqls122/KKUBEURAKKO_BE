@@ -51,18 +51,6 @@ public class MenuServiceImpl implements MenuService {
 	}
 
 	@Override
-	@Transactional
-	public void updateOptionGroups(Long menuId, List<Long> optionGroupIds) {
-		Menus menu = menuRepository.findById(menuId)
-			.orElseThrow(() -> new EntityNotFoundException("메뉴가 존재하지 않습니다."));
-
-		menu.clearOptionGroups();
-
-		List<OptionGroups> optionGroups = optionGroupRepository.findAllById(optionGroupIds);
-		optionGroups.forEach(menu::addOptionGroup);
-	}
-
-	@Override
 	@Transactional(readOnly = true)
 	public AdminMenuDetailDto getMenuDetailForAdmin(Long menuId) {
 

@@ -12,9 +12,6 @@ public interface MenuService {
 
 	MenuDetailResponseDto getMenuDetail(Long menuId);
 
-	//메뉴에 옵션 그룹 추가/갱신
-	void updateOptionGroups(Long menuId, List<Long> optionGroupIds);
-
 	//메뉴 단건 조회 (관리자)
 	AdminMenuDetailDto getMenuDetailForAdmin(Long menuId);
 
