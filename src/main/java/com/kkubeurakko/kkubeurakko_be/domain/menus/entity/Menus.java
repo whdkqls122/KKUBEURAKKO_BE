@@ -75,4 +75,12 @@ public class Menus extends BaseEntity {
 		this.menuOptionGroups.clear();
 	}
 
+	public void update(String name, String description, int price, MenuStatus status, String img) {
+		this.name = name;
+		this.description = description;
+		this.price = price;
+		this.menuStatus = status;
+		this.img = img;
+	}
+
 }
