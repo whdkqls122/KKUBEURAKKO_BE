@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AddOptionGroupsRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuDetailDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.service.MenuService;
@@ -78,4 +79,15 @@ public class MenuController {
 		return menuService.getMenuDetailForAdmin(menuId);
 	}
 
+	@Operation(
+		summary = "관리자 메뉴 수정",
+		description = "관리자 측에서 메뉴를 수정합니다."
+	)
+	@PutMapping("/admin/{menuId}")
+	public void updateMenu(
+		@PathVariable Long menuId,
+		@RequestBody AdminMenuUpdateDto request
+	) {
+		menuService.updateMenu(menuId, request);
+	}
 }
