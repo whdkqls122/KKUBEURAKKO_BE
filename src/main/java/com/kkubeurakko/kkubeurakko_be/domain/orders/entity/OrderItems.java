@@ -41,8 +41,8 @@ public class OrderItems {
 	private int quantity;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "order_id", nullable = false)
-	private Orders orders;
+	@JoinColumn(name = "orders_id", nullable = false)
+	private Orders order;
 
 	@OneToMany(mappedBy = "orderItems", cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default
