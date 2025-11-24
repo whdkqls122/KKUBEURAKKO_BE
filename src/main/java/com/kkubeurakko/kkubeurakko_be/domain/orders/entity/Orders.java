@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
+import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 
 import jakarta.persistence.CascadeType;
@@ -20,6 +21,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -55,14 +57,21 @@ public class Orders {
 	@Column(name = "status", nullable = false)
 	private Status status;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "order_type", nullable = false)
+	private OrderType orderType;
+
 	@Column(name = "address", length = 100)
 	private String address;
 
-	@OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default
 	List<OrderItems> orderItemList = new ArrayList<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_number", nullable = false)
 	private Users user;
+
+	@OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
+	private Payments payments;
 }
