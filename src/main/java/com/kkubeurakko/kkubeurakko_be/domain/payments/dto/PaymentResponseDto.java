@@ -17,6 +17,7 @@ public record PaymentResponseDto(
 			.totalAmount(payment.getTotalAmount())
 			.disCountAmount(payment.getDiscountAmount())
 			.finalAmount(payment.getFinalAmount())
+			.paymentType(payment.getPaymentsType())
 			.build();
 	}
 }
