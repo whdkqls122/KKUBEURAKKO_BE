@@ -65,6 +65,7 @@ public class OrderServiceImpl implements OrderService {
 					.name(mainMenuName)
 					.orderDate(ol.getOrderDate())
 					.orderQuantity(ol.getOrderItemList().stream().mapToInt(OrderItems::getQuantity).sum())
+					.orderType(ol.getOrderType())
 					.status(ol.getStatus())
 					.build();
 			})
