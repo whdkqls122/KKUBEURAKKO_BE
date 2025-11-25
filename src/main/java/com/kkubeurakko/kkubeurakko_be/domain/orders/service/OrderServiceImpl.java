@@ -74,18 +74,21 @@ public class OrderServiceImpl implements OrderService {
 	private OrderDetailResponseDto toResponseDto(Orders order) {
 
 		List<OrderMenuResponseDto> orderMenuList = order.getOrderItemList().stream()
-			.map(oi -> new OrderMenuResponseDto(
-				oi.getMenu().getName(),
-				oi.getQuantity(),
-				oi.getTotalPrice(),
-				oi.getOrderItemOptionList().stream()
-					.map(opt -> OrderItemsOptionResponseDto.builder()
-						.name(opt.getOption().getName())
-						.price(opt.getOption().getPrice())
-						.build()
-					)
-					.toList()
-			))
+			.map(oi -> OrderMenuResponseDto.builder()
+				.name(oi.getMenu().getName())
+				.quantity(oi.getQuantity())
+				.totalPrice(oi.getTotalPrice())
+				.optionList(
+					oi.getOrderItemOptionList().stream()
+						.map(opt -> OrderItemsOptionResponseDto.builder()
+							.name(opt.getOption().getName())
+							.price(opt.getOption().getPrice())
+							.build()
+						)
+						.toList()
+				)
+				.build()
+			)
 			.toList();
 
 		return OrderDetailResponseDto.builder()
