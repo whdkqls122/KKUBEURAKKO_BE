@@ -16,8 +16,7 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
 
 	@Query("""
 		    SELECT DISTINCT o FROM Orders o
-		    JOIN FETCH o.orderItemList oi
-		    JOIN FETCH oi.orderItemOptionList oio
+		    join fetch o.orderItemList oi
 		    WHERE o.id = :orderId AND o.user = :user
 		""")
 	Optional<Orders> findByIdAndUser(Long orderId, Users user);
