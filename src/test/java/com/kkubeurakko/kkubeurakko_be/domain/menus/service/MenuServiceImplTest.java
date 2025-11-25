@@ -17,6 +17,8 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuDetailDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
@@ -237,38 +239,81 @@ class MenuServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("메뉴의 옵션 그룹이 새 옵션 그룹으로 업데이트되는지 검증한다.")
-	void updateOptionGroups_success() {
+	@DisplayName("관리자 메뉴 상세 조회가 정상적으로 이루어지는지 검증한다.")
+	void getMenuDetailForAdmin_success() {
 		// given
-		Stores store = TestFixture.createStore();
-		MenuGroups group = TestFixture.createMenuGroup(1L, store);
-		Menus menu = TestFixture.createMenu(1L, group);
-
-		OptionGroups old1 = TestFixture.createOptionGroup(1L);
-		OptionGroups old2 = TestFixture.createOptionGroup(2L);
-
-		menu.addOptionGroup(old1);
-		menu.addOptionGroup(old2);
-
-		OptionGroups new1 = TestFixture.createOptionGroup(3L);
-		OptionGroups new2 = TestFixture.createOptionGroup(4L);
-
-		List<Long> idList = List.of(3L, 4L);
-		List<OptionGroups> newGroups = List.of(new1, new2);
-
 		when(menuRepository.findById(1L)).thenReturn(Optional.of(menu));
-		when(optionGroupRepository.findAllById(idList)).thenReturn(newGroups);
+		when(optionGroupRepository.findAllByMenuId(1L)).thenReturn(List.of(optionGroup));
 
 		// when
-		menuService.updateOptionGroups(1L, idList);
+		AdminMenuDetailDto dto = menuService.getMenuDetailForAdmin(1L);
 
 		// then
-		assertThat(menu.getMenuOptionGroups()).hasSize(2);
-		assertThat(menu.getMenuOptionGroups())
-			.extracting(mog -> mog.getOptionGroup().getId())
-			.containsExactlyInAnyOrder(3L, 4L);
+		assertThat(dto).isNotNull();
+		assertThat(dto.menuId()).isEqualTo(1L);
+		assertThat(dto.name()).isEqualTo(menu.getName());
+		assertThat(dto.status()).isEqualTo(menu.getMenuStatus());
+		assertThat(dto.optionGroups()).hasSize(1);
+		assertThat(dto.optionGroups().get(0).name()).isEqualTo(optionGroup.getName());
 
 		verify(menuRepository, times(1)).findById(1L);
-		verify(optionGroupRepository, times(1)).findAllById(idList);
+		verify(optionGroupRepository, times(1)).findAllByMenuId(1L);
 	}
+
+	@Test
+	@DisplayName("관리자 메뉴 수정이 정상적으로 이루어지는지 검증한다.")
+	void updateMenu_success() {
+		// given
+		Long menuId = 1L;
+
+		Menus menu = Menus.builder()
+			.id(menuId)
+			.name("이전메뉴명")
+			.description("이전설명")
+			.price(10000)
+			.menuStatus(MenuStatus.ON_SALE)
+			.img("old.jpg")
+			.build();
+
+		when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
+
+		AdminMenuUpdateDto request = AdminMenuUpdateDto.builder()
+			.name("새로운메뉴명")
+			.description("새로운설명")
+			.price(15000)
+			.status(MenuStatus.ON_SALE)
+			.img("new.jpg")
+			.optionGroupIds(List.of(10L, 11L))
+			.build();
+
+		OptionGroups og1 = OptionGroups.builder()
+			.id(10L)
+			.name("추가옵션1")
+			.build();
+
+		OptionGroups og2 = OptionGroups.builder()
+			.id(11L)
+			.name("추가옵션2")
+			.build();
+
+		when(optionGroupRepository.findAllById(List.of(10L, 11L)))
+			.thenReturn(List.of(og1, og2));
+
+		// when
+		menuService.updateMenu(menuId, request);
+
+		// then
+		assertThat(menu.getName()).isEqualTo("새로운메뉴명");
+		assertThat(menu.getDescription()).isEqualTo("새로운설명");
+		assertThat(menu.getPrice()).isEqualTo(15000);
+		assertThat(menu.getImg()).isEqualTo("new.jpg");
+
+		assertThat(menu.getMenuOptionGroups())
+			.extracting(mog -> mog.getOptionGroup().getId())
+			.containsExactlyInAnyOrder(10L, 11L);
+
+		verify(menuRepository, times(1)).findById(menuId);
+		verify(optionGroupRepository, times(1)).findAllById(List.of(10L, 11L));
+	}
+
 }
