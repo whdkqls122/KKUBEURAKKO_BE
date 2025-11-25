@@ -21,6 +21,6 @@ public record OrderDetailResponseDto(
 	String address,
 	String phoneNum,
 	List<OrderMenuResponseDto> orderMenuList,
-	PaymentResponseDto paymentResponseDto
+	PaymentResponseDto payment
 ) {
 }

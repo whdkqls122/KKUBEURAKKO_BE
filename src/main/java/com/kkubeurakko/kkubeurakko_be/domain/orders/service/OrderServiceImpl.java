@@ -101,7 +101,7 @@ public class OrderServiceImpl implements OrderService {
 			.address(order.getAddress())
 			.phoneNum(aesUtil.decryptFromBase64(order.getUser().getPhone()))
 			.orderMenuList(orderMenuList)
-			.paymentResponseDto(PaymentResponseDto.from(order.getPayments()))
+			.payment(PaymentResponseDto.from(order.getPayments()))
 			.build();
 	}
 }
