@@ -15,7 +15,7 @@ public record OrderDetailResponseDto(
 	Long id,
 	OrderType orderType,
 	Status orderStatus,
-	@JsonFormat(pattern = "yy-MM-dd HH:mm")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
 	LocalDateTime orderDate,
 	int completionTime,
 	String address,
