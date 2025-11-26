@@ -44,6 +44,12 @@ public class Addresses extends BaseEntity {
 	@Column(name = "postal_code", nullable = false)
 	private String postalCode;
 
+	@Column(name = "latitude", nullable = false)
+	private double latitude;
+
+	@Column(name = "longitude", nullable = false)
+	private double longitude;
+
 	@Column(name = "is_primary", nullable = false)
 	private Boolean isPrimary;
 
@@ -67,7 +73,8 @@ public class Addresses extends BaseEntity {
 	public void update(
 		String addressName, String roadName, String detailAddress,
 		String postalCode, AddressCategory category,
-		String requestContent, String entrancePassword, String directionsInfo
+		String requestContent, String entrancePassword, String directionsInfo,
+		double latitude, double longitude
 	) {
 		this.addressName = addressName;
 		this.roadName = roadName;
@@ -77,6 +84,8 @@ public class Addresses extends BaseEntity {
 		this.requestContent = requestContent;
 		this.entrancePassword = entrancePassword;
 		this.directionsInfo = directionsInfo;
+		this.latitude = latitude;
+		this.longitude = longitude;
 	}
 
 	public void updatePrimary(boolean isPrimary) {
