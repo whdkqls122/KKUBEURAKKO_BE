@@ -11,6 +11,8 @@ public record AddressDetailResponseDto(
 	String roadName,
 	String detailAddress,
 	String postalCode,
+	double latitude,
+	double longitude,
 	boolean isPrimary,
 	AddressCategory category,
 	String requestContent,
