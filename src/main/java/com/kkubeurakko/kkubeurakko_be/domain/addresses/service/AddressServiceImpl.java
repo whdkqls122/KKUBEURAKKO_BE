@@ -225,6 +225,8 @@ public class AddressServiceImpl implements AddressService {
 			.roadName(address.getRoadName())
 			.detailAddress(aesUtil.decryptFromBase64(address.getDetailAddress()))
 			.postalCode(address.getPostalCode())
+			.latitude(address.getLatitude())
+			.longitude(address.getLongitude())
 			.isPrimary(address.getIsPrimary())
 			.category(address.getCategory())
 			.requestContent(address.getRequestContent())
