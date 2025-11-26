@@ -2,11 +2,13 @@ package com.kkubeurakko.kkubeurakko_be.global.oauth.dto;
 
 import java.util.Map;
 
-public class GoogleResponse implements OAuth2Response{
+public class GoogleResponse implements OAuth2Response {
 	private final Map<String, Object> attribute;
-	public GoogleResponse(Map<String, Object> attribute){
+
+	public GoogleResponse(Map<String, Object> attribute) {
 		this.attribute = attribute;
 	}
+
 	@Override
 	public String getProvider() {
 		return "google";
@@ -15,5 +17,15 @@ public class GoogleResponse implements OAuth2Response{
 	@Override
 	public String getProviderId() {
 		return attribute.get("sub").toString();
+	}
+
+	@Override
+	public String getEmail() {
+		return attribute.get("email").toString();
+	}
+
+	@Override
+	public String getNickname() {
+		return attribute.get("nickname").toString();
 	}
 }

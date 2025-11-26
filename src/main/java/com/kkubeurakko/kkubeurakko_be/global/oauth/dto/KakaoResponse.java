@@ -2,11 +2,17 @@ package com.kkubeurakko.kkubeurakko_be.global.oauth.dto;
 
 import java.util.Map;
 
-public class KakaoResponse implements OAuth2Response{
+public class KakaoResponse implements OAuth2Response {
 	private final Map<String, Object> attribute;
-	public KakaoResponse(Map<String, Object> attribute){
+	private final Map<String, Object> kakaoAccount;
+	private final Map<String, Object> profile;
+
+	public KakaoResponse(Map<String, Object> attribute) {
 		this.attribute = attribute;
+		this.kakaoAccount = (Map<String, Object>)attribute.get("kakao_account");
+		this.profile = (Map<String, Object>)kakaoAccount.get("profile");
 	}
+
 	@Override
 	public String getProvider() {
 		return "kakao";
@@ -15,5 +21,15 @@ public class KakaoResponse implements OAuth2Response{
 	@Override
 	public String getProviderId() {
 		return attribute.get("id").toString();
+	}
+
+	@Override
+	public String getEmail() {
+		return kakaoAccount.get("email").toString();
+	}
+
+	@Override
+	public String getNickname() {
+		return profile.get("nickname").toString();
 	}
 }
