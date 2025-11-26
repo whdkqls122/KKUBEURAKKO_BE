@@ -62,4 +62,8 @@ public class Users extends BaseEntity {
 		this.phoneHash = phoneHash;
 		this.phone = phone;
 	}
+
+	public void updateNickname(String nickname) {
+		this.nickname = nickname;
+	}
 }

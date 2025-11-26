@@ -11,10 +11,8 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
-import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.GoogleResponse;
-import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.KakaoResponse;
-import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.NaverResponse;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.OAuth2Response;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.resolver.OAuth2ProviderResolver;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 	private final UserRepository userRepository;
+	private final OAuth2ProviderResolver oAuth2ProviderResolver;
 
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -32,44 +31,34 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 		log.info("OAuth2User attributes: {}", oAuth2User.getAttributes());
 
-		String userNumber = getUserNumber(userRequest, oAuth2User);
+		String provider = userRequest.getClientRegistration().getRegistrationId();
+		OAuth2Response response = oAuth2ProviderResolver.resolve(provider, oAuth2User.getAttributes());
+		String userNumber = response.getProvider() + "_" + response.getProviderId();
 
 		Users user = userRepository.findByUserNumber(userNumber).orElse(null);
-		boolean firstLogin = false;
-		if (user == null) {
-			firstLogin = true;
+		boolean firstLogin = (user == null);
+		if (firstLogin) {
 			user = Users.builder()
 				.userNumber(userNumber)
+				.email(response.getEmail())
+				.nickname(response.getNickname())
 				.role(UserRole.CUSTOMER)
 				.build();
 			userRepository.save(user);
+		} else {
+			user.updateNickname(response.getNickname());
 		}
 
 		UserDto userDto = UserDto.builder()
 			.userNumber(user.getUserNumber())
 			.role(user.getRole())
+			.email(user.getEmail())
+			.nickname(user.getNickname())
 			.firstLogin(firstLogin)
+			.provider(response.getProvider())
 			.build();
+
 		log.info("유저 정보 생성 완료:{}", userNumber);
 		return new CustomOAuth2User(userDto);
-	}
-
-	private String getUserNumber(OAuth2UserRequest userRequest, OAuth2User oAuth2User) {
-		String registrationId = userRequest.getClientRegistration().getRegistrationId();
-		OAuth2Response oAuth2Response = null;
-
-		if (registrationId.equals("kakao")) {
-			oAuth2Response = new KakaoResponse(oAuth2User.getAttributes());
-		} else if (registrationId.equals("naver")) {
-			oAuth2Response = new NaverResponse(oAuth2User.getAttributes());
-		} else if (registrationId.equals("google")) {
-			oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
-		}
-
-		if (oAuth2Response == null) {
-			throw new OAuth2AuthenticationException("지원하지 않는 소셜 로그인입니다.");
-		}
-
-		return oAuth2Response.getProvider() + "_" + oAuth2Response.getProviderId();
 	}
 }
