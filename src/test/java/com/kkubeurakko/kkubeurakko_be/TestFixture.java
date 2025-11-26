@@ -17,6 +17,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItemsOptions;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
@@ -160,7 +161,7 @@ public class TestFixture {
 			.id(id + 1000)
 			.order(order)
 			.totalAmount(order.getOrderItemList().stream().mapToInt(OrderItems::getTotalPrice).sum())
-			.paymentsType("CARD")
+			.paymentsType(PaymentType.GENERAL)
 			.transactionId("T" + id + "PAY")
 			.build();
 
