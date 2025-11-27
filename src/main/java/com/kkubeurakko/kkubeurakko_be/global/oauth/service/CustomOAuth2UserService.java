@@ -52,10 +52,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		UserDto userDto = UserDto.builder()
 			.userNumber(user.getUserNumber())
 			.role(user.getRole())
-			.email(user.getEmail())
-			.nickname(user.getNickname())
 			.firstLogin(firstLogin)
-			.provider(response.getProvider())
 			.build();
 
 		log.info("유저 정보 생성 완료:{}", userNumber);
