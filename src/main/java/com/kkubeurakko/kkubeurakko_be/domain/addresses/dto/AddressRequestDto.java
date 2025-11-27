@@ -32,6 +32,6 @@ public record AddressRequestDto(
 	@Size(max = 20, message = "공동 현관 비밀번호는 최대 20자까지 가능합니다.")
 	String entrancePassword,
 	@Size(max = 100, message = "찾아오는 길 정보는 최대 100자까지 가능합니다.")
-	String directionInfo
+	String directionsInfo
 ) {
 }
