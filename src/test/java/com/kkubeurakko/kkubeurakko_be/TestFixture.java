@@ -96,6 +96,8 @@ public class TestFixture {
 		return Users.builder()
 			.userNumber(userNumber)
 			.role(UserRole.CUSTOMER)
+			.email("test@naver.com")
+			.nickname("조아빈")
 			.phone(phone)
 			.build();
 	}
