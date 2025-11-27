@@ -7,6 +7,7 @@ import java.util.Base64;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.PhoneHashingException;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
@@ -43,6 +44,11 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	public UserInfoResponseDto getUserInfo(CustomOAuth2User customOAuth2User) {
+		return toResponseDto(customOAuth2User);
+	}
+
+	@Override
 	public boolean existsUserPhone(String phonePhone) {
 		return userRepository.existsByPhoneHash(phonePhone);
 	}
@@ -62,5 +68,13 @@ public class UserServiceImpl implements UserService {
 		} catch (Exception e) {
 			throw new PhoneHashingException("전화번호 해시 생성에 실패 하였습니다.", e);
 		}
+	}
+
+	private UserInfoResponseDto toResponseDto(CustomOAuth2User customOAuth2User) {
+		return UserInfoResponseDto.builder()
+			.provider(customOAuth2User.getProvider())
+			.email(customOAuth2User.getEmail())
+			.nickname(customOAuth2User.getNickname())
+			.build();
 	}
 }
