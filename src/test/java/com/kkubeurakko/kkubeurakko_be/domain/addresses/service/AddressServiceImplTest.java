@@ -227,7 +227,7 @@ class AddressServiceImplTest {
 			.category(AddressCategory.COMPANY)
 			.requestContent("문앞에 두세요")
 			.entrancePassword(null)
-			.directionInfo("왼쪽 골목")
+			.directionsInfo("왼쪽 골목")
 			.build();
 
 		// when
@@ -260,7 +260,7 @@ class AddressServiceImplTest {
 			.longitude(126.9780770992189)
 			.requestContent("문앞에 두세요")
 			.entrancePassword(null)
-			.directionInfo("왼쪽 골목")
+			.directionsInfo("왼쪽 골목")
 			.build();
 
 		// when & then
