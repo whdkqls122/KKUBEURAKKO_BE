@@ -14,6 +14,7 @@ public interface UserService {
 
 	Users getUser(String userNumber);
 
+	//사용자 정보 조회
 	UserInfoResponseDto getUserInfo(CustomOAuth2User customOAuth2User);
 
 }
