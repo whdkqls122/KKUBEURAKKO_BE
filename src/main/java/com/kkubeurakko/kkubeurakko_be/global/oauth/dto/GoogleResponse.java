@@ -26,6 +26,6 @@ public class GoogleResponse implements OAuth2Response {
 
 	@Override
 	public String getNickname() {
-		return attribute.get("nickname").toString();
+		return attribute.get("name").toString();
 	}
 }
