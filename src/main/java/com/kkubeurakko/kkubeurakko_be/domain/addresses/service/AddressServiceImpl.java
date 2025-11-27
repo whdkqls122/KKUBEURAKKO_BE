@@ -63,7 +63,7 @@ public class AddressServiceImpl implements AddressService {
 			addressUpdateRequestDto.requestContent(),
 			addressUpdateRequestDto.entrancePassword() != null ?
 				aesUtil.encryptToBase64(addressUpdateRequestDto.entrancePassword()) : null,
-			addressUpdateRequestDto.directionInfo(),
+			addressUpdateRequestDto.directionsInfo(),
 			addressUpdateRequestDto.latitude(),
 			addressUpdateRequestDto.longitude()
 		);
@@ -175,7 +175,7 @@ public class AddressServiceImpl implements AddressService {
 				addressRequestDto.entrancePassword() != null ?
 					aesUtil.encryptToBase64(addressRequestDto.entrancePassword()) : null
 			)
-			.directionsInfo(addressRequestDto.directionInfo())
+			.directionsInfo(addressRequestDto.directionsInfo())
 			.user(user)
 			.build();
 	}
