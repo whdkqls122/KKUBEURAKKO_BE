@@ -45,7 +45,8 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public UserInfoResponseDto getUserInfo(CustomOAuth2User customOAuth2User) {
-		return toResponseDto(customOAuth2User);
+		Users user = getUser(customOAuth2User.getName());
+		return toResponseDto(user);
 	}
 
 	@Override
@@ -70,11 +71,15 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
-	private UserInfoResponseDto toResponseDto(CustomOAuth2User customOAuth2User) {
+	private UserInfoResponseDto toResponseDto(Users user) {
 		return UserInfoResponseDto.builder()
-			.provider(customOAuth2User.getProvider())
-			.email(customOAuth2User.getEmail())
-			.nickname(customOAuth2User.getNickname())
+			.provider(getProvider(user.getUserNumber()))
+			.email(user.getEmail())
+			.nickname(user.getNickname())
 			.build();
+	}
+
+	private String getProvider(String userNumber) {
+		return userNumber.substring(0, userNumber.indexOf("_"));
 	}
 }
