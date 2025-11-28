@@ -13,6 +13,7 @@ import io.micrometer.common.lang.Nullable;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 
 public record OrderCreateRequest(
 	@NotNull(message = "사용자 ID는 필수입니다.")
@@ -22,9 +23,11 @@ public record OrderCreateRequest(
 	Long addressId,
 
 	@Nullable
+	@Size(max = 15, message = "가게 요청사항은 최대 15자까지 가능합니다.")
 	String storeRequest,
 
 	@Nullable
+	@Size(max = 15, message = "배달 요청사항은 최대 15자까지 가능합니다.")
 	String deliveryRequest,
 
 	@NotNull(message = "주문 타입은 필수입니다.")
@@ -32,7 +35,7 @@ public record OrderCreateRequest(
 
 	@NotNull(message = "결제 방식은 필수입니다.")
 	PaymentType paymentType,
-	
+
 	@Nullable
 	Long couponId,
 

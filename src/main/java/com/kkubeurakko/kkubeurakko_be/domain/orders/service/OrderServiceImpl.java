@@ -112,6 +112,9 @@ public class OrderServiceImpl implements OrderService {
 
 		Addresses address = null;
 		if (request.orderType() == OrderType.DELIVERY) {
+			if (request.addressId() == null) {
+				throw new IllegalArgumentException("배달 주문 시 주소는 필수입니다.");
+			}
 			address = addressRepository.findById(request.addressId())
 				.orElseThrow(() -> new EntityNotFoundException("주소를 찾을 수 없습니다."));
 		}
