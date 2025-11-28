@@ -35,7 +35,7 @@ public class UsersCoupons {
 	@Column(name = "is_used", nullable = false)
 	private boolean isUsed;
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "users_number", nullable = false)
+	@JoinColumn(name = "user_number", nullable = false)
 	private Users user;
 
 	@ManyToOne(fetch = FetchType.LAZY)
