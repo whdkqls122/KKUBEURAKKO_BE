@@ -98,6 +98,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
+	@Transactional
 	public Long createOrder(OrderCreateRequest request) {
 
 		Users user = userRepository.findById(request.userId())
@@ -126,7 +127,7 @@ public class OrderServiceImpl implements OrderService {
 		Payments payment = toPaymentEntity(order, request, discountAmount);
 		paymentRepository.save(payment);
 
-		cart.removeCartItem(cart.getCartItemList());//전체 삭제 메서드 만들기
+		cart.clearItems();
 
 		sendOrderToStore(order);
 

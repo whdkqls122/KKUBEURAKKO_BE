@@ -49,4 +49,8 @@ public class Cart {
 	public void removeCartItem(CartItem cartItem) {
 		this.cartItemList.remove(cartItem);
 	}
+
+	public void clearItems() {
+		this.cartItemList.clear();
+	}
 }
