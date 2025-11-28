@@ -1,19 +1,36 @@
 package com.kkubeurakko.kkubeurakko_be.domain.orders.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.repository.AddressRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
+import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItem;
+import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItemOption;
+import com.kkubeurakko.kkubeurakko_be.domain.cart.repository.CartRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderItemsOptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderMenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItems;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItemsOptions;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.dto.PaymentResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
+import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
@@ -26,6 +43,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class OrderServiceImpl implements OrderService {
+
+	private final UserRepository userRepository;
+	private final CartRepository cartRepository;
+	private final UserCouponRepository userCouponRepository;
+	private final PaymentRepository paymentRepository;
+	private final AddressRepository addressRepository;
+	private final SimpMessagingTemplate messagingTemplate;
 	private final OrderRepository orderRepository;
 	private final UserService userService;
 	private final AesUtil aesUtil;
@@ -72,6 +96,41 @@ public class OrderServiceImpl implements OrderService {
 			.toList();
 	}
 
+	public Long createOrder(OrderCreateRequest request) {
+
+		Users user = userRepository.findById(request.userNumber())
+			.orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+
+		Cart cart = cartRepository.findByUser(user)
+			.orElseThrow(() -> new IllegalStateException("장바구니가 비어있습니다."));
+
+		if (cart.getCartItemList().isEmpty())
+			throw new IllegalStateException("장바구니에 담긴 메뉴가 없습니다.");
+
+		Addresses address = null;
+		if (request.orderType() == OrderType.DELIVERY) {
+			address = addressRepository.findById(request.addressId())
+				.orElseThrow(() -> new EntityNotFoundException("주소를 찾을 수 없습니다."));
+		}
+
+		int discountAmount = applyCouponIfNecessary(user, cart, request);
+		int totalAmount = calculateCartTotal(cart);
+
+		Orders order = toOrderEntity(request, user, address, totalAmount);
+		orderRepository.save(order);
+
+		createOrderItems(order, cart);
+
+		Payments payment = toPaymentEntity(order, request, discountAmount);
+		paymentRepository.save(payment);
+
+		cart.clearItems();
+
+		sendOrderToStore(order);
+
+		return order.getId();
+	}
+
 	private OrderDetailResponseDto toResponseDto(Orders order) {
 
 		List<OrderMenuResponseDto> orderMenuList = order.getOrderItemList().stream()
@@ -103,5 +162,96 @@ public class OrderServiceImpl implements OrderService {
 			.orderMenuList(orderMenuList)
 			.payment(PaymentResponseDto.from(order.getPayments()))
 			.build();
+	}
+
+	private Orders toOrderEntity(OrderCreateRequest request, Users user, Addresses address, int totalAmount) {
+		return Orders.builder()
+			.user(user)
+			.orderDate(LocalDateTime.now())
+			.status(Status.PENDING)
+			.orderType(request.orderType())
+			.address(address != null
+				? address.getRoadName() + " " + address.getDetailAddress()
+				: null)
+			.storeRequest(request.storeRequest())
+			.completionTime(0)
+			.totalAmount(totalAmount)
+			.build();
+	}
+
+	private void createOrderItems(Orders order, Cart cart) {
+		for (CartItem cartItem : cart.getCartItemList()) {
+
+			OrderItems orderItem = toOrderItemEntity(order, cartItem);
+
+			for (CartItemOption opt : cartItem.getOptionList()) {
+				orderItem.getOrderItemOptionList()
+					.add(toOrderItemOptionEntity(orderItem, opt));
+			}
+
+			order.getOrderItemList().add(orderItem);
+		}
+	}
+
+	private OrderItems toOrderItemEntity(Orders order, CartItem cartItem) {
+		return OrderItems.builder()
+			.order(order)
+			.menu(cartItem.getMenu())
+			.quantity(cartItem.getQuantity())
+			.totalPrice(cartItem.getQuantity() * cartItem.getMenu().getPrice())
+			.build();
+	}
+
+	private OrderItemsOptions toOrderItemOptionEntity(OrderItems orderItem, CartItemOption opt) {
+		return OrderItemsOptions.builder()
+			.orderItems(orderItem)
+			.option(opt.getOption())
+			.build();
+	}
+
+	private Payments toPaymentEntity(Orders order, OrderCreateRequest request, int discountAmount) {
+		return Payments.builder()
+			.order(order)
+			.paymentsType(request.paymentType())
+			.totalAmount(order.getTotalAmount())
+			.finalAmount(order.getTotalAmount() + request.deliveryTip() - discountAmount)
+			.discountAmount(discountAmount)
+			.transactionId(UUID.randomUUID().toString())
+			.build();
+	}
+
+	private int calculateCartTotal(Cart cart) {
+		return cart.getCartItemList().stream()
+			.mapToInt(i -> i.getMenu().getPrice() * i.getQuantity()
+				+ i.getOptionList().stream().mapToInt(o -> o.getOption().getPrice()).sum())
+			.sum();
+	}
+
+	private int applyCouponIfNecessary(Users user, Cart cart, OrderRequest request) {
+		if (request.couponId() == null)
+			return 0;
+
+		UsersCoupons usersCoupon = usersCouponsRepository.findByUserAndCouponId(user, request.couponId())
+			.orElseThrow(() -> new IllegalArgumentException("쿠폰이 존재하지 않습니다."));
+
+		if (usersCoupon.isUsed())
+			throw new IllegalArgumentException("이미 사용된 쿠폰입니다.");
+
+		Coupons coupon = usersCoupon.getCoupon();
+
+		int orderAmount = calculateCartTotal(cart);
+		if (orderAmount < coupon.getMinOrderAmount())
+			throw new IllegalStateException("최소 주문 금액에 미달합니다.");
+
+		usersCoupon.setUsed(true);
+
+		return Integer.parseInt(coupon.getDiscountAmount());
+	}
+
+	private void sendOrderToStore(Orders order) {
+		messagingTemplate.convertAndSend(
+			"/topic/store/" + order.getUser().getUserNumber(),
+			OrderSocketResponse.from(order)
+		);
 	}
 }

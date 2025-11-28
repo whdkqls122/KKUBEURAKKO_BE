@@ -1,13 +1,18 @@
 package com.kkubeurakko.kkubeurakko_be.domain.orders.dto;
 
-import java.util.List;
-
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
 
 public record OrderCreateRequest(
-	OrderType orderType,
-	String address,
+	String userNumber,
+	Long addressId,
 	String storeRequest,
-	List<OrderItemCreateRequest> items
+	String deliveryRequest,
+	OrderType orderType, // DELIVERY, TAKEOUT
+	PaymentType paymentType,
+	Long couponId, // optional
+	int deliveryTip,
+	int totalAmount,
+	int discountAmount
 ) {
 }

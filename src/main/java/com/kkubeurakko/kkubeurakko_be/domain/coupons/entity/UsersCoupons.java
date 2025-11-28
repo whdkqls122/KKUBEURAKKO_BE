@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Getter
 public class UsersCoupons {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY) // AUTO_INCREMENT
 	@Column(name = "users_coupons_id")
 	private Long id;
 
@@ -34,8 +34,9 @@ public class UsersCoupons {
 
 	@Column(name = "is_used", nullable = false)
 	private boolean isUsed;
+
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_number", nullable = false)
+	@JoinColumn(name = "users_number", nullable = false)
 	private Users user;
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -43,6 +44,13 @@ public class UsersCoupons {
 	private Coupons coupon;
 
 	public void updateIsUsed() {
+		this.isUsed = true;
+	}
+
+	public void use() {
+		if (this.isUsed) {
+			throw new IllegalStateException("이미 사용된 쿠폰입니다.");
+		}
 		this.isUsed = true;
 	}
 }
