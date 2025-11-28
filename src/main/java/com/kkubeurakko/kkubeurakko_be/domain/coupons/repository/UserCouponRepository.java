@@ -10,9 +10,13 @@ import org.springframework.stereotype.Repository;
 
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
+import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 
 @Repository
 public interface UserCouponRepository extends JpaRepository<UsersCoupons, Long> {
+
+	Optional<UsersCoupons> findByUserAndCoupon_Id(Users user, Long couponId);
+
 	@Query("""
 			SELECT uc
 			FROM UsersCoupons uc

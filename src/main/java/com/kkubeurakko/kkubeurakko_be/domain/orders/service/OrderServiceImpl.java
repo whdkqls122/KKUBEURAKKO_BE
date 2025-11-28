@@ -220,7 +220,7 @@ public class OrderServiceImpl implements OrderService {
 		if (request.couponId() == null)
 			return 0;
 
-		UsersCoupons usersCoupon = userCouponRepository.findByUserAndCouponId(user, request.couponId())
+		UsersCoupons usersCoupon = userCouponRepository.findByUserAndCoupon_Id(user, request.couponId())
 			.orElseThrow(() -> new IllegalArgumentException("쿠폰이 존재하지 않습니다."));
 
 		Coupons coupon = usersCoupon.getCoupon();
