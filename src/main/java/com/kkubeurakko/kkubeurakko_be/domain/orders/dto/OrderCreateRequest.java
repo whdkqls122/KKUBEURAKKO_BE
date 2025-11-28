@@ -4,7 +4,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
 
 public record OrderCreateRequest(
-	String userNumber,
+	Long userId,
 	Long addressId,
 	String storeRequest,
 	String deliveryRequest,

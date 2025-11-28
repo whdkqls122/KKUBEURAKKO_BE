@@ -14,12 +14,15 @@ import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItem;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItemOption;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.repository.CartRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderItemsOptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderMenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItems;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItemsOptions;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
@@ -98,7 +101,7 @@ public class OrderServiceImpl implements OrderService {
 
 	public Long createOrder(OrderCreateRequest request) {
 
-		Users user = userRepository.findById(request.userNumber())
+		Users user = userRepository.findById(request.userId())
 			.orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
 
 		Cart cart = cartRepository.findByUser(user)
@@ -124,7 +127,7 @@ public class OrderServiceImpl implements OrderService {
 		Payments payment = toPaymentEntity(order, request, discountAmount);
 		paymentRepository.save(payment);
 
-		cart.clearItems();
+		cart.removeCartItem(cart.getCartItemList());//전체 삭제 메서드 만들기
 
 		sendOrderToStore(order);
 
@@ -227,23 +230,24 @@ public class OrderServiceImpl implements OrderService {
 			.sum();
 	}
 
-	private int applyCouponIfNecessary(Users user, Cart cart, OrderRequest request) {
+	private int applyCouponIfNecessary(Users user, Cart cart, OrderCreateRequest request) {
+
 		if (request.couponId() == null)
 			return 0;
 
-		UsersCoupons usersCoupon = usersCouponsRepository.findByUserAndCouponId(user, request.couponId())
+		UsersCoupons usersCoupon = userCouponRepository.findByUserAndCouponId(user, request.couponId())
 			.orElseThrow(() -> new IllegalArgumentException("쿠폰이 존재하지 않습니다."));
+
+		Coupons coupon = usersCoupon.getCoupon();
 
 		if (usersCoupon.isUsed())
 			throw new IllegalArgumentException("이미 사용된 쿠폰입니다.");
-
-		Coupons coupon = usersCoupon.getCoupon();
 
 		int orderAmount = calculateCartTotal(cart);
 		if (orderAmount < coupon.getMinOrderAmount())
 			throw new IllegalStateException("최소 주문 금액에 미달합니다.");
 
-		usersCoupon.setUsed(true);
+		usersCoupon.use();
 
 		return Integer.parseInt(coupon.getDiscountAmount());
 	}
