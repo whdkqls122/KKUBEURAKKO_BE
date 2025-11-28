@@ -1,6 +1,5 @@
 package com.kkubeurakko.kkubeurakko_be.domain.orders.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,7 +26,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItems;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItemsOptions;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.dto.PaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
@@ -99,6 +97,7 @@ public class OrderServiceImpl implements OrderService {
 			.toList();
 	}
 
+	@Override
 	public Long createOrder(OrderCreateRequest request) {
 
 		Users user = userRepository.findById(request.userId())
@@ -119,7 +118,7 @@ public class OrderServiceImpl implements OrderService {
 		int discountAmount = applyCouponIfNecessary(user, cart, request);
 		int totalAmount = calculateCartTotal(cart);
 
-		Orders order = toOrderEntity(request, user, address, totalAmount);
+		Orders order = request.toOrderEntity(user, address, totalAmount);
 		orderRepository.save(order);
 
 		createOrderItems(order, cart);
@@ -164,21 +163,6 @@ public class OrderServiceImpl implements OrderService {
 			.phoneNum(aesUtil.decryptFromBase64(order.getUser().getPhone()))
 			.orderMenuList(orderMenuList)
 			.payment(PaymentResponseDto.from(order.getPayments()))
-			.build();
-	}
-
-	private Orders toOrderEntity(OrderCreateRequest request, Users user, Addresses address, int totalAmount) {
-		return Orders.builder()
-			.user(user)
-			.orderDate(LocalDateTime.now())
-			.status(Status.PENDING)
-			.orderType(request.orderType())
-			.address(address != null
-				? address.getRoadName() + " " + address.getDetailAddress()
-				: null)
-			.storeRequest(request.storeRequest())
-			.completionTime(0)
-			.totalAmount(totalAmount)
 			.build();
 	}
 
