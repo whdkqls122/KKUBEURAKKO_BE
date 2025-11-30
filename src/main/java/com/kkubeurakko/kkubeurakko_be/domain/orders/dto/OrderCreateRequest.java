@@ -17,7 +17,7 @@ import jakarta.validation.constraints.Size;
 
 public record OrderCreateRequest(
 	@NotNull(message = "사용자 ID는 필수입니다.")
-	Long userId,
+	String userNumber,
 
 	@Nullable
 	Long addressId,

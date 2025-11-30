@@ -12,15 +12,27 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.repository.AddressRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
+import com.kkubeurakko.kkubeurakko_be.domain.cart.repository.CartRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
+import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
@@ -36,6 +48,16 @@ class OrderServiceImplTest {
 
 	@Mock
 	private AesUtil aesUtil;
+	@Mock
+	private UserRepository userRepository;
+	@Mock
+	private CartRepository cartRepository;
+	@Mock
+	private AddressRepository addressRepository;
+	@Mock
+	private PaymentRepository paymentRepository;
+	@Mock
+	private UserCouponRepository userCouponRepository;
 
 	@InjectMocks
 	private OrderServiceImpl orderService;
@@ -110,4 +132,69 @@ class OrderServiceImplTest {
 			"조회된 주문 내역이 없습니다."
 		);
 	}
+
+	@Test
+	@DisplayName("주문 생성이 정상적으로 수행되는지 검증한다.")
+	void createOrder() {
+
+		// given
+		Users user = TestFixture.createUser("user1", "010-0000-0000");
+		Cart cart = TestFixture.createCartWithOneItem(user);
+		Addresses address = TestFixture.createAddress(1L, user);
+		String addressStr = address.getRoadName() + " " + address.getDetailAddress();
+
+		OrderCreateRequest request = new OrderCreateRequest(
+			user.getUserNumber(),
+			address.getId(),
+			"무빼주세요",
+			"벨x, 노크 x",
+			OrderType.DELIVERY,
+			PaymentType.GENERAL,
+			null,
+			3000,
+			24000,
+			0
+		);
+
+		when(userRepository.findByUserNumber(user.getUserNumber()))
+			.thenReturn(Optional.of(user));
+
+		when(cartRepository.findByUser(user))
+			.thenReturn(Optional.of(cart));
+
+		when(addressRepository.findById(address.getId()))
+			.thenReturn(Optional.of(address));
+
+		when(userCouponRepository.findByUserAndCoupon_Id(user, null))
+			.thenReturn(Optional.empty());
+
+		when(orderRepository.save(any(Orders.class)))
+			.thenAnswer(invocation -> {
+				Orders o = invocation.getArgument(0);
+				ReflectionTestUtils.setField(o, "id", 100L);
+				return o;
+			});
+
+		when(paymentRepository.save(any(Payments.class)))
+			.thenAnswer(invocation -> {
+				Payments p = invocation.getArgument(0);
+				ReflectionTestUtils.setField(p, "id", 999L);
+				ReflectionTestUtils.setField(p.getOrder(), "payments", p);
+				return p;
+			});
+
+		// when
+		Long orderId = orderService.createOrder(request);
+
+		// then
+		assertNotNull(orderId);
+		assertEquals(100L, orderId);
+
+		verify(userRepository).findByUserNumber(user.getUserNumber());
+		verify(cartRepository).findByUser(user);
+		verify(addressRepository).findById(address.getId());
+		verify(orderRepository).save(any(Orders.class));
+		verify(paymentRepository).save(any(Payments.class));
+	}
+
 }

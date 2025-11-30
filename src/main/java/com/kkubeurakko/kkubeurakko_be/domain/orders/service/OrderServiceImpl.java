@@ -101,7 +101,7 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional
 	public Long createOrder(OrderCreateRequest request) {
 
-		Users user = userRepository.findById(request.userId())
+		Users user = userRepository.findByUserNumber(request.userNumber())
 			.orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
 
 		Cart cart = cartRepository.findByUser(user)

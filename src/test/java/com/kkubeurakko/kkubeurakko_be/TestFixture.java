@@ -1,5 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be;
 
+import static com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -9,6 +11,11 @@ import java.util.UUID;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponType;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.AddressCategory;
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
+import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
+import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItem;
+import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItemOption;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
@@ -136,6 +143,75 @@ public class TestFixture {
 		item.getOrderItemOptionList().addAll(optionEntities);
 
 		return item;
+	}
+
+	public static Cart createCartWithOneItem(Users user) {
+		Menus menu = TestFixture.createMenu(1L,
+			TestFixture.createMenuGroup(1L, TestFixture.createStore())
+		);
+
+		Cart cart = Cart.builder()
+			.id(1L)
+			.user(user)
+			.cartItemList(new ArrayList<>())
+			.build();
+
+		CartItem cartItem = CartItem.builder()
+			.id(1L)
+			.cart(cart)
+			.menu(menu)
+			.quantity(2)
+			.optionList(new ArrayList<>())
+			.build();
+
+		cart.getCartItemList().add(cartItem);
+
+		return cart;
+	}
+
+	public static CartItem createCartItemWithOption(Cart cart, Menus menu, Options option) {
+		CartItem cartItem = CartItem.builder()
+			.id(1L)
+			.cart(cart)
+			.menu(menu)
+			.quantity(1)
+			.optionList(new ArrayList<>())
+			.build();
+
+		CartItemOption cartItemOption = CartItemOption.builder()
+			.id(1L)
+			.cartItem(cartItem)
+			.option(option)
+			.build();
+
+		cartItem.getOptionList().add(cartItemOption);
+		return cartItem;
+	}
+
+	public static CartItem createCartItem(Cart cart, Menus menu, int quantity) {
+		return CartItem.builder()
+			.id(1L)
+			.cart(cart)
+			.menu(menu)
+			.quantity(quantity)
+			.optionList(new ArrayList<>())
+			.build();
+	}
+
+	public static Addresses createAddress(Long id, Users user) {
+		return Addresses.builder()
+			.id(id)
+			.addressName("우리집")
+			.roadName("서울 강남구 테헤란로")
+			.detailAddress("101호")
+			.postalCode("06236")
+			.isPrimary(true)
+			.category(AddressCategory.HOME)
+			.requestContent("문 앞에 놔주세요")
+			.entrancePassword("1234#")
+			.directionsInfo("초록색 문")
+			.user(user)
+			.build();
 	}
 
 	public static Orders createOrderWithPayment(Long id, Users user, List<Menus> menus,

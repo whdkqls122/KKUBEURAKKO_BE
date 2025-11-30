@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 
@@ -61,9 +62,6 @@ public class Orders {
 	@Column(name = "order_type", nullable = false)
 	private OrderType orderType;
 
-	@Column(name = "address", length = 100)
-	private String address;
-
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default
 	List<OrderItems> orderItemList = new ArrayList<>();
@@ -74,4 +72,8 @@ public class Orders {
 
 	@OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
 	private Payments payments;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "addresses_id", nullable = false)
+	private Addresses address;
 }
