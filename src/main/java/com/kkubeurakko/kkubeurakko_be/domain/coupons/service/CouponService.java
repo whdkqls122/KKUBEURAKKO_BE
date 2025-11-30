@@ -10,5 +10,7 @@ public interface CouponService {
 	List<CouponResponseDto> getAllCouponDoesNotHave(CustomOAuth2User customOAuth2User);
 
 	//보유 쿠폰 조회
-	List<CouponResponseDto> getAllCouponDoesHave(CustomOAuth2User customOAuth2User);
+	List<CouponResponseDto> getAllUserOwned(CustomOAuth2User customOAuth2User);
+
+	//쿠폰 발급
 }

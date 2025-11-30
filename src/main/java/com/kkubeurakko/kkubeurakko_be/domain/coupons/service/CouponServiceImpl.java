@@ -32,7 +32,7 @@ public class CouponServiceImpl implements CouponService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<CouponResponseDto> getAllCouponDoesHave(CustomOAuth2User customOAuth2User) {
+	public List<CouponResponseDto> getAllUserOwned(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 		List<Coupons> couponsList = couponRepository.findAllUserOwned(user.getUserNumber());
 		return toResponseDto(couponsList);
