@@ -7,16 +7,25 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
-import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 
 public interface CouponRepository extends JpaRepository<Coupons, Long> {
 	@Query("""
-			select c from Coupons c
-			where c.id not in (
-				select uc.coupon.id
-				from UsersCoupons uc
-				where uc.user = :user
-			)
+		    SELECT c FROM Coupons c
+		    WHERE c.id NOT IN (
+		        SELECT uc.coupon.id
+		        FROM UsersCoupons uc
+		        WHERE uc.user.userNumber = :userNumber
+		    )
+		    AND c.validUntil >= CURRENT_DATE
 		""")
-	List<Coupons> findAllUserDoesNotHave(@Param("user") Users user);
+	List<Coupons> findAllUserDoesNotHave(@Param("userNumber") String userNumber);
+
+	@Query("""
+		SELECT uc.coupon 
+		FROM UsersCoupons uc 
+		WHERE uc.user = :user
+		AND uc.coupon.validUntil >= CURRENT_DATE
+		AND uc.isUsed = false
+		""")
+	List<Coupons> findAllUserOwned(@Param("userNumber") String userNumber);
 }
