@@ -13,4 +13,5 @@ public interface CouponService {
 	List<CouponResponseDto> getAllUserOwned(CustomOAuth2User customOAuth2User);
 
 	//쿠폰 발급
+	void issueCoupon(Long couponId, CustomOAuth2User customOAuth2User);
 }

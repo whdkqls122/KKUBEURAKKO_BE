@@ -74,4 +74,11 @@ public class Coupons extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "stroes_id", nullable = false)
 	private Stores store;
+
+	public void updateQuantity() {
+		if (this.quantity <= 0) {
+			throw new IllegalStateException("쿠폰 수량이 부족합니다.");
+		}
+		this.quantity -= 1;
+	}
 }
