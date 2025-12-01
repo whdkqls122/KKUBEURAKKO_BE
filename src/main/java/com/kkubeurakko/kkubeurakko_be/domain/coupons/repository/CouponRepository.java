@@ -29,7 +29,7 @@ public interface CouponRepository extends JpaRepository<Coupons, Long> {
 	@Query("""
 		SELECT uc.coupon
 		FROM UsersCoupons uc
-		WHERE uc.user = :user
+		WHERE uc.user = :userNumber
 		AND uc.coupon.validUntil >= CURRENT_DATE
 		AND uc.isUsed = false
 		""")
