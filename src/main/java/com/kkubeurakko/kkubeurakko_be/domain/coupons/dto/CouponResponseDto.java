@@ -15,9 +15,9 @@ public record CouponResponseDto(
 	String discountAmount,
 	int minOrderAmount,
 	CouponType couponType,
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+	@JsonFormat(pattern = "yyyy-MM-dd")
 	LocalDate validFrom,
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+	@JsonFormat(pattern = "yyyy-MM-dd")
 	LocalDate validUntil,
 	int quantity,
 	Status status
