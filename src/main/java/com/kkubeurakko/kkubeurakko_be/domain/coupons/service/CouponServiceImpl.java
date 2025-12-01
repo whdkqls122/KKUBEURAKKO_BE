@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.CouponRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
@@ -38,12 +40,12 @@ public class CouponServiceImpl implements CouponService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<CouponResponseDto> getAllUserOwned(CustomOAuth2User customOAuth2User) {
+	public List<IssuedCouponResponseDto> getAllUserOwned(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
-		List<Coupons> couponsList = couponRepository.findAllUserOwned(user.getUserNumber());
+		List<UsersCoupons> couponsList = userCouponRepository.findAllUserOwned(user.getUserNumber(), Status.OFFER);
 
 		log.info("보유 쿠폰 조회 성공");
-		return toResponseDto(couponsList);
+		return toIssuedResponseDto(couponsList);
 	}
 
 	@Override
@@ -65,7 +67,7 @@ public class CouponServiceImpl implements CouponService {
 		UsersCoupons userCoupon = UsersCoupons.builder()
 			.coupon(coupon)
 			.user(user)
-			.couponsNumber(UUID.randomUUID().toString())
+			.couponsNumber(UUID.randomUUID().toString().replace("-", "").substring(0, 19))
 			.isUsed(false)
 			.build();
 
@@ -98,6 +100,24 @@ public class CouponServiceImpl implements CouponService {
 				.quantity(c.getQuantity())
 				.status(c.getStatus())
 				.build()
+			)
+			.toList();
+	}
+
+	private List<IssuedCouponResponseDto> toIssuedResponseDto(List<UsersCoupons> couponList) {
+		return couponList.stream()
+			.map(
+				uc -> IssuedCouponResponseDto.builder()
+					.id(uc.getCoupon().getId())
+					.name(uc.getCoupon().getName())
+					.couponNumber(uc.getCouponsNumber())
+					.discountAmount(uc.getCoupon().getDiscountAmount())
+					.minOrderAmount(uc.getCoupon().getMinOrderAmount())
+					.couponType(uc.getCoupon().getCouponType())
+					.validFrom(uc.getCoupon().getValidFrom())
+					.validUntil(uc.getCoupon().getValidUntil())
+					.status(uc.getCoupon().getStatus())
+					.build()
 			)
 			.toList();
 	}
