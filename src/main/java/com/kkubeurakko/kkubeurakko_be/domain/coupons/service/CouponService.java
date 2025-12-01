@@ -14,4 +14,7 @@ public interface CouponService {
 
 	//쿠폰 발급
 	void issueCoupon(Long couponId, CustomOAuth2User customOAuth2User);
+
+	//쿠폰 사용
+	void usedCoupon(Long userCouponId, CustomOAuth2User customOAuth2User);
 }

@@ -68,6 +68,17 @@ public class CouponServiceImpl implements CouponService {
 		userCouponRepository.save(userCoupon);
 	}
 
+	@Override
+	@Transactional
+	public void usedCoupon(Long userCouponId, CustomOAuth2User customOAuth2User) {
+		Users user = userService.getUser(customOAuth2User.getName());
+
+		UsersCoupons userCoupon = userCouponRepository.findByIdAndUser(userCouponId, customOAuth2User.getName())
+			.orElseThrow(() -> new IllegalArgumentException("조회된 쿠폰이 없습니다."));
+
+		userCoupon.updateIsUsed();
+	}
+
 	private List<CouponResponseDto> toResponseDto(List<Coupons> couponList) {
 		return couponList.stream()
 			.map(c -> CouponResponseDto.builder()

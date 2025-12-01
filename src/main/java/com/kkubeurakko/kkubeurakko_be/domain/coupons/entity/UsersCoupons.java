@@ -41,4 +41,8 @@ public class UsersCoupons {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "coupons_id", nullable = false)
 	private Coupons coupon;
+
+	public void updateIsUsed() {
+		this.isUsed = true;
+	}
 }
