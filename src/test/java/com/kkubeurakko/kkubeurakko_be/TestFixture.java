@@ -4,7 +4,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponType;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
@@ -178,5 +182,31 @@ public class TestFixture {
 		}
 
 		return order;
+	}
+
+	public static Coupons createCoupon(Long id, String name, int quantity, LocalDate validFrom, LocalDate validUntil,
+		CouponType couponType, com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status status, Stores store) {
+		return Coupons.builder()
+			.id(id)
+			.name(name)
+			.discountAmount("1000원") // 예시
+			.minOrderAmount(12000)
+			.couponType(couponType)
+			.validFrom(validFrom)
+			.validUntil(validUntil)
+			.quantity(quantity)
+			.status(status)
+			.store(store)
+			.build();
+	}
+
+	public static UsersCoupons createUserCoupon(Long id, Users user, Coupons coupon, boolean isUsed) {
+		return UsersCoupons.builder()
+			.id(id)
+			.user(user)
+			.coupon(coupon)
+			.couponsNumber(UUID.randomUUID().toString())
+			.isUsed(isUsed)
+			.build();
 	}
 }
