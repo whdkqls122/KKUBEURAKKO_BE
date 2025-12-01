@@ -25,11 +25,11 @@ import lombok.NoArgsConstructor;
 @Getter
 public class UsersCoupons {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY) // AUTO_INCREMENT
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "users_coupons_id")
 	private Long id;
 
-	@Column(name = "coupons_number", nullable = false, length = 19)
+	@Column(name = "coupons_number", nullable = false, length = 19, unique = true)
 	private String couponsNumber;
 
 	@Column(name = "is_used", nullable = false)

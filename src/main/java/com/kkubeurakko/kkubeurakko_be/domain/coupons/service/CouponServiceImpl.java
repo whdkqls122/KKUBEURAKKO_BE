@@ -67,7 +67,7 @@ public class CouponServiceImpl implements CouponService {
 		UsersCoupons userCoupon = UsersCoupons.builder()
 			.coupon(coupon)
 			.user(user)
-			.couponsNumber(UUID.randomUUID().toString().replace("-", "").substring(0, 19))
+			.couponsNumber(generatedCouponNumber())
 			.isUsed(false)
 			.build();
 
@@ -120,5 +120,14 @@ public class CouponServiceImpl implements CouponService {
 					.build()
 			)
 			.toList();
+	}
+
+	private String generatedCouponNumber() {
+		while (true) {
+			String couponNumber = UUID.randomUUID().toString().replace("-", "").substring(0, 19);
+			if (!userCouponRepository.existsByCouponsNumber(couponNumber)) {
+				return couponNumber;
+			}
+		}
 	}
 }

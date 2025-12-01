@@ -34,4 +34,6 @@ public interface UserCouponRepository extends JpaRepository<UsersCoupons, Long> 
 	List<UsersCoupons> findAllUserOwned(@Param("userNumber") String userNumber, Status status);
 
 	boolean existsByUserUserNumberAndCouponId(String userNumber, Long couponId);
+
+	boolean existsByCouponsNumber(String couponNumber);
 }
