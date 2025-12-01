@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.service.CouponService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
@@ -49,11 +50,11 @@ public class CouponController {
 		description = "사용자의 발급된 쿠폰 목록을 조회 할 때 사용합니다."
 	)
 	@GetMapping("/issued")
-	public ResponseEntity<ApiResponse<List<CouponResponseDto>>> getAllUserOwned(
+	public ResponseEntity<ApiResponse<List<IssuedCouponResponseDto>>> getAllUserOwned(
 		@AuthenticationPrincipal
 		CustomOAuth2User customOAuth2User
 	) {
-		List<CouponResponseDto> couponResponseDtoList = couponService.getAllUserOwned(customOAuth2User);
+		List<IssuedCouponResponseDto> couponResponseDtoList = couponService.getAllUserOwned(customOAuth2User);
 
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
