@@ -31,6 +31,8 @@ public class CouponServiceImpl implements CouponService {
 	public List<CouponResponseDto> getAllCouponDoesNotHave(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 		List<Coupons> couponList = couponRepository.findAllUserDoesNotHave(user.getUserNumber());
+
+		log.info("쿠폰 조회 성공");
 		return toResponseDto(couponList);
 	}
 
@@ -39,6 +41,8 @@ public class CouponServiceImpl implements CouponService {
 	public List<CouponResponseDto> getAllUserOwned(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 		List<Coupons> couponsList = couponRepository.findAllUserOwned(user.getUserNumber());
+
+		log.info("보유 쿠폰 조회 성공");
 		return toResponseDto(couponsList);
 	}
 
@@ -65,6 +69,7 @@ public class CouponServiceImpl implements CouponService {
 			.isUsed(false)
 			.build();
 
+		log.info("쿠폰 발급 성공");
 		userCouponRepository.save(userCoupon);
 	}
 
@@ -76,6 +81,7 @@ public class CouponServiceImpl implements CouponService {
 		UsersCoupons userCoupon = userCouponRepository.findByIdAndUser(userCouponId, user.getUserNumber())
 			.orElseThrow(() -> new IllegalArgumentException("조회된 쿠폰이 없습니다."));
 
+		log.info("쿠폰 사용 성공");
 		userCoupon.updateIsUsed();
 	}
 
