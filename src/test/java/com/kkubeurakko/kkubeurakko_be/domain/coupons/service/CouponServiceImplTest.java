@@ -19,6 +19,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponType;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
@@ -76,7 +78,7 @@ class CouponServiceImplTest {
 		when(couponRepository.findAllUserDoesNotHave("U123"))
 			.thenReturn(List.of(coupon1, coupon2));
 
-		List<?> result = couponService.getAllCouponDoesNotHave(oauthUser);
+		List<CouponResponseDto> result = couponService.getAllCouponDoesNotHave(oauthUser);
 
 		assertThat(result).hasSize(2);
 		verify(couponRepository).findAllUserDoesNotHave("U123");
@@ -89,13 +91,19 @@ class CouponServiceImplTest {
 		when(oauthUser.getName()).thenReturn("U123");
 
 		when(userService.getUser("U123")).thenReturn(testUser);
-		when(couponRepository.findAllUserOwned("U123"))
-			.thenReturn(List.of(coupon1));
 
-		List<?> result = couponService.getAllUserOwned(oauthUser);
+		UsersCoupons userCoupon = TestFixture.createUserCoupon(1L, testUser, coupon1, false);
+		when(userCouponRepository.findAllUserOwned("U123", Status.OFFER))
+			.thenReturn(List.of(userCoupon));
+
+		List<IssuedCouponResponseDto> result = couponService.getAllUserOwned(oauthUser);
 
 		assertThat(result).hasSize(1);
-		verify(couponRepository).findAllUserOwned("U123");
+		assertThat(result.get(0))
+			.extracting("id", "name", "couponNumber")
+			.containsExactly(userCoupon.getId(), coupon1.getName(), userCoupon.getCouponsNumber());
+
+		verify(userCouponRepository).findAllUserOwned("U123", Status.OFFER);
 	}
 
 	@Test

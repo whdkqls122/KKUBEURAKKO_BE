@@ -205,7 +205,7 @@ public class TestFixture {
 			.id(id)
 			.user(user)
 			.coupon(coupon)
-			.couponsNumber(UUID.randomUUID().toString())
+			.couponsNumber(UUID.randomUUID().toString().replace("-", "").substring(0, 19)) // 19자리
 			.isUsed(isUsed)
 			.build();
 	}
