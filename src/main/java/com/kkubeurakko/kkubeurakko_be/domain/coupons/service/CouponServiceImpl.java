@@ -73,7 +73,7 @@ public class CouponServiceImpl implements CouponService {
 	public void usedCoupon(Long userCouponId, CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 
-		UsersCoupons userCoupon = userCouponRepository.findByIdAndUser(userCouponId, customOAuth2User.getName())
+		UsersCoupons userCoupon = userCouponRepository.findByIdAndUser(userCouponId, user.getUserNumber())
 			.orElseThrow(() -> new IllegalArgumentException("조회된 쿠폰이 없습니다."));
 
 		userCoupon.updateIsUsed();
