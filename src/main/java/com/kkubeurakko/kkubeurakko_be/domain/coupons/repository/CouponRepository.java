@@ -26,15 +26,6 @@ public interface CouponRepository extends JpaRepository<Coupons, Long> {
 		""")
 	List<Coupons> findAllUserDoesNotHave(@Param("userNumber") String userNumber);
 
-	@Query("""
-		SELECT uc.coupon
-		FROM UsersCoupons uc
-		WHERE uc.user.userNumber = :userNumber
-		AND uc.coupon.validUntil >= CURRENT_DATE
-		AND uc.isUsed = false
-		""")
-	List<Coupons> findAllUserOwned(@Param("userNumber") String userNumber);
-
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("SELECT c FROM Coupons c WHERE c.id = :couponId")
 	Optional<Coupons> findByIdForUpdate(@Param("couponId") Long couponId);
