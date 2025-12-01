@@ -16,13 +16,13 @@ import jakarta.persistence.LockModeType;
 @Repository
 public interface CouponRepository extends JpaRepository<Coupons, Long> {
 	@Query("""
-		    SELECT c FROM Coupons c
-		    WHERE c.id NOT IN (
-		        SELECT uc.coupon.id
-		        FROM UsersCoupons uc
-		        WHERE uc.user.userNumber = :userNumber
-		    )
+		    SELECT c
+		    FROM Coupons c
+		    LEFT JOIN UsersCoupons uc ON uc.coupon = c AND uc.user.userNumber = :userNumber
+		    WHERE uc.id IS NULL
 		    AND c.validUntil >= CURRENT_DATE
+		    AND c.validFrom <= CURRENT_DATE
+		    AND c.quantity > 0
 		""")
 	List<Coupons> findAllUserDoesNotHave(@Param("userNumber") String userNumber);
 
