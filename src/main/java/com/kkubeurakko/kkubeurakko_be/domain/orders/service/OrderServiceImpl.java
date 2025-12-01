@@ -163,7 +163,7 @@ public class OrderServiceImpl implements OrderService {
 			.orderStatus(order.getStatus())
 			.orderDate(order.getOrderDate())
 			.completionTime(order.getCompletionTime())
-			.address(order.getAddress())
+			// .address(order.getAddress()) 엔티티 변경으로 인해 임시 주석 처리
 			.phoneNum(aesUtil.decryptFromBase64(order.getUser().getPhone()))
 			.orderMenuList(orderMenuList)
 			.payment(PaymentResponseDto.from(order.getPayments()))

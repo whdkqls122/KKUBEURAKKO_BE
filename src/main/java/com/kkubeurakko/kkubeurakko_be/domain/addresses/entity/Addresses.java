@@ -1,9 +1,5 @@
 package com.kkubeurakko.kkubeurakko_be.domain.addresses.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
 
@@ -17,7 +13,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -74,9 +69,6 @@ public class Addresses extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_number", nullable = false)
 	private Users user;
-
-	@OneToMany(mappedBy = "address")
-	private List<Orders> order = new ArrayList<>();
 
 	public void update(
 		String addressName, String roadName, String detailAddress,

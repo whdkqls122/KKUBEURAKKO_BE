@@ -6,12 +6,12 @@ import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
-import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -73,7 +73,6 @@ public class Orders {
 	@OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
 	private Payments payments;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "addresses_id", nullable = false)
-	private Addresses address;
+	@Embedded
+	private OrderAddressSnapshot addressSnapshot;
 }

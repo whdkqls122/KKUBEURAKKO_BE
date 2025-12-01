@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.orders.dto;
 import java.time.LocalDateTime;
 
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderAddressSnapshot;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
@@ -49,15 +50,28 @@ public record OrderCreateRequest(
 	int discountAmount
 ) {
 	public Orders toOrderEntity(Users user, Addresses address, int totalAmount) {
+
+		OrderAddressSnapshot snapshot = null;
+		if (address != null) {
+			snapshot = OrderAddressSnapshot.builder()
+				.addressName(address.getAddressName())
+				.roadName(address.getRoadName())
+				.detailAddress(address.getDetailAddress())
+				.requestContent(address.getRequestContent())
+				.entrancePassword(address.getEntrancePassword())
+				.directionsInfo(address.getDirectionsInfo())
+				.build();
+		}
+
 		return Orders.builder()
 			.user(user)
 			.orderDate(LocalDateTime.now())
 			.status(Status.PENDING)
 			.orderType(orderType)
-			.address(address != null ? address.getRoadName() + " " + address.getDetailAddress() : null)
 			.storeRequest(storeRequest)
 			.completionTime(0)
 			.totalAmount(totalAmount)
+			.addressSnapshot(snapshot)
 			.build();
 	}
 }
