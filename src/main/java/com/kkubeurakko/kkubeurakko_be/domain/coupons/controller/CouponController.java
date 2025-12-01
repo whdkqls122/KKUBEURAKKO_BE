@@ -79,7 +79,7 @@ public class CouponController {
 
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
-				"발급된 쿠폰 목록 조회가 완료되었습니다.",
+				"쿠폰이 발급되었습니다.",
 				null
 			)
 		);
