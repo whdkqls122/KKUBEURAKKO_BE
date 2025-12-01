@@ -11,6 +11,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.exception.DuplicatedCouponNumberException;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.CouponRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -64,15 +65,19 @@ public class CouponServiceImpl implements CouponService {
 
 		coupon.updateQuantity();
 
-		UsersCoupons userCoupon = UsersCoupons.builder()
-			.coupon(coupon)
-			.user(user)
-			.couponsNumber(generatedCouponNumber())
-			.isUsed(false)
-			.build();
+		try {
+			UsersCoupons userCoupon = UsersCoupons.builder()
+				.coupon(coupon)
+				.user(user)
+				.couponsNumber(generatedCouponNumber())
+				.isUsed(false)
+				.build();
 
-		log.info("쿠폰 발급 성공");
-		userCouponRepository.save(userCoupon);
+			log.info("쿠폰 발급 성공");
+			userCouponRepository.save(userCoupon);
+		} catch (IllegalStateException e) {
+			throw new DuplicatedCouponNumberException(e.getMessage(), e);
+		}
 	}
 
 	@Override
@@ -123,11 +128,13 @@ public class CouponServiceImpl implements CouponService {
 	}
 
 	private String generatedCouponNumber() {
-		while (true) {
+		int maxAttempts = 10;
+		for (int i = 0; i < maxAttempts; i++) {
 			String couponNumber = UUID.randomUUID().toString().replace("-", "").substring(0, 19);
 			if (!userCouponRepository.existsByCouponsNumber(couponNumber)) {
 				return couponNumber;
 			}
 		}
+		throw new IllegalStateException("다시 요청 해주세요");
 	}
 }
