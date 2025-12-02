@@ -23,6 +23,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderAddressSnapshot;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItems;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItemsOptions;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
@@ -214,8 +215,12 @@ public class TestFixture {
 			.build();
 	}
 
-	public static Orders createOrderWithPayment(Long id, Users user, List<Menus> menus,
-		List<List<Options>> optionsPerMenu) {
+	public static Orders createOrderWithPayment(
+		Long id,
+		Users user,
+		List<Menus> menus,
+		List<List<Options>> optionsPerMenu
+	) {
 		Orders order = Orders.builder()
 			.id(id)
 			.user(user)
@@ -225,9 +230,16 @@ public class TestFixture {
 			.completionTime(20)
 			.address("서울시 강남구")
 			.orderDate(LocalDateTime.now())
+			.addressSnapshot(OrderAddressSnapshot.builder()
+				.addressName("우리집")
+				.roadName("서울시 강남구 테헤란로")
+				.detailAddress("101동 1004호")
+				.requestContent("문앞에 두세요")
+				.entrancePassword("1234#")
+				.directionsInfo("엘리베이터 오른쪽")
+				.build())
 			.build();
 
-		// OrderItems 생성 및 추가
 		for (int i = 0; i < menus.size(); i++) {
 			OrderItems item = createOrderItem(
 				id + 100 + i,
@@ -247,8 +259,6 @@ public class TestFixture {
 			.transactionId("T" + id + "PAY")
 			.build();
 
-		// Builder 사용으로 Orders에 Payment 포함
-		// Orders 엔티티에 payments 필드가 final이나 builder 미포함이면, OrderService 테스트에서는 reflection 또는 getter를 통한 세팅 필요
 		try {
 			java.lang.reflect.Field paymentField = Orders.class.getDeclaredField("payments");
 			paymentField.setAccessible(true);
@@ -259,6 +269,7 @@ public class TestFixture {
 
 		return order;
 	}
+
 
 	public static Coupons createCoupon(Long id, String name, int quantity, LocalDate validFrom, LocalDate validUntil,
 		CouponType couponType, com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status status, Stores store) {

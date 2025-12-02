@@ -123,7 +123,7 @@ public class OrderServiceImpl implements OrderService {
 		int totalAmount = calculateCartTotal(cart);
 
 		Orders order = request.toOrderEntity(user, address, totalAmount);
-		orderRepository.save(order);
+		Orders savedOrder = orderRepository.save(order);
 
 		createOrderItems(order, cart);
 
@@ -134,7 +134,7 @@ public class OrderServiceImpl implements OrderService {
 
 		sendOrderToStore(order);
 
-		return order.getId();
+		return savedOrder.getId();
 	}
 
 	private OrderDetailResponseDto toResponseDto(Orders order) {
