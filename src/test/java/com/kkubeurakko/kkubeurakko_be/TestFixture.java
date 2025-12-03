@@ -1,21 +1,19 @@
 package com.kkubeurakko.kkubeurakko_be;
 
-import static com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponType;
-import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
-import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.AddressCategory;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItem;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItemOption;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponType;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
@@ -228,7 +226,6 @@ public class TestFixture {
 			.orderType(OrderType.DELIVERY)
 			.status(Status.COMPLETED)
 			.completionTime(20)
-			.address("서울시 강남구")
 			.orderDate(LocalDateTime.now())
 			.addressSnapshot(OrderAddressSnapshot.builder()
 				.addressName("우리집")
@@ -269,7 +266,6 @@ public class TestFixture {
 
 		return order;
 	}
-
 
 	public static Coupons createCoupon(Long id, String name, int quantity, LocalDate validFrom, LocalDate validUntil,
 		CouponType couponType, com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status status, Stores store) {
