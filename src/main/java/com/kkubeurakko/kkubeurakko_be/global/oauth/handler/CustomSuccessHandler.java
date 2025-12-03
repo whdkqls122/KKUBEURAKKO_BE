@@ -53,16 +53,17 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 
 		response.addCookie(createCookie(refresh));
 
-		String redirectUrl = "http://localhost:5173/home?success=" + true + "&firstLogin=" + firstLogin;
+		// String redirectUrl = "http://localhost:5173/home?success=" + true + "&firstLogin=" + firstLogin;
 		//실사용 url
-		// String redirectUrl = "https://kkubeurakko-anyang.shop/home?success=" + true + "&firstLogin=" + firstLogin;		log.info("로그인 성공");
+		String redirectUrl = "https://www.kkubeurakko-anyang.shop/home?success=" + true + "&firstLogin=" + firstLogin;
+		log.info("로그인 성공");
 		response.sendRedirect(redirectUrl);
 	}
 
 	private Cookie createCookie(String value) {
 		Cookie cookie = new Cookie("refresh", value);
 		cookie.setMaxAge((int)refreshTokenExpiry / 1000); // 7일
-		// cookie.setSecure(true);	//https
+		cookie.setSecure(true);    //https
 		cookie.setPath("/");
 		cookie.setHttpOnly(true);
 		return cookie;
