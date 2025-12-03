@@ -45,8 +45,12 @@ public class SecurityConfig {
 			.cors(corsCustomizer -> corsCustomizer.configurationSource(request -> {
 				CorsConfiguration configuration = new CorsConfiguration();
 
-				configuration.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
-				configuration.setAllowedMethods(Collections.singletonList("*"));
+				configuration.setAllowedOrigins(Arrays.asList(
+					"http://localhost:5173",
+					"https://www.kkubeurakko-anyang.shop",
+					"http://www.kkubeurakko-anyang.shop"
+				));
+				configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 				configuration.setAllowCredentials(true);
 				configuration.setAllowedHeaders(Collections.singletonList("*"));
 				configuration.setMaxAge(3600L);
