@@ -32,7 +32,27 @@ jobs:
 
       # Docker 이미지 Build
       - name: docker image build
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app .
+        run: |
+          docker build \
+            --build-arg DB_URL="${{ secrets.DB_URL }}" \
+            --build-arg DB_USERNAME="${{ secrets.DB_USERNAME }}" \
+            --build-arg DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            --build-arg REDIS_HOST="${{ secrets.REDIS_HOST }}" \
+            --build-arg REDIS_PORT="${{ secrets.REDIS_PORT }}" \
+            --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            --build-arg JWT_ACCESS_EXP="${{ secrets.JWT_ACCESS_EXP }}" \
+            --build-arg JWT_REFRESH_EXP="${{ secrets.JWT_REFRESH_EXP }}" \
+            --build-arg KAKAO_CLIENT_ID="${{ secrets.KAKAO_CLIENT_ID }}" \
+            --build-arg KAKAO_CLIENT_SECRET="${{ secrets.KAKAO_CLIENT_SECRET }}" \
+            --build-arg KAKAO_REDIRECT_URI="${{ secrets.KAKAO_REDIRECT_URI }}" \
+            --build-arg NAVER_CLIENT_ID="${{ secrets.NAVER_CLIENT_ID }}" \
+            --build-arg NAVER_CLIENT_SECRET="${{ secrets.NAVER_CLIENT_SECRET }}" \
+            --build-arg NAVER_REDIRECT_URI="${{ secrets.NAVER_REDIRECT_URI }}" \
+            --build-arg GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+            --build-arg GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            --build-arg GOOGLE_REDIRECT_URI="${{ secrets.GOOGLE_REDIRECT_URI }}" \
+            --build-arg AES_SECRET="${{ secrets.AES_SECRET }}" \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app .
 
       # DockerHub Login (push 하기 위해)
       - name: docker login
@@ -52,7 +72,7 @@ jobs:
 
     steps:
       - name: docker pull
-        run : sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app
+        run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app
 
       - name: docker stop container
         run: |
@@ -61,7 +81,7 @@ jobs:
           fi
 
       - name: docker run new container
-        run: sudo docker run --rm -it -d -p 80:8080 --name kkubeurakko-app ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app
+        run: sudo docker run --rm -it -d -p 8080:8080 --name kkubeurakko-app ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app
 
       - name: delete old docker image
         run: sudo docker system prune -f
