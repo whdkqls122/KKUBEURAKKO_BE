@@ -69,8 +69,8 @@ jobs:
             -e COOLSMS_SECRET="${{ secrets.COOLSMS_SECRET }}" \
             -e COOLSMS_FROM="${{ secrets.COOLSMS_FROM }}" \
             -e COOLSMS_URL="${{ secrets.COOLSMS_URL }}" \
-            -e SPRING_DATA_REDIS_HOST="localhost" \
-            -e SPRING_DATA_REDIS_PORT="6379" \
+            -e SPRING_DATA_REDIS_HOST="{{ secrets.REDIS_HOST }}" \
+            -e SPRING_DATA_REDIS_PORT="{{ secrets.REDIS_PORT }}" \
             -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
             -e JWT_ACCESS_EXP="${{ secrets.JWT_ACCESS_EXP }}" \
             -e JWT_REFRESH_EXP="${{ secrets.JWT_REFRESH_EXP }}" \
