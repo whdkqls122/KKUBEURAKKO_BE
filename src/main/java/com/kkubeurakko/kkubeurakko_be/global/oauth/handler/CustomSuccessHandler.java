@@ -60,23 +60,14 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 		response.sendRedirect(redirectUrl);
 	}
 
-	// private Cookie createCookie(String value) {
-	// 	Cookie cookie = new Cookie("refresh", value);
-	// 	cookie.setMaxAge((int)refreshTokenExpiry / 1000); // 7일
-	// 	cookie.setSecure(true);    //https
-	// 	cookie.setPath("/");
-	// 	cookie.setHttpOnly(true);
-	// 	return cookie;
-	// }
-
 	private ResponseCookie createCookie(String value) {
 		return ResponseCookie.from("refresh", value)
 			.maxAge(refreshTokenExpiry / 1000)
 			.secure(true)
-			.httpOnly(true)
+			// .httpOnly(true)
 			.sameSite("None")
 			.path("/")
-			.domain(".kkubeurakko-anyang.shop")
+			// .domain(".kkubeurakko-anyang.shop")
 			.build();
 	}
 
