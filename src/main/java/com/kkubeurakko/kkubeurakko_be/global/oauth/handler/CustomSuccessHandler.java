@@ -63,7 +63,7 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 	private Cookie createCookie(String value) {
 		Cookie cookie = new Cookie("refresh", value);
 		cookie.setMaxAge((int)refreshTokenExpiry / 1000); // 7일
-		// cookie.setSecure(true);    //https
+		cookie.setSecure(true);    //https
 		cookie.setPath("/");
 		cookie.setHttpOnly(true);
 		return cookie;
