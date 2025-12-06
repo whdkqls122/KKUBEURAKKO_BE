@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.global.oauth.handler;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -13,7 +14,6 @@ import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenReposito
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +51,7 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 
 		saveRefreshToken(userNumber, refresh);
 
-		response.addCookie(createCookie(refresh));
+		response.addHeader("Set-Cookie", createCookie(refresh).toString());
 
 		String redirectUrl = "http://localhost:5173/home?success=" + true + "&firstLogin=" + firstLogin;
 		//실사용 url
@@ -60,13 +60,24 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 		response.sendRedirect(redirectUrl);
 	}
 
-	private Cookie createCookie(String value) {
-		Cookie cookie = new Cookie("refresh", value);
-		cookie.setMaxAge((int)refreshTokenExpiry / 1000); // 7일
-		cookie.setSecure(true);    //https
-		cookie.setPath("/");
-		cookie.setHttpOnly(true);
-		return cookie;
+	// private Cookie createCookie(String value) {
+	// 	Cookie cookie = new Cookie("refresh", value);
+	// 	cookie.setMaxAge((int)refreshTokenExpiry / 1000); // 7일
+	// 	cookie.setSecure(true);    //https
+	// 	cookie.setPath("/");
+	// 	cookie.setHttpOnly(true);
+	// 	return cookie;
+	// }
+
+	private ResponseCookie createCookie(String value) {
+		return ResponseCookie.from("refresh", value)
+			.maxAge(refreshTokenExpiry / 1000)
+			.secure(true)
+			.httpOnly(true)
+			.sameSite("None")
+			.path("/")
+			.domain(".kkubeurakko-anyang.shop")
+			.build();
 	}
 
 	//redis에 저장
