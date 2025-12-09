@@ -17,4 +17,7 @@ public interface MenuService {
 
 	//메뉴 수정 (관리자)
 	void updateMenu(Long menuId, AdminMenuUpdateDto request);
+
+	//메뉴 삭제 (관리자)
+	void deleteMenu(Long menuId);
 }

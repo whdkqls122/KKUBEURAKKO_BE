@@ -89,6 +89,15 @@ public class MenuServiceImpl implements MenuService {
 		optionGroups.forEach(menu::addOptionGroup);
 	}
 
+	@Override
+	@Transactional
+	public void deleteMenu(Long menuId) {
+		Menus menu = menuRepository.findById(menuId)
+			.orElseThrow(() -> new EntityNotFoundException("메뉴가 존재하지 않습니다."));
+		
+		menuRepository.delete(menu);
+	}
+
 	private List<MenuResponseDto> toResponseDto(List<Menus> menuList) {
 		return menuList.stream()
 			.map(menus -> MenuResponseDto
