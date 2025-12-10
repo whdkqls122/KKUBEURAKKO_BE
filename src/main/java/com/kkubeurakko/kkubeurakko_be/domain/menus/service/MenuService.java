@@ -16,6 +16,9 @@ public interface MenuService {
 	//메뉴 단건 조회 (관리자)
 	AdminMenuDetailDto getMenuDetailForAdmin(Long menuId);
 
+	//메뉴 생성 (관리자)
+	void createMenu(AdminMenuUpdateDto request);
+
 	//메뉴 수정 (관리자)
 	void updateMenu(Long menuId, AdminMenuUpdateDto request);
 

@@ -64,6 +64,30 @@ public class MenuServiceImpl implements MenuService {
 
 	@Override
 	@Transactional
+	public void createMenu(AdminMenuUpdateDto request) {
+
+		Menus menu = Menus.builder()
+			.name(request.name())
+			.description(request.description())
+			.price(request.price())
+			.menuStatus(request.status())
+			.img(request.img())
+			.build();
+
+		Menus savedMenu = menuRepository.save(menu);
+
+		if (request.optionGroupIds() == null || request.optionGroupIds().isEmpty()) {
+			return;
+		}
+		
+		List<OptionGroups> optionGroups =
+			optionGroupRepository.findAllById(request.optionGroupIds());
+
+		optionGroups.forEach(savedMenu::addOptionGroup);
+	}
+
+	@Override
+	@Transactional
 	public void updateMenu(Long menuId, AdminMenuUpdateDto request) {
 
 		Menus menu = menuRepository.findById(menuId)
