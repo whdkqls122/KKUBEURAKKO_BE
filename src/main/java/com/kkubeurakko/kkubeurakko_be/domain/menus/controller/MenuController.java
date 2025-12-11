@@ -90,11 +90,11 @@ public class MenuController {
 		description = "관리자 측에서 메뉴의 상태를 변경합니다."
 	)
 	@PatchMapping("/admin/{menuId}/status")
-	public ResponseEntity<Void> changeMenuStatus(
+	public ResponseEntity<ApiResponse<Void>> changeMenuStatus(
 		@PathVariable Long menuId,
 		@RequestParam MenuStatus status
 	) {
 		menuService.changeMenuStatus(menuId, status);
-		return ResponseEntity.noContent().build();
+		return ResponseEntity.ok(ApiResponse.success("메뉴가 상태가 변경되었습니다.", null));
 	}
 }
