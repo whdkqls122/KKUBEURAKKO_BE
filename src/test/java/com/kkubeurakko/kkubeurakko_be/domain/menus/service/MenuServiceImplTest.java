@@ -18,12 +18,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuDetailDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType;
@@ -42,13 +44,16 @@ class MenuServiceImplTest {
 	@Mock
 	private OptionGroupRepository optionGroupRepository;
 
+	@Mock
+	private MenuGroupRepository menuGroupRepository;
+
 	@InjectMocks
 	private MenuServiceImpl menuService;
 
 	@BeforeEach
 	void setup() {
 		MockitoAnnotations.openMocks(this);
-		menuService = new MenuServiceImpl(menuRepository, optionGroupRepository);
+		menuService = new MenuServiceImpl(menuRepository, optionGroupRepository, menuGroupRepository);
 	}
 
 	private Stores store;
@@ -320,12 +325,13 @@ class MenuServiceImplTest {
 	@DisplayName("관리자 메뉴 생성이 정상적으로 이루어지는지 검증한다.")
 	void createMenu() {
 		// given
-		AdminMenuUpdateDto request = AdminMenuUpdateDto.builder()
+		AdminMenuRequestDto request = AdminMenuRequestDto.builder()
 			.name("새로운메뉴")
 			.description("맛있는 메뉴")
 			.price(15000)
 			.status(MenuStatus.ON_SALE)
 			.img("new.jpg")
+			.menuGroupId(1L)
 			.optionGroupIds(List.of(10L, 11L))
 			.build();
 

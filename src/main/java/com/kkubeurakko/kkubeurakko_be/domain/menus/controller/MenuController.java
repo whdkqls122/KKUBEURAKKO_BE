@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuDetailDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuResponseDto;
@@ -80,7 +81,7 @@ public class MenuController {
 	)
 	@PostMapping("/admin")
 	public ResponseEntity<ApiResponse<Void>> createMenu(
-		@Valid @RequestBody AdminMenuUpdateDto request
+		@Valid @RequestBody AdminMenuRequestDto request
 	) {
 		menuService.createMenu(request);
 
@@ -99,7 +100,7 @@ public class MenuController {
 	@PutMapping("/admin/{menuId}")
 	public ResponseEntity<ApiResponse<Void>> updateMenu(
 		@PathVariable Long menuId,
-		@RequestBody AdminMenuUpdateDto request
+		@Valid @RequestBody AdminMenuUpdateDto request
 	) {
 		menuService.updateMenu(menuId, request);
 		return ResponseEntity.ok(ApiResponse.success("메뉴가 수정되었습니다.", null));

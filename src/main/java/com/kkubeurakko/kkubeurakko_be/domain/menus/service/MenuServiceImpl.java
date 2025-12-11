@@ -7,11 +7,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuDetailDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
@@ -28,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MenuServiceImpl implements MenuService {
 	private final MenuRepository menuRepository;
 	private final OptionGroupRepository optionGroupRepository;
+	private final MenuGroupRepository menuGroupRepository;
 
 	@Override
 	public List<MenuResponseDto> getAllMenuByMenuGroup(Long menuGroupId) {
@@ -64,7 +68,10 @@ public class MenuServiceImpl implements MenuService {
 
 	@Override
 	@Transactional
-	public void createMenu(AdminMenuUpdateDto request) {
+	public void createMenu(AdminMenuRequestDto request) {
+
+		MenuGroups menuGroup = menuGroupRepository.findById(request.menuGroupId())
+			.orElseThrow(() -> new IllegalArgumentException("메뉴 그룹이 존재하지 않습니다."));
 
 		Menus menu = Menus.builder()
 			.name(request.name())
@@ -72,6 +79,7 @@ public class MenuServiceImpl implements MenuService {
 			.price(request.price())
 			.menuStatus(request.status())
 			.img(request.img())
+			.menuGroup(menuGroup)
 			.build();
 
 		Menus savedMenu = menuRepository.save(menu);
@@ -79,7 +87,7 @@ public class MenuServiceImpl implements MenuService {
 		if (request.optionGroupIds() == null || request.optionGroupIds().isEmpty()) {
 			return;
 		}
-		
+
 		List<OptionGroups> optionGroups =
 			optionGroupRepository.findAllById(request.optionGroupIds());
 
