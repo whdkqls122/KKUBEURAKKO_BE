@@ -317,6 +317,59 @@ class MenuServiceImplTest {
 	}
 
 	@Test
+	@DisplayName("관리자 메뉴 생성이 정상적으로 이루어지는지 검증한다.")
+	void createMenu() {
+		// given
+		AdminMenuUpdateDto request = AdminMenuUpdateDto.builder()
+			.name("새로운메뉴")
+			.description("맛있는 메뉴")
+			.price(15000)
+			.status(MenuStatus.ON_SALE)
+			.img("new.jpg")
+			.optionGroupIds(List.of(10L, 11L))
+			.build();
+
+		Menus saved = Menus.builder()
+			.id(1L)
+			.name("새로운메뉴")
+			.description("맛있는 메뉴")
+			.price(15000)
+			.menuStatus(MenuStatus.ON_SALE)
+			.img("new.jpg")
+			.build();
+
+		OptionGroups og1 = OptionGroups.builder()
+			.id(10L)
+			.name("옵션그룹1")
+			.build();
+
+		OptionGroups og2 = OptionGroups.builder()
+			.id(11L)
+			.name("옵션그룹2")
+			.build();
+
+		when(menuRepository.save(any(Menus.class))).thenReturn(saved);
+
+		when(optionGroupRepository.findAllById(List.of(10L, 11L)))
+			.thenReturn(List.of(og1, og2));
+
+		// when
+		menuService.createMenu(request);
+
+		// then
+		verify(menuRepository, times(1)).save(any(Menus.class));
+		verify(optionGroupRepository, times(1))
+			.findAllById(List.of(10L, 11L));
+
+		assertThat(saved.getName()).isEqualTo("새로운메뉴");
+		assertThat(saved.getDescription()).isEqualTo("맛있는 메뉴");
+		assertThat(saved.getMenuOptionGroups()).hasSize(2);
+		assertThat(saved.getMenuOptionGroups())
+			.extracting(m -> m.getOptionGroup().getId())
+			.containsExactlyInAnyOrder(10L, 11L);
+	}
+
+	@Test
 	@DisplayName("메뉴 상태 변경이 정상적으로 수행되는지 검증한다.")
 	void changeMenuStatus() {
 		// given

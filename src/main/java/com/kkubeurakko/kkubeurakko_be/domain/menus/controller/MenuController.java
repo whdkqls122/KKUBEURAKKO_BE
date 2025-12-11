@@ -75,7 +75,7 @@ public class MenuController {
 	}
 
 	@Operation(
-		summary = "메뉴 등록",
+		summary = "메뉴 추가",
 		description = "관리자가 새로운 메뉴를 등록합니다."
 	)
 	@PostMapping("/admin")
