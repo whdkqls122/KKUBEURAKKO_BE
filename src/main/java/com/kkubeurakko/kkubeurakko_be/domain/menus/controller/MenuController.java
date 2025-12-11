@@ -3,18 +3,20 @@ package com.kkubeurakko.kkubeurakko_be.domain.menus.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuDetailDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.service.MenuService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
@@ -84,12 +86,15 @@ public class MenuController {
 	}
 
 	@Operation(
-		summary = "관리자 메뉴 삭제",
-		description = "관리자 측에서 메뉴를 삭제합니다."
+		summary = "관리자 메뉴 상태 변경",
+		description = "관리자 측에서 메뉴의 상태를 변경합니다."
 	)
-	@DeleteMapping("/admin/{menuId}")
-	public ResponseEntity<ApiResponse<Void>> deleteMenu(@PathVariable Long menuId) {
-		menuService.deleteMenu(menuId);
-		return ResponseEntity.ok(ApiResponse.success("메뉴가 성공적으로 삭제되었습니다.", null));
+	@PatchMapping("/admin/{menuId}/status")
+	public ResponseEntity<Void> changeMenuStatus(
+		@PathVariable Long menuId,
+		@RequestParam MenuStatus status
+	) {
+		menuService.changeMenuStatus(menuId, status);
+		return ResponseEntity.noContent().build();
 	}
 }

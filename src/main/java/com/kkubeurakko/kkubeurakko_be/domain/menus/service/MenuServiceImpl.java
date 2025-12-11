@@ -91,11 +91,12 @@ public class MenuServiceImpl implements MenuService {
 
 	@Override
 	@Transactional
-	public void deleteMenu(Long menuId) {
+	public void changeMenuStatus(Long menuId, MenuStatus status) {
+
 		Menus menu = menuRepository.findById(menuId)
-			.orElseThrow(() -> new EntityNotFoundException("메뉴가 존재하지 않습니다."));
-		
-		menuRepository.delete(menu);
+			.orElseThrow(() -> new IllegalArgumentException("메뉴가 존재하지 않습니다."));
+
+		menu.changeStatus(status);
 	}
 
 	private List<MenuResponseDto> toResponseDto(List<Menus> menuList) {

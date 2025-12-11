@@ -316,28 +316,4 @@ class MenuServiceImplTest {
 		verify(optionGroupRepository, times(1)).findAllById(List.of(10L, 11L));
 	}
 
-	@Test
-	@DisplayName("메뉴 삭제가 정상적으로 이루어지는지 검증한다.")
-	void deleteMenu_success() {
-		// given
-		Long menuId = 1L;
-
-		Menus menu = Menus.builder()
-			.id(menuId)
-			.name("양념꾸브")
-			.description("양념꾸브입니다.")
-			.price(18000)
-			.menuStatus(MenuStatus.ON_SALE)
-			.build();
-
-		when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
-
-		// when
-		menuService.deleteMenu(menuId);
-
-		// then
-		verify(menuRepository, times(1)).findById(menuId);
-		verify(menuRepository, times(1)).delete(menu);
-	}
-
 }

@@ -83,4 +83,8 @@ public class Menus extends BaseEntity {
 		this.img = img;
 	}
 
+	public void changeStatus(MenuStatus status) {
+		this.menuStatus = status;
+	}
+
 }
