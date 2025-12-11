@@ -316,4 +316,31 @@ class MenuServiceImplTest {
 		verify(optionGroupRepository, times(1)).findAllById(List.of(10L, 11L));
 	}
 
+	@Test
+	@DisplayName("메뉴 상태 변경이 정상적으로 수행되는지 검증한다.")
+	void changeMenuStatus() {
+		// given
+		Long menuId = 1L;
+		MenuStatus newStatus = MenuStatus.SOLD_OUT;
+
+		Menus menu = Menus.builder()
+			.id(menuId)
+			.name("양념꾸브")
+			.description("양념")
+			.price(18000)
+			.menuStatus(MenuStatus.ON_SALE)
+			.img("test.jpg")
+			.build();
+
+		when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
+
+		// when
+		menuService.changeMenuStatus(menuId, newStatus);
+
+		// then
+		assertThat(menu.getMenuStatus()).isEqualTo(MenuStatus.SOLD_OUT);
+
+		verify(menuRepository, times(1)).findById(menuId);
+	}
+
 }
