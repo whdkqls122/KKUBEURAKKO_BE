@@ -63,7 +63,7 @@ public class MenuServiceImpl implements MenuService {
 
 		List<OptionGroups> optionGroups = optionGroupRepository.findAllByMenuId(menuId);
 
-		return AdminMenuDetailDto(menu, optionGroups);
+		return adminMenuDetailDto(menu, optionGroups);
 	}
 
 	@Override
@@ -181,7 +181,7 @@ public class MenuServiceImpl implements MenuService {
 			.toList();
 	}
 
-	private AdminMenuDetailDto AdminMenuDetailDto(Menus menu, List<OptionGroups> optionGroups) {
+	private AdminMenuDetailDto adminMenuDetailDto(Menus menu, List<OptionGroups> optionGroups) {
 
 		List<AdminMenuDetailDto.OptionGroupSimpleDto> optionGroupDtos =
 			optionGroups.stream()
