@@ -30,6 +30,8 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.dto.PaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
@@ -54,6 +56,7 @@ public class OrderServiceImpl implements OrderService {
 	private final OrderRepository orderRepository;
 	private final UserService userService;
 	private final AesUtil aesUtil;
+	private final PortOneService portOneService;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -99,11 +102,8 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	@Transactional
-	public Long createOrder(OrderCreateRequest request) {
-
-		Users user = userRepository.findByUserNumber(request.userNumber())
-			.orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
-
+	public Long createOrder(OrderCreateRequest request, CustomOAuth2User customOAuth2User) {
+		Users user = userService.getUser(customOAuth2User.getName());
 		Cart cart = cartRepository.findByUser(user)
 			.orElseThrow(() -> new IllegalStateException("장바구니가 비어있습니다."));
 
@@ -127,7 +127,8 @@ public class OrderServiceImpl implements OrderService {
 
 		createOrderItems(order, cart);
 
-		Payments payment = toPaymentEntity(order, request, discountAmount);
+		PortOnePaymentResponseDto paymentResponseDto = portOneService.getPortOnePayment(request.paymentId());
+		Payments payment = toPaymentEntity(order, request, discountAmount, paymentResponseDto);
 		paymentRepository.save(payment);
 
 		cart.clearItems();
@@ -200,12 +201,16 @@ public class OrderServiceImpl implements OrderService {
 			.build();
 	}
 
-	private Payments toPaymentEntity(Orders order, OrderCreateRequest request, int discountAmount) {
+	private Payments toPaymentEntity(Orders order,
+		OrderCreateRequest request,
+		int discountAmount,
+		PortOnePaymentResponseDto paymentResponseDto
+	) {
 		return Payments.builder()
 			.order(order)
-			.paymentsType(request.paymentType())
+			// .paymentsType(request.paymentType())
 			.totalAmount(order.getTotalAmount())
-			.finalAmount(order.getTotalAmount() + request.deliveryTip() - discountAmount)
+			.finalAmount(order.getTotalAmount() - discountAmount)
 			.discountAmount(discountAmount)
 			.transactionId(UUID.randomUUID().toString())
 			.build();
@@ -220,11 +225,11 @@ public class OrderServiceImpl implements OrderService {
 
 	private int applyCouponIfNecessary(String userNumber, Cart cart, OrderCreateRequest request) {
 
-		if (request.couponId() == null)
+		if (request.couponNumber() == null)
 			return 0;
 
-		UsersCoupons usersCoupon = userCouponRepository.findByUser_UserNumberAndCoupon_Id(userNumber,
-				request.couponId())
+		UsersCoupons usersCoupon = userCouponRepository.findByUser_UserNumberAndCouponsNumber(userNumber,
+				request.couponNumber())
 			.orElseThrow(() -> new IllegalArgumentException("쿠폰이 존재하지 않습니다."));
 
 		Coupons coupon = usersCoupon.getCoupon();
