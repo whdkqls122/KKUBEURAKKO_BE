@@ -11,7 +11,8 @@ public enum Status {
 	COOKING("조리 중"),
 	ON_DELIVERY("배달 중"),
 	COMPLETED("배달 완료"),
-	CANCELED("취소");
+	CANCELED("취소"),
+	REFUNDED("환불");
 
 	private final String status;
 }
