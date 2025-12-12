@@ -77,9 +77,10 @@ public class OrderController {
 	)
 	@PostMapping("")
 	public ResponseEntity<ApiResponse<Long>> createOrder(
-		@Valid @RequestBody OrderCreateRequest request
+		@Valid @RequestBody OrderCreateRequest request,
+		@AuthenticationPrincipal CustomOAuth2User customOAuth2User
 	) {
-		Long orderId = orderService.createOrder(request);
+		Long orderId = orderService.createOrder(request, customOAuth2User);
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
 				"주문 요청이 완료되었습니다.",

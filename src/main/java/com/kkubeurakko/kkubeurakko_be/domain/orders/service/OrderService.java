@@ -15,5 +15,5 @@ public interface OrderService {
 	OrderDetailResponseDto getOrderDetailHistory(Long orderId, CustomOAuth2User customOAuth2User);
 
 	//주문 생성/요청
-	Long createOrder(OrderCreateRequest request);
+	Long createOrder(OrderCreateRequest request, CustomOAuth2User customOAuth2User);
 }
