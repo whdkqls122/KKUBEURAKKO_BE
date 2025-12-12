@@ -95,6 +95,6 @@ public class MenuController {
 		@RequestParam MenuStatus status
 	) {
 		menuService.changeMenuStatus(menuId, status);
-		return ResponseEntity.ok(ApiResponse.success("메뉴가 상태가 변경되었습니다.", null));
+		return ResponseEntity.ok(ApiResponse.success("메뉴 상태가 변경되었습니다.", null));
 	}
 }
