@@ -7,8 +7,13 @@ import lombok.Getter;
 @Getter
 public enum PaymentType {
 	GENERAL("일반결제"),
-	KAKAOPAY("카카오페이"),
-	NAVERPAY("네이버페이");
+	CARD("카드결제"),
+	EASY_PAY("간편결제"),
+	CONVENIENCE_STORE("편의점 결제"),
+	GIFT_CERTIFICATE("상품권 결제"),
+	MOBILE("휴대폰 결제"),
+	TRANSFER("계좌이체"),
+	VIRTUAL_ACCOUNT("가상계좌");
 
 	private final String type;
 }
