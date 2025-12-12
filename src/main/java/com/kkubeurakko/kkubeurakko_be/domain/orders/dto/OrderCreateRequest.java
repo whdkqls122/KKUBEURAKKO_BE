@@ -7,7 +7,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderAddressSnapshot;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
-import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 
 import io.micrometer.common.lang.Nullable;
@@ -17,9 +16,6 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 public record OrderCreateRequest(
-	@NotNull(message = "사용자 ID는 필수입니다.")
-	String userNumber,
-
 	@Nullable
 	Long addressId,
 
@@ -34,14 +30,11 @@ public record OrderCreateRequest(
 	@NotNull(message = "주문 타입은 필수입니다.")
 	OrderType orderType,
 
-	@NotNull(message = "결제 방식은 필수입니다.")
-	PaymentType paymentType,
-
 	@Nullable
-	Long couponId,
+	String couponNumber,
 
-	@PositiveOrZero(message = "배달팁은 0 이상이어야 합니다.")
-	int deliveryTip,
+	@NotNull(message = "결제 아이디는 필수입니다.")
+	String paymentId,
 
 	@Positive(message = "총 금액은 0보다 커야 합니다.")
 	int totalAmount,
