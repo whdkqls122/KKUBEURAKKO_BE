@@ -20,8 +20,6 @@ public interface MenuService {
 	//메뉴 생성 (관리자)
 	void createMenu(AdminMenuRequestDto request);
 
-	void createMenu(AdminMenuUpdateDto request);
-
 	//메뉴 수정 (관리자)
 	void updateMenu(Long menuId, AdminMenuUpdateDto request);
 
