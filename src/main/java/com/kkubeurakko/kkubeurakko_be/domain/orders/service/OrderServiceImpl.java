@@ -1,8 +1,8 @@
 package com.kkubeurakko.kkubeurakko_be.domain.orders.service;
 
 import java.util.List;
-import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,8 +26,10 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItems;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItemsOptions;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.exception.OrderCreateException;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.dto.PaymentResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
@@ -57,6 +59,7 @@ public class OrderServiceImpl implements OrderService {
 	private final UserService userService;
 	private final AesUtil aesUtil;
 	private final PortOneService portOneService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -100,42 +103,56 @@ public class OrderServiceImpl implements OrderService {
 			.toList();
 	}
 
-	@Override
 	@Transactional
+	@Override
 	public Long createOrder(OrderCreateRequest request, CustomOAuth2User customOAuth2User) {
-		Users user = userService.getUser(customOAuth2User.getName());
-		Cart cart = cartRepository.findByUser(user)
-			.orElseThrow(() -> new IllegalStateException("장바구니가 비어있습니다."));
 
-		if (cart.getCartItemList().isEmpty())
-			throw new IllegalStateException("장바구니에 담긴 메뉴가 없습니다.");
+		try {
+			Users user = userService.getUser(customOAuth2User.getName());
+			Cart cart = cartRepository.findByUser(user)
+				.orElseThrow(() -> new IllegalStateException("장바구니가 비어있습니다."));
 
-		Addresses address = null;
-		if (request.orderType() == OrderType.DELIVERY) {
-			if (request.addressId() == null) {
-				throw new IllegalArgumentException("배달 주문 시 주소는 필수입니다.");
+			if (cart.getCartItemList().isEmpty()) {
+				throw new IllegalStateException("장바구니에 담긴 메뉴가 없습니다.");
 			}
-			address = addressRepository.findById(request.addressId())
-				.orElseThrow(() -> new EntityNotFoundException("주소를 찾을 수 없습니다."));
+
+			Addresses address = null;
+			if (request.orderType() == OrderType.DELIVERY) {
+				address = addressRepository.findById(request.addressId())
+					.orElseThrow(() -> new EntityNotFoundException("주소를 찾을 수 없습니다."));
+			}
+
+			int discountAmount = applyCouponIfNecessary(user.getUserNumber(), cart, request);
+			int totalAmount = calculateCartTotal(cart);
+
+			Orders order = request.toOrderEntity(user, address, totalAmount);
+			orderRepository.save(order);
+
+			createOrderItems(order, cart);
+
+			PortOnePaymentResponseDto paymentResponse =
+				portOneService.getPortOnePayment(request.paymentId());
+
+			Payments payment = toPaymentEntity(order, discountAmount, paymentResponse);
+			paymentRepository.save(payment);
+
+			cart.clearItems();
+
+			sendOrderToStore(order);
+
+			return order.getId();
+
+		} catch (Exception e) {
+			OrderCreateException exception =
+				new OrderCreateException(
+					"결제는 자동으로 취소를 시도합니다.\n" +
+						"환불이 지연될 경우 가게로 문의 부탁드립니다.",
+					request.paymentId(),
+					e
+				);
+			eventPublisher.publishEvent(exception);
+			throw exception;
 		}
-
-		int discountAmount = applyCouponIfNecessary(user.getUserNumber(), cart, request);
-		int totalAmount = calculateCartTotal(cart);
-
-		Orders order = request.toOrderEntity(user, address, totalAmount);
-		Orders savedOrder = orderRepository.save(order);
-
-		createOrderItems(order, cart);
-
-		PortOnePaymentResponseDto paymentResponseDto = portOneService.getPortOnePayment(request.paymentId());
-		Payments payment = toPaymentEntity(order, request, discountAmount, paymentResponseDto);
-		paymentRepository.save(payment);
-
-		cart.clearItems();
-
-		sendOrderToStore(order);
-
-		return savedOrder.getId();
 	}
 
 	private OrderDetailResponseDto toResponseDto(Orders order) {
@@ -201,19 +218,41 @@ public class OrderServiceImpl implements OrderService {
 			.build();
 	}
 
-	private Payments toPaymentEntity(Orders order,
-		OrderCreateRequest request,
+	private Payments toPaymentEntity(
+		Orders order,
 		int discountAmount,
 		PortOnePaymentResponseDto paymentResponseDto
 	) {
 		return Payments.builder()
 			.order(order)
-			// .paymentsType(request.paymentType())
+			.paymentsType(getPaymentType(paymentResponseDto))
 			.totalAmount(order.getTotalAmount())
-			.finalAmount(order.getTotalAmount() - discountAmount)
+			.finalAmount(paymentResponseDto.amount().total())
 			.discountAmount(discountAmount)
-			.transactionId(UUID.randomUUID().toString())
+			.transactionId(paymentResponseDto.transactionId())
 			.build();
+	}
+
+	private PaymentType getPaymentType(PortOnePaymentResponseDto paymentResponseDto) {
+		String type = paymentResponseDto.method().type();
+
+		if ("PaymentMethodCard".equals(type)) {
+			return PaymentType.CARD;
+		} else if ("PaymentMethodConvenienceStore".equals(type)) {
+			return PaymentType.CONVENIENCE_STORE;
+		} else if ("PaymentMethodEasyPay".equals(type)) {
+			return PaymentType.EASY_PAY;
+		} else if ("PaymentMethodGiftCertificate".equals(type)) {
+			return PaymentType.GIFT_CERTIFICATE;
+		} else if ("PaymentMethodMobile".equals(type)) {
+			return PaymentType.MOBILE;
+		} else if ("PaymentMethodTransfer".equals(type)) {
+			return PaymentType.MOBILE;
+		} else if ("PaymentMethodVirtualAccount".equals(type)) {
+			return PaymentType.VIRTUAL_ACCOUNT;
+		} else {
+			return PaymentType.GENERAL;
+		}
 	}
 
 	private int calculateCartTotal(Cart cart) {
