@@ -14,7 +14,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 @Repository
 public interface UserCouponRepository extends JpaRepository<UsersCoupons, Long> {
 
-	Optional<UsersCoupons> findByUser_UserNumberAndCoupon_Id(String userNumber, Long couponId);
+	Optional<UsersCoupons> findByUser_UserNumberAndCouponsNumber(String userNumber, String couponNumber);
 
 	@Query("""
 			SELECT uc
