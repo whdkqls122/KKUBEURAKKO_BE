@@ -145,8 +145,8 @@ public class OrderServiceImpl implements OrderService {
 		} catch (Exception e) {
 			OrderCreateException exception =
 				new OrderCreateException(
-					"결제는 자동으로 취소를 시도합니다.\n" +
-						"환불이 지연될 경우 가게로 문의 부탁드립니다.",
+					"결제는 자동으로 취소 됩니다.\n" +
+						"환불이 지연되거나 같은 문제가 지속될 경우 가게로 문의 부탁드립니다.",
 					request.paymentId(),
 					e
 				);
