@@ -254,7 +254,7 @@ public class OrderServiceImpl implements OrderService {
 		} else if ("PaymentMethodMobile".equals(type)) {
 			return PaymentType.MOBILE;
 		} else if ("PaymentMethodTransfer".equals(type)) {
-			return PaymentType.MOBILE;
+			return PaymentType.TRANSFER;
 		} else if ("PaymentMethodVirtualAccount".equals(type)) {
 			return PaymentType.VIRTUAL_ACCOUNT;
 		} else {
