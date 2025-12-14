@@ -203,11 +203,18 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	private OrderItems toOrderItemEntity(Orders order, CartItem cartItem) {
+		int optionTotalPrice = cartItem.getOptionList().stream()
+			.mapToInt(option -> option.getOption().getPrice())
+			.sum();
+
+		int totalPrice =
+			cartItem.getQuantity() *
+				(cartItem.getMenu().getPrice() + optionTotalPrice);
 		return OrderItems.builder()
 			.order(order)
 			.menu(cartItem.getMenu())
 			.quantity(cartItem.getQuantity())
-			.totalPrice(cartItem.getQuantity() * cartItem.getMenu().getPrice())
+			.totalPrice(totalPrice)
 			.build();
 	}
 
@@ -258,7 +265,7 @@ public class OrderServiceImpl implements OrderService {
 	private int calculateCartTotal(Cart cart) {
 		return cart.getCartItemList().stream()
 			.mapToInt(i -> i.getMenu().getPrice() * i.getQuantity()
-				+ i.getOptionList().stream().mapToInt(o -> o.getOption().getPrice()).sum())
+				+ i.getOptionList().stream().mapToInt(o -> i.getQuantity() * o.getOption().getPrice()).sum())
 			.sum();
 	}
 
