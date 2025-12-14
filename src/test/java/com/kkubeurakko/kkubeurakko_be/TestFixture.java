@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.AddressCategory;
@@ -29,6 +30,9 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PaymentAmount;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PaymentMethodDto;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -252,7 +256,9 @@ public class TestFixture {
 			.id(id + 1000)
 			.order(order)
 			.totalAmount(order.getOrderItemList().stream().mapToInt(OrderItems::getTotalPrice).sum())
-			.paymentsType(PaymentType.GENERAL)
+			.paymentsType(PaymentType.CARD)
+			.discountAmount(2000)
+			.finalAmount(order.getOrderItemList().stream().mapToInt(OrderItems::getTotalPrice).sum() - 2000)
 			.transactionId("T" + id + "PAY")
 			.build();
 
@@ -291,5 +297,29 @@ public class TestFixture {
 			.couponsNumber(UUID.randomUUID().toString().replace("-", "").substring(0, 19)) // 19자리
 			.isUsed(isUsed)
 			.build();
+	}
+
+	public static PortOnePaymentResponseDto createPortOnePaymentResponse(
+		String paymentId,
+		String transactionId,
+		int totalAmount
+	) {
+		return new PortOnePaymentResponseDto(
+			"PAID",
+			paymentId,
+			transactionId,
+			"store-test-001",
+			new PaymentAmount(
+				totalAmount,
+				0,
+				totalAmount / 10,
+				totalAmount - (totalAmount / 10),
+				0
+			),
+			new PaymentMethodDto(
+				"PaymentMethodCard",
+				Map.of()
+			)
+		);
 	}
 }

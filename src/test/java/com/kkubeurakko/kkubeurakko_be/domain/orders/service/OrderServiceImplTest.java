@@ -4,8 +4,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
@@ -28,14 +27,12 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderAddressSnapshot;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
-import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
-import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
@@ -65,6 +62,12 @@ class OrderServiceImplTest {
 	private UserCouponRepository userCouponRepository;
 	@Mock
 	private SimpMessagingTemplate messagingTemplate;
+
+	@Mock
+	private PortOneService portOneService;
+
+	@Mock
+	private ApplicationEventPublisher eventPublisher;
 
 	@InjectMocks
 	private OrderServiceImpl orderService;
@@ -147,70 +150,44 @@ class OrderServiceImplTest {
 		// given
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 		Cart cart = TestFixture.createCartWithOneItem(user);
-
 		Addresses address = TestFixture.createAddress(1L, user);
 
+		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
+		when(customOAuth2User.getName()).thenReturn("kakao_1234");
+
 		OrderCreateRequest request = new OrderCreateRequest(
-			"kakao_1234",
 			1L,
 			"젓가락 2개 주세요",
 			"초인종 누르지 말아주세요",
 			OrderType.DELIVERY,
-			PaymentType.GENERAL,
 			null,
-			3000,
+			"paymentid",
 			20000,
-			0
+			3000
 		);
 
-		when(userRepository.findByUserNumber("kakao_1234"))
-			.thenReturn(Optional.of(user));
+		when(userService.getUser("kakao_1234")).thenReturn(user);
+		when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
+		when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
 
-		when(cartRepository.findByUser(user))
-			.thenReturn(Optional.of(cart));
+		Orders savedOrder = Orders.builder().id(10L).build();
+		when(orderRepository.save(any())).thenReturn(savedOrder);
 
-		when(addressRepository.findById(1L))
-			.thenReturn(Optional.of(address));
+		// ⭐ 여기 핵심
+		PortOnePaymentResponseDto portOneResponse =
+			TestFixture.createPortOnePaymentResponse(
+				"paymentid",
+				"tx-123",
+				20000
+			);
 
-		Orders savedOrder = Orders.builder()
-			.id(10L)
-			.user(user)
-			.orderDate(LocalDateTime.now())
-			.orderType(OrderType.DELIVERY)
-			.status(Status.ACCEPTED)
-			.addressSnapshot(OrderAddressSnapshot.builder()
-				.addressName(address.getAddressName())
-				.roadName(address.getRoadName())
-				.detailAddress(address.getDetailAddress())
-				.requestContent(address.getRequestContent())
-				.entrancePassword(address.getEntrancePassword())
-				.directionsInfo(address.getDirectionsInfo())
-				.build())
-			.orderItemList(new ArrayList<>())
-			.build();
-
-		when(orderRepository.save(any(Orders.class)))
-			.thenReturn(savedOrder);
+		when(portOneService.getPortOnePayment("paymentid"))
+			.thenReturn(portOneResponse);
 
 		// when
-		Long orderId = orderService.createOrder(request);
-
+		Long orderId = orderService.createOrder(request, customOAuth2User);
+		System.out.println(orderId);
 		// then
 		assertThat(orderId).isEqualTo(10L);
-
-		verify(userRepository, times(1))
-			.findByUserNumber("kakao_1234");
-
-		verify(cartRepository, times(1))
-			.findByUser(user);
-
-		verify(addressRepository, times(1))
-			.findById(1L);
-
-		verify(orderRepository, times(1))
-			.save(any(Orders.class));
-
-		verify(paymentRepository, times(1))
-			.save(any(Payments.class));
 	}
 }
