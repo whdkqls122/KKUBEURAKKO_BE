@@ -172,8 +172,7 @@ class OrderServiceImplTest {
 
 		Orders savedOrder = Orders.builder().id(10L).build();
 		when(orderRepository.save(any())).thenReturn(savedOrder);
-
-		// ⭐ 여기 핵심
+		
 		PortOnePaymentResponseDto portOneResponse =
 			TestFixture.createPortOnePaymentResponse(
 				"paymentid",
