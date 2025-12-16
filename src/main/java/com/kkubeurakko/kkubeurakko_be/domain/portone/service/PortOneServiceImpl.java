@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentCancelRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.exception.PortOnePaymentCancelException;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.exception.PortOnePaymentHistoryException;
 
@@ -55,6 +56,32 @@ public class PortOneServiceImpl implements PortOneService {
 		} catch (Exception e) {
 			log.error("PortOne 결제 조회 중 예외", e);
 			throw new PortOnePaymentHistoryException("PortOne 결제 조회 실패: ", e);
+		}
+	}
+
+	@Override
+	public PortOneVerifyInfoResponseDto getPortOneVerifyInfo(String identityVerificationId) {
+		try {
+			String url = requestUri + "/identity-verifications/" + identityVerificationId;
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("Authorization", "PortOne " + secretKey);
+			headers.setContentType(MediaType.APPLICATION_JSON);
+
+			HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+			ResponseEntity<PortOneVerifyInfoResponseDto> response =
+				restTemplate.exchange(url, HttpMethod.GET, entity, PortOneVerifyInfoResponseDto.class);
+
+			return response.getBody();
+		} catch (HttpStatusCodeException e) {
+			log.error(
+				"PortOne 사용자 정보 조회 실패 - status: {}, body: {}",
+				e.getStatusCode(), e.getResponseBodyAsString()
+			);
+			throw new PortOnePaymentHistoryException("PortOne 사용자 정보 조회 실패: ", e);
+		} catch (Exception e) {
+			log.error("PortOne 결제 조회 중 예외", e);
+			throw new PortOnePaymentHistoryException("PortOne 사용자 정보 조회 실패: ", e);
 		}
 	}
 
