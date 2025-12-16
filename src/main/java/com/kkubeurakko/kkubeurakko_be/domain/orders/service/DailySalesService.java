@@ -18,21 +18,25 @@ public class DailySalesService {
 
 	public DailySalesResponseDto getDailySales(LocalDate date) {
 
+		// 오늘
 		LocalDateTime start = date.atStartOfDay();
 		LocalDateTime end = date.atTime(23, 59, 59);
 
+		// 어제
 		LocalDateTime prevStart = date.minusDays(1).atStartOfDay();
 		LocalDateTime prevEnd = date.minusDays(1).atTime(23, 59, 59);
 
-		int todaySales = statisticsQueryRepository.getSalesAmount(start, end);
-		int yesterdaySales = statisticsQueryRepository.getSalesAmount(prevStart, prevEnd);
+		// 매출
+		long todaySales = statisticsQueryRepository.getSalesAmount(start, end);
+		long yesterdaySales = statisticsQueryRepository.getSalesAmount(prevStart, prevEnd);
 
-		int todayOrders = statisticsQueryRepository.getOrderCount(start, end).intValue();
-		int yesterdayOrders = statisticsQueryRepository.getOrderCount(prevStart, prevEnd).intValue();
+		// 주문 수
+		long todayOrders = statisticsQueryRepository.getOrderCount(start, end);
+		long yesterdayOrders = statisticsQueryRepository.getOrderCount(prevStart, prevEnd);
 
-		int refundAmount = statisticsQueryRepository.getRefundAmount(start, end);
-		
-		int discountAmount = statisticsQueryRepository.getDiscountAmount(start, end);
+		// 환불 / 할인
+		long refundAmount = statisticsQueryRepository.getRefundAmount(start, end);
+		long discountAmount = statisticsQueryRepository.getDiscountAmount(start, end);
 
 		return DailySalesResponseDto.builder()
 			.salesAmount(todaySales)

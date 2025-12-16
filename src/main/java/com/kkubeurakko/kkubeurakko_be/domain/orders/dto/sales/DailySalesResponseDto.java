@@ -4,13 +4,13 @@ import lombok.Builder;
 
 @Builder
 public record DailySalesResponseDto(
-	int salesAmount,
-	int salesDiff,
+	Long salesAmount,
+	Long salesDiff,
 
-	int orderCount,
-	int orderCountDiff,
+	Long orderCount,
+	Long orderCountDiff,
 
-	int refundAmount,
-	int discountAmount
+	Long refundAmount,
+	Long discountAmount
 ) {
 }
