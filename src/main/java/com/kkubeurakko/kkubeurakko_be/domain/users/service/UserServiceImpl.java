@@ -7,7 +7,10 @@ import java.util.Base64;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserInfoResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.PhoneHashingException;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
@@ -23,22 +26,27 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceImpl implements UserService {
 	private final AesUtil aesUtil;
 	private final UserRepository userRepository;
+	private final PortOneService portOneService;
 
 	@Override
 	@Transactional
-	public void saveUserPhone(String phone, CustomOAuth2User customOAuth2User) {
-		String phoneHash = hashPhone(phone);
+	public void saveUserPhone(UserVerifyRequestDto userVerifyRequestDto, CustomOAuth2User customOAuth2User) {
+		Users users = getUser(customOAuth2User.getName());
 		try {
+			PortOneVerifyInfoResponseDto portOneVerifyInfoResponseDto =
+				portOneService.getPortOneVerifyInfo(userVerifyRequestDto.identityVerificationId());
+
+			String phoneNumber = portOneVerifyInfoResponseDto.verifiedCustomer().phoneNumber();
+			String phoneHash = hashPhone(phoneNumber);
 			if (existsUserPhone(phoneHash)) {
-				//중복된 전화번호
+				userRepository.delete(users);
 				throw new IllegalArgumentException("이미 저장된 전화번호");
 			}
-			String encodePhone = aesUtil.encryptToBase64(phone);
-			Users users = userRepository
-				.findByUserNumber(customOAuth2User.getName())
-				.orElseThrow(NullPointerException::new);
+			String encodePhone = aesUtil.encryptToBase64(phoneNumber);
+
 			users.updateUsersPhone(phoneHash, encodePhone);
 		} catch (RuntimeException e) {
+			//예외 시 사용자 정보 삭제 및 카카오 연결 해제 요청
 			throw new RuntimeException("이미 저장된 전화번호 입니다.");
 		}
 	}
