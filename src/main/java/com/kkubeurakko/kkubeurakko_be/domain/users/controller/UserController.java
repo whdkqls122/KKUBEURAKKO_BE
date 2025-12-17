@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
+import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserVerifyFacadeServiceImpl;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "User API", description = "사용자 관련 API")
 public class UserController {
 	private final UserService userService;
+	private final UserVerifyFacadeServiceImpl userVerifyFacadeService;
 
 	@Operation(
 		summary = "사용자 정보 조회 API",
@@ -54,7 +56,7 @@ public class UserController {
 		@AuthenticationPrincipal
 		CustomOAuth2User customOAuth2User
 	) {
-		userService.saveUserPhone(userVerifyRequestDto, customOAuth2User);
+		userVerifyFacadeService.verifyAndSavePhone(userVerifyRequestDto, customOAuth2User);
 
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
