@@ -44,9 +44,6 @@ dependencies {
     //Spring Boot
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    //coolsms
-    implementation 'net.nurigo:sdk:4.3.2'
-
     //mysql
     runtimeOnly 'com.mysql:mysql-connector-j'
 
