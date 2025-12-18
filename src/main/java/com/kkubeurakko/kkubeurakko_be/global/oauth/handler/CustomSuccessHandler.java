@@ -3,12 +3,15 @@ package com.kkubeurakko.kkubeurakko_be.global.oauth.handler;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.entity.RefreshToken;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenRepository;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
@@ -25,11 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 	private final JwtUtil jwtUtil;
 	private final RefreshTokenRepository refreshTokenRepository;
-	private final ObjectMapper objectMapper;
-
-	@Value("${spring.jwt.access-token-expiry}")
-	private long accessTokenExpiry;
-
+	private final OAuth2AuthorizedClientService authorizedClientService;
+	private final RedisTemplate<String, String> redisTemplate;
 	@Value("${spring.jwt.refresh-token-expiry}")
 	private long refreshTokenExpiry;
 
@@ -39,12 +39,31 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 		HttpServletResponse response,
 		Authentication authentication)
 		throws IOException {
-		CustomOAuth2User customUserDetails = (CustomOAuth2User)authentication.getPrincipal();
+		OAuth2AuthenticationToken oAuthToken = (OAuth2AuthenticationToken)authentication;
+
+		CustomOAuth2User customUserDetails = (CustomOAuth2User)oAuthToken.getPrincipal();
 		String userNumber = customUserDetails.getName();
 		String role = authentication.getAuthorities().iterator().next().getAuthority();
 
+		String provider =
+			oAuthToken.getAuthorizedClientRegistrationId();
+
+		OAuth2AuthorizedClient authorizedClient =
+			authorizedClientService.loadAuthorizedClient(
+				provider,
+				oAuthToken.getName()
+			);
+
+		String providerAccessToken =
+			authorizedClient.getAccessToken().getTokenValue();
 		refreshTokenRepository.deleteById(userNumber);
 
+		String providerRefreshToken =
+			authorizedClient.getRefreshToken() != null
+				? authorizedClient.getRefreshToken().getTokenValue()
+				: null;
+
+		saveOAuthToken(userNumber, providerAccessToken, providerRefreshToken);
 		boolean firstLogin = customUserDetails.getUserDto().isFirstLogin();
 
 		String refresh = jwtUtil.createRefreshToken(userNumber, role, refreshTokenExpiry);
@@ -58,6 +77,17 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 		// String redirectUrl = "https://www.kkubeurakko-anyang.shop/home?success=" + true + "&firstLogin=" + firstLogin;
 		log.info("로그인 성공");
 		response.sendRedirect(redirectUrl);
+	}
+
+	private void saveOAuthToken(String userNumber, String providerAccessToken, String providerRefreshToken) {
+		redisTemplate.opsForValue().set(
+			"OAUTH(AT):" + userNumber,
+			providerAccessToken
+		);
+		redisTemplate.opsForValue().set(
+			"OAUTH(RT):" + userNumber,
+			providerRefreshToken
+		);
 	}
 
 	private ResponseCookie createCookie(String value) {
