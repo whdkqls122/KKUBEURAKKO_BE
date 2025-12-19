@@ -15,12 +15,6 @@ spring:
         hibernate.default_batch_fetch_size: 100
     defer-datasource-initialization: true
 
-  coolsms:
-    api-key: ${COOLSMS_KEY}
-    api-secret: ${COOLSMS_SECRET}
-    from-number: ${COOLSMS_FROM}
-    api-url: ${COOLSMS_URL}
-
   data:
     redis:
       host: ${REDIS_HOST}
