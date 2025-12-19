@@ -68,3 +68,12 @@ spring:
 
     aes:
       secret: ${AES_SECRET}
+
+  portOne:
+    request-uri: ${PORT_ONE_REQUEST_URL}
+    store-id: ${PORT_ONE_STORE_ID}
+    secret-key: ${PORT_ONE_SECRET}
+    payment:
+      channel-key: ${PORT_ONE_PAYMENT_CHANNEL_KEY}
+    verify:
+      channel-key: ${PORT_ONE_VERIFY_CHANNEL_KEY}
