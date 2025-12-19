@@ -35,12 +35,16 @@ public class UserServiceImpl implements UserService {
 		}
 		String phone = responseDto.verifiedCustomer().phoneNumber();
 		String phoneHash = hashPhone(phone);
-
-		if (userRepository.existsByPhoneHash(phoneHash)) {
-			log.error("중복된 사용자 전화 번호");
-			throw new DuplicatePhoneException();
+		try {
+			if (userRepository.existsByPhoneHash(phoneHash)) {
+				log.error("중복된 사용자 전화 번호");
+				throw new IllegalStateException();
+			}
+			user.updateUsersPhone(phoneHash, aesUtil.encryptToBase64(phone));
+		} catch (IllegalStateException e) {
+			throw new DuplicatePhoneException("이미 가입된 계정이 존재합니다.", e);
 		}
-		user.updateUsersPhone(phoneHash, aesUtil.encryptToBase64(phone));
+
 	}
 
 	@Override
