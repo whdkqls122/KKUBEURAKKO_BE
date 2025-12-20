@@ -69,6 +69,16 @@ spring:
     aes:
       secret: ${AES_SECRET}
 
+    kakao:
+      refresh-url: https://kauth.kakao.com/oauth/token
+      unlink-url: https://kapi.kakao.com/v1/user/unlink
+    naver:
+      refresh-url: https://nid.naver.com/oauth2.0/token
+      unlink-url: https://nid.naver.com/oauth2.0/token
+    google:
+      refresh-url: https://oauth2.googleapis.com/token
+      unlink-url: https://oauth2.googleapis.com/revoke
+
   portOne:
     request-uri: ${PORT_ONE_REQUEST_URL}
     store-id: ${PORT_ONE_STORE_ID}
