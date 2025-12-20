@@ -32,8 +32,7 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 		} catch (Exception e) {
 			userService.deleteUser(user);
 			try {
-				String userNumber = user.getUserNumber().split("_")[1];
-				oAuthUnlinkService.revokeOAuthAccount(userNumber);
+				oAuthUnlinkService.revokeOAuthAccount(user.getUserNumber());
 			} catch (Exception ex) {
 				log.error("OAuth unlink 실패", ex);
 			}
