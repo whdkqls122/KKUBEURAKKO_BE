@@ -37,4 +37,19 @@ public class SalesController {
 		);
 
 	}
+
+	@GetMapping("/weekly")
+	public ResponseEntity<ApiResponse<SalesResponseDto>> getWeeklyStatistics(
+		@RequestParam("date")
+		@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
+	) {
+		SalesResponseDto SalesResponseDto = SalesService.getWeeklySales(date);
+
+		return ResponseEntity.ok(
+			ApiResponse.success(
+				"주별 매출 조회가 완료되었습니다.",
+				SalesResponseDto
+			)
+		);
+	}
 }
