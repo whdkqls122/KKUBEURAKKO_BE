@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
+import com.kkubeurakko.kkubeurakko_be.domain.orders.config.MonthRange;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.config.WeekRange;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.sales.SalesResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.StatisticsQueryRepository;
@@ -83,5 +84,38 @@ public class SalesServiceImpl implements SalesService {
 			.discountAmount(discountAmount)
 			.build();
 	}
-	
+
+	public SalesResponseDto getMonthlySales(LocalDate date) {
+
+		// 이번 달
+		LocalDateTime start = MonthRange.getMonthStart(date);
+		LocalDateTime end = MonthRange.getMonthEnd(date);
+
+		// 지난 달
+		LocalDateTime prevStart = MonthRange.getMonthStart(date.minusMonths(1));
+		LocalDateTime prevEnd = MonthRange.getMonthEnd(date.minusMonths(1));
+
+		// 매출
+		Long thisMonthSales = statisticsQueryRepository.getSalesAmount(start, end);
+		Long lastMonthSales = statisticsQueryRepository.getSalesAmount(prevStart, prevEnd);
+
+		// 주문 수
+		Long thisMonthOrders = statisticsQueryRepository.getOrderCount(start, end);
+		Long lastMonthOrders = statisticsQueryRepository.getOrderCount(prevStart, prevEnd);
+
+		// 환불 / 할인
+		Long refundAmount = statisticsQueryRepository.getRefundAmount(start, end);
+		Long discountAmount = statisticsQueryRepository.getDiscountAmount(start, end);
+
+		return SalesResponseDto.builder()
+			.salesAmount(thisMonthSales)
+			.salesDiff(thisMonthSales - lastMonthSales)
+
+			.orderCount(thisMonthOrders)
+			.orderCountDiff(thisMonthOrders - lastMonthOrders)
+
+			.refundAmount(refundAmount)
+			.discountAmount(discountAmount)
+			.build();
+	}
 }
