@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.sales.DailySalesResponseDto;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.service.SalesService;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.sales.SalesResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.service.SalesServiceImpl;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -20,19 +20,19 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/v1/admin/statistics")
 public class SalesController {
 
-	private final SalesService SalesService;
+	private final SalesServiceImpl SalesService;
 
 	@GetMapping("/daily")
-	public ResponseEntity<ApiResponse<DailySalesResponseDto>> getDailyStatistics(
+	public ResponseEntity<ApiResponse<SalesResponseDto>> getDailyStatistics(
 		@RequestParam("date")
 		@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
 	) {
-		DailySalesResponseDto dailySalesResponseDto = SalesService.getDailySales(date);
+		SalesResponseDto SalesResponseDto = SalesService.getDailySales(date);
 
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
 				"특정일 매출 조회가 완료되었습니다.",
-				dailySalesResponseDto
+				SalesResponseDto
 			)
 		);
 

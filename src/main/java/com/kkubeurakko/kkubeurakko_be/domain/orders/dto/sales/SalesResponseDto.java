@@ -3,7 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.orders.dto.sales;
 import lombok.Builder;
 
 @Builder
-public record DailySalesResponseDto(
+public record SalesResponseDto(
 	Long salesAmount,
 	Long salesDiff,
 
