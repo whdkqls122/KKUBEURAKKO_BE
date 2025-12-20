@@ -63,7 +63,7 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 				? authorizedClient.getRefreshToken().getTokenValue()
 				: null;
 
-		saveOAuthToken(userNumber, providerAccessToken, providerRefreshToken);
+		saveOAuthToken(provider, userNumber, providerAccessToken, providerRefreshToken);
 		boolean firstLogin = customUserDetails.getUserDto().isFirstLogin();
 
 		String refresh = jwtUtil.createRefreshToken(userNumber, role, refreshTokenExpiry);
@@ -79,14 +79,23 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 		response.sendRedirect(redirectUrl);
 	}
 
-	private void saveOAuthToken(String userNumber, String providerAccessToken, String providerRefreshToken) {
+	private void saveOAuthToken(
+		String provider,
+		String userNumber,
+		String providerAccessToken,
+		String providerRefreshToken
+	) {
 		redisTemplate.opsForValue().set(
-			"OAUTH(AT):" + userNumber,
+			"OAUTH:AT:" + userNumber,
 			providerAccessToken
 		);
 		redisTemplate.opsForValue().set(
-			"OAUTH(RT):" + userNumber,
+			"OAUTH:RT:" + userNumber,
 			providerRefreshToken
+		);
+		redisTemplate.opsForValue().set(
+			"OAUTH:PROVIDER:" + userNumber,
+			provider
 		);
 	}
 
