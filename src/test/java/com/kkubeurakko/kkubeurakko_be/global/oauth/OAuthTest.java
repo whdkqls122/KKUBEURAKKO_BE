@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserDto;
@@ -56,6 +57,9 @@ class OAuthTest {
 	@Mock
 	private ObjectMapper objectMapper;
 
+	@Mock
+	private OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
+
 	private JwtUtil jwtUtil;
 	private CustomSuccessHandler successHandler;
 	private CustomLogoutFilter logoutFilter;
@@ -68,7 +72,8 @@ class OAuthTest {
 
 		lenient().when(redisTemplate.opsForValue()).thenReturn(valueOps);
 
-		successHandler = new CustomSuccessHandler(jwtUtil, refreshTokenRepository, objectMapper);
+		successHandler = new CustomSuccessHandler(jwtUtil, refreshTokenRepository, oAuth2AuthorizedClientService,
+			redisTemplate);
 		org.springframework.test.util.ReflectionTestUtils.setField(successHandler, "accessTokenExpiry",
 			1000L * 60 * 10);
 		org.springframework.test.util.ReflectionTestUtils.setField(successHandler, "refreshTokenExpiry",
