@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class DailySalesService {
+public class SalesService {
 
 	private final StatisticsQueryRepository statisticsQueryRepository;
 
