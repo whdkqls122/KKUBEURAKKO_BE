@@ -19,13 +19,13 @@ public class NaverTokenRefresher implements OAuthTokenRefresher {
 
 	private final RestTemplate oauthRestTemplate;
 
-	@Value("${security.oauth2.client.registration.naver.client-id}")
+	@Value("${spring.security.oauth2.client.registration.naver.client-id}")
 	private String clientId;
 
-	@Value("${security.oauth2.client.registration.naver.client-secret}")
+	@Value("${spring.security.oauth2.client.registration.naver.client-secret}")
 	private String clientSecret;
 
-	@Value("${security.naver.refresh-url}")
+	@Value("${spring.security.naver.refresh-url}")
 	private String refreshUrl;
 
 	@Override

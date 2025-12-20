@@ -19,13 +19,13 @@ public class GoogleTokenRefresher implements OAuthTokenRefresher {
 
 	private final RestTemplate oauthRestTemplate;
 
-	@Value("${security.oauth2.client.registration.google.client-id}")
+	@Value("${spring.security.oauth2.client.registration.google.client-id}")
 	private String clientId;
 
-	@Value("${security.oauth2.client.registration.google.client-secret}")
+	@Value("${spring.security.oauth2.client.registration.google.client-secret}")
 	private String clientSecret;
 
-	@Value("${security.google.refresh-url}")
+	@Value("${spring.security.google.refresh-url}")
 	private String refreshUrl;
 
 	@Override

@@ -24,10 +24,10 @@ public class KakaoTokenRefresher implements OAuthTokenRefresher {
 
 	private final RestTemplate oauthRestTemplate;
 
-	@Value("${security.oauth2.client.registration.kakao.client-id}")
+	@Value("${spring.security.oauth2.client.registration.kakao.client-id}")
 	private String clientId;
 
-	@Value("${security.kakao.refresh-url}")
+	@Value("${spring.security.kakao.refresh-url}")
 	private String refreshUrl;
 
 	@Override

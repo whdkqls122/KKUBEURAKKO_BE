@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class GoogleOAuthUnlinkClient implements OAuthUnlinkClient {
-	@Value("${spring.security.unlink-url}")
+	@Value("${spring.security.google.unlink-url}")
 	private String unlinkUrl;
 
 	private final RestTemplate oauthRestTemplate;
