@@ -10,5 +10,5 @@ public interface SalesService {
 	SalesResponseDto getDailySales(LocalDate date);
 
 	//주별 매출 통계
-	WeeklySalesResponseDto getWeeklySales(LocalDate date);
+	SalesResponseDto getWeeklySales(LocalDate date);
 }

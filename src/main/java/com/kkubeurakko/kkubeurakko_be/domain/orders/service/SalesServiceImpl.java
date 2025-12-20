@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
+import com.kkubeurakko.kkubeurakko_be.domain.orders.config.WeekRange;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.sales.SalesResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.StatisticsQueryRepository;
 
@@ -48,4 +49,39 @@ public class SalesServiceImpl implements SalesService {
 			.discountAmount(discountAmount)
 			.build();
 	}
+
+	@Override
+	public SalesResponseDto getWeeklySales(LocalDate date) {
+		// 이번 주
+		LocalDateTime start = WeekRange.getWeekStart(date);
+		LocalDateTime end = WeekRange.getWeekEnd(date);
+
+		// 지난 주
+		LocalDateTime prevStart = start.minusWeeks(1);
+		LocalDateTime prevEnd = end.minusWeeks(1);
+
+		// 매출
+		Long thisWeekSales = statisticsQueryRepository.getSalesAmount(start, end);
+		Long lastWeekSales = statisticsQueryRepository.getSalesAmount(prevStart, prevEnd);
+
+		// 주문 수
+		Long thisWeekOrders = statisticsQueryRepository.getOrderCount(start, end);
+		Long lastWeekOrders = statisticsQueryRepository.getOrderCount(prevStart, prevEnd);
+
+		// 환불 / 할인
+		Long refundAmount = statisticsQueryRepository.getRefundAmount(start, end);
+		Long discountAmount = statisticsQueryRepository.getDiscountAmount(start, end);
+
+		return SalesResponseDto.builder()
+			.salesAmount(thisWeekSales)
+			.salesDiff(thisWeekSales - lastWeekSales)
+
+			.orderCount(thisWeekOrders)
+			.orderCountDiff(thisWeekOrders - lastWeekOrders)
+
+			.refundAmount(refundAmount)
+			.discountAmount(discountAmount)
+			.build();
+	}
+	
 }
