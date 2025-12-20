@@ -55,23 +55,26 @@ public class StatisticsQueryRepository {
 					"AND o.orderDate BETWEEN :start AND :end",
 				Long.class
 			)
-			.setParameter("status", Status.CANCELED)
+			.setParameter("status", Status.REFUNDED)
 			.setParameter("start", start)
 			.setParameter("end", end)
 			.getSingleResult();
 	}
 
-	// 할인 금액
+	// 할인 금액 (환불 주문 제외)
 	public Long getDiscountAmount(LocalDateTime start, LocalDateTime end) {
 		return em.createQuery(
 				"SELECT COALESCE(SUM(p.discountAmount), 0L) " +
 					"FROM Payments p " +
 					"JOIN p.order o " +
-					"WHERE o.orderDate BETWEEN :start AND :end",
+					"WHERE o.status = :status " +
+					"AND o.orderDate BETWEEN :start AND :end",
 				Long.class
 			)
+			.setParameter("status", Status.COMPLETED)
 			.setParameter("start", start)
 			.setParameter("end", end)
 			.getSingleResult();
 	}
+
 }
