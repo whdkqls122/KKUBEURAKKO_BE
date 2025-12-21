@@ -52,4 +52,19 @@ public class SalesController {
 			)
 		);
 	}
+
+	@GetMapping("/monthly")
+	public ResponseEntity<ApiResponse<SalesResponseDto>> getMonthlyStatistics(
+		@RequestParam("date")
+		@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
+	) {
+		SalesResponseDto SalesResponseDto = SalesService.getMonthlySales(date);
+
+		return ResponseEntity.ok(
+			ApiResponse.success(
+				"월별 매출 조회가 완료되었습니다.",
+				SalesResponseDto
+			)
+		);
+	}
 }
