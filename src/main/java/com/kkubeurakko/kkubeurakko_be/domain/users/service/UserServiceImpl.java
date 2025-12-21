@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void deleteUser(Users user) {
-		userRepository.delete(user);
+		userRepository.deleteByUserNumber(user.getUserNumber());
 	}
 
 	@Override
