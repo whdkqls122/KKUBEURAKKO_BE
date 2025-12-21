@@ -8,6 +8,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.UserVerifyException;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.exception.OAUthUnlinkException;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.service.OAuthUnlinkService;
 
 import lombok.RequiredArgsConstructor;
@@ -45,11 +46,12 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 	public void deleteUserAndUnlink(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 
-		userService.deleteUser(user);
 		try {
 			oAuthUnlinkService.revokeOAuthAccount(user.getUserNumber());
 		} catch (Exception e) {
 			log.error("OAuth unlink 실패");
+			throw new OAUthUnlinkException("회원탈퇴 중 오류발생, 가게에 문의 부탁드립니다.", e);
 		}
+		userService.deleteUser(user);
 	}
 }
