@@ -40,4 +40,16 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 			throw new UserVerifyException(e.getMessage(), e);
 		}
 	}
+
+	@Override
+	public void deleteUserAndUnlink(CustomOAuth2User customOAuth2User) {
+		Users user = userService.getUser(customOAuth2User.getName());
+
+		userService.deleteUser(user);
+		try {
+			oAuthUnlinkService.revokeOAuthAccount(user.getUserNumber());
+		} catch (Exception e) {
+			log.error("OAuth unlink 실패");
+		}
+	}
 }
