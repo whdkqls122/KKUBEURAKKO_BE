@@ -2,6 +2,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.users.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -61,6 +62,25 @@ public class UserController {
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
 				"회원 가입이 완료되었습니다.",
+				null
+			)
+		);
+	}
+
+	@Operation(
+		summary = "사용자 탈퇴 API",
+		description = "사용자 탈퇴 요청 및 OAuth 연결 해제를 진행합니다."
+	)
+	@DeleteMapping("")
+	public ResponseEntity<ApiResponse<Void>> deleteUser(
+		@AuthenticationPrincipal
+		CustomOAuth2User customOAuth2User
+	) {
+		userVerifyFacadeService.deleteUserAndUnlink(customOAuth2User);
+
+		return ResponseEntity.ok().body(
+			ApiResponse.success(
+				"회원 탈퇴가 완료되었습니다.",
 				null
 			)
 		);
