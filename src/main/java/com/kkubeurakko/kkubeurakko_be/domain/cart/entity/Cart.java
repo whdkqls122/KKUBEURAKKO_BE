@@ -53,8 +53,4 @@ public class Cart {
 	public void clearItems() {
 		this.cartItemList.clear();
 	}
-
-	public void revokeCart() {
-		this.user = null;
-	}
 }
