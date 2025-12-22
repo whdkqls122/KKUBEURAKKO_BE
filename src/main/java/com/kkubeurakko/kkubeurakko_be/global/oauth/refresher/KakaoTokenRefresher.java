@@ -26,6 +26,8 @@ public class KakaoTokenRefresher implements OAuthTokenRefresher {
 
 	@Value("${spring.security.oauth2.client.registration.kakao.client-id}")
 	private String clientId;
+	@Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
+	private String clientSecret;
 
 	@Value("${spring.security.kakao.refresh-url}")
 	private String refreshUrl;
@@ -44,6 +46,7 @@ public class KakaoTokenRefresher implements OAuthTokenRefresher {
 		params.add("grant_type", "refresh_token");
 		params.add("client_id", clientId);
 		params.add("refresh_token", refreshToken);
+		params.add("client_secret", clientSecret);
 
 		HttpEntity<?> request = new HttpEntity<>(params, headers);
 
