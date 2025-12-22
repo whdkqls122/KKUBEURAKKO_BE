@@ -13,11 +13,13 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.sales.SalesResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.service.SalesServiceImpl;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/admin/statistics")
+@Tag(name = "Sales API", description = "매출 조회 관련 API")
 public class SalesController {
 
 	private final SalesServiceImpl SalesService;

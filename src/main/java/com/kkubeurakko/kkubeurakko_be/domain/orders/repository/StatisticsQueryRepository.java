@@ -1,6 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.domain.orders.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
@@ -35,11 +36,11 @@ public class StatisticsQueryRepository {
 		return em.createQuery(
 				"SELECT COUNT(o.id) " +
 					"FROM Orders o " +
-					"WHERE o.status = :status " +
+					"WHERE o.status IN (:statuses) " +
 					"AND o.orderDate BETWEEN :start AND :end",
 				Long.class
 			)
-			.setParameter("status", Status.COMPLETED)
+			.setParameter("statuses", List.of(Status.COMPLETED, Status.REFUNDED))
 			.setParameter("start", start)
 			.setParameter("end", end)
 			.getSingleResult();
