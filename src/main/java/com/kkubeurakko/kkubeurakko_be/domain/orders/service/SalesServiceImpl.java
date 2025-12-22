@@ -30,25 +30,16 @@ public class SalesServiceImpl implements SalesService {
 		LocalDateTime prevStart = date.minusDays(1).atStartOfDay();
 		LocalDateTime prevEnd = date.minusDays(1).atTime(23, 59, 59);
 
-		// 매출
-		long todaySales = statisticsQueryRepository.getSalesAmount(start, end);
-		long yesterdaySales = statisticsQueryRepository.getSalesAmount(prevStart, prevEnd);
-
-		// 주문 수
-		long todayOrders = statisticsQueryRepository.getOrderCount(start, end);
-		long yesterdayOrders = statisticsQueryRepository.getOrderCount(prevStart, prevEnd);
-
-		// 환불 / 할인
-		long refundAmount = statisticsQueryRepository.getRefundAmount(start, end);
-		long discountAmount = statisticsQueryRepository.getDiscountAmount(start, end);
+		PeriodSalesData today = getPeriodSalesData(start, end);
+		PeriodSalesData yesterday = getPeriodSalesData(prevStart, prevEnd);
 
 		return buildSalesResponse(
-			todaySales,
-			yesterdaySales,
-			todayOrders,
-			yesterdayOrders,
-			refundAmount,
-			discountAmount
+			today.sales,
+			yesterday.sales,
+			today.orders,
+			yesterday.orders,
+			today.refund,
+			today.discount
 		);
 	}
 
@@ -62,26 +53,18 @@ public class SalesServiceImpl implements SalesService {
 		LocalDateTime prevStart = start.minusWeeks(1);
 		LocalDateTime prevEnd = end.minusWeeks(1);
 
-		// 매출
-		long thisWeekSales = statisticsQueryRepository.getSalesAmount(start, end);
-		long lastWeekSales = statisticsQueryRepository.getSalesAmount(prevStart, prevEnd);
-
-		// 주문 수
-		long thisWeekOrders = statisticsQueryRepository.getOrderCount(start, end);
-		long lastWeekOrders = statisticsQueryRepository.getOrderCount(prevStart, prevEnd);
-
-		// 환불 / 할인
-		long refundAmount = statisticsQueryRepository.getRefundAmount(start, end);
-		long discountAmount = statisticsQueryRepository.getDiscountAmount(start, end);
+		PeriodSalesData thisWeekOrders = getPeriodSalesData(start, end);
+		PeriodSalesData lastWeekOrders = getPeriodSalesData(prevStart, prevEnd);
 
 		return buildSalesResponse(
-			thisWeekSales,
-			lastWeekSales,
-			thisWeekOrders,
-			lastWeekOrders,
-			refundAmount,
-			discountAmount
+			thisWeekOrders.sales,
+			lastWeekOrders.sales,
+			thisWeekOrders.orders,
+			lastWeekOrders.orders,
+			thisWeekOrders.refund,
+			thisWeekOrders.discount
 		);
+
 	}
 
 	@Override
@@ -95,26 +78,18 @@ public class SalesServiceImpl implements SalesService {
 		LocalDateTime prevStart = MonthRange.getMonthStart(date.minusMonths(1));
 		LocalDateTime prevEnd = MonthRange.getMonthEnd(date.minusMonths(1));
 
-		// 매출
-		long thisMonthSales = statisticsQueryRepository.getSalesAmount(start, end);
-		long lastMonthSales = statisticsQueryRepository.getSalesAmount(prevStart, prevEnd);
-
-		// 주문 수
-		long thisMonthOrders = statisticsQueryRepository.getOrderCount(start, end);
-		long lastMonthOrders = statisticsQueryRepository.getOrderCount(prevStart, prevEnd);
-
-		// 환불 / 할인
-		long refundAmount = statisticsQueryRepository.getRefundAmount(start, end);
-		long discountAmount = statisticsQueryRepository.getDiscountAmount(start, end);
+		PeriodSalesData thisMonthOrders = getPeriodSalesData(start, end);
+		PeriodSalesData lastMonthOrders = getPeriodSalesData(prevStart, prevEnd);
 
 		return buildSalesResponse(
-			thisMonthSales,
-			lastMonthSales,
-			thisMonthOrders,
-			lastMonthOrders,
-			refundAmount,
-			discountAmount
+			thisMonthOrders.sales,
+			lastMonthOrders.sales,
+			thisMonthOrders.orders,
+			lastMonthOrders.orders,
+			thisMonthOrders.refund,
+			thisMonthOrders.discount
 		);
+
 	}
 
 	private SalesResponseDto buildSalesResponse(
@@ -135,6 +110,29 @@ public class SalesServiceImpl implements SalesService {
 			.refundAmount(refundAmount)
 			.discountAmount(discountAmount)
 			.build();
+	}
+
+	private static class PeriodSalesData {
+		long sales;
+		long orders;
+		long refund;
+		long discount;
+
+		PeriodSalesData(long sales, long orders, long refund, long discount) {
+			this.sales = sales;
+			this.orders = orders;
+			this.refund = refund;
+			this.discount = discount;
+		}
+	}
+
+	private PeriodSalesData getPeriodSalesData(LocalDateTime start, LocalDateTime end) {
+		long sales = statisticsQueryRepository.getSalesAmount(start, end);
+		long orders = statisticsQueryRepository.getOrderCount(start, end);
+		long refund = statisticsQueryRepository.getRefundAmount(start, end);
+		long discount = statisticsQueryRepository.getDiscountAmount(start, end);
+
+		return new PeriodSalesData(sales, orders, refund, discount);
 	}
 
 }
