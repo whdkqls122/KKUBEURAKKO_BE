@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -56,6 +57,9 @@ public class UserServiceImpl implements UserService {
 	@Override
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void deleteUser(Users user) {
+		if (!user.getOrdersList().isEmpty()) {
+			user.getOrdersList().forEach(Orders::revokeUser);
+		}
 		userRepository.deleteByUserNumber(user.getUserNumber());
 	}
 
