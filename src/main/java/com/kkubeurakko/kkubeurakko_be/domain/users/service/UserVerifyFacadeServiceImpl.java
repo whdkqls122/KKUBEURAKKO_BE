@@ -50,7 +50,7 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 			oAuthUnlinkService.revokeOAuthAccount(user.getUserNumber());
 		} catch (Exception e) {
 			log.error("OAuth unlink 실패");
-			throw new OAUthUnlinkException("회원탈퇴 중 오류발생, 가게에 문의 부탁드립니다.", e);
+			throw new OAUthUnlinkException("탈퇴 중 오류 발생, 가게에 문의 부탁드립니다.", e);
 		}
 		userService.deleteUser(user);
 	}
