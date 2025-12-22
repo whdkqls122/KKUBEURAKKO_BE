@@ -67,7 +67,7 @@ public class Orders {
 	List<OrderItems> orderItemList = new ArrayList<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_number", nullable = false)
+	@JoinColumn(name = "user_number")
 	private Users user;
 
 	@OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
@@ -75,4 +75,8 @@ public class Orders {
 
 	@Embedded
 	private OrderAddressSnapshot addressSnapshot;
+
+	public void revokeUser() {
+		this.user = null;
+	}
 }

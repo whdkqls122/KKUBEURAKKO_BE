@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
+import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
@@ -13,8 +14,11 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -57,6 +61,10 @@ public class Users extends BaseEntity {
 
 	@OneToMany(mappedBy = "user")
 	private List<Orders> ordersList = new ArrayList<>();
+
+	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+	@JoinColumn(name = "cart_id")
+	private Cart cart;
 
 	public void updateUsersPhone(String phoneHash, String phone) {
 		this.phoneHash = phoneHash;

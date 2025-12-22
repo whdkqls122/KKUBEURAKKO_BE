@@ -34,7 +34,7 @@ public class Cart {
 	private Long id;
 
 	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", nullable = false)
+	@JoinColumn(name = "user_number")
 	private Users user;
 
 	@OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -52,5 +52,9 @@ public class Cart {
 
 	public void clearItems() {
 		this.cartItemList.clear();
+	}
+
+	public void revokeCart() {
+		this.user = null;
 	}
 }
