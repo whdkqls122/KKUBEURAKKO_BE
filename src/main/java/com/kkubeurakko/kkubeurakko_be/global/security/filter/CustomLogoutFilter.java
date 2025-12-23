@@ -29,18 +29,21 @@ public class CustomLogoutFilter extends GenericFilterBean {
 	private final JwtUtil jwtUtil;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final RedisTemplate<String, String> redisTemplate;
+
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws
 		IOException,
 		ServletException {
-		if(request instanceof HttpServletRequest&& response instanceof HttpServletResponse) {
-			doFilter((HttpServletRequest) request, (HttpServletResponse) response, chain);
+		if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
+			doFilter((HttpServletRequest)request, (HttpServletResponse)response, chain);
 		} else {
 			chain.doFilter(request, response);
 		}
 	}
 
-	private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+	private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws
+		IOException,
+		ServletException {
 		if (!isLogoutRequest(request)) {
 			chain.doFilter(request, response);
 			return;
@@ -70,6 +73,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 	}
+
 	private boolean isLogoutRequest(HttpServletRequest request) {
 		return "/logout".equals(request.getRequestURI()) && "POST".equalsIgnoreCase(request.getMethod());
 	}
@@ -86,7 +90,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
 	}
 
 	private void validateRefreshToken(String refreshToken) {
-		if(jwtUtil.isExpired(refreshToken)) { // 만료 여부 확인
+		if (jwtUtil.isExpired(refreshToken)) { // 만료 여부 확인
 			throw new ExpiredJwtException(null, null, "refreshToken이 만료 되었습니다.");
 		}
 		if (!"refresh".equals(jwtUtil.getCategory(refreshToken))) {
@@ -99,7 +103,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
 
 	private void performLogout(String accessToken, String refreshToken, HttpServletResponse response) {
 		// DB에서 Refresh 토큰 삭제
-		refreshTokenRepository.deleteByRefresh(refreshToken);
+		// refreshTokenRepository.deleteByRefresh(refreshToken);
 		// AccessToken 블랙리스트 등록
 		long expiration = jwtUtil.getRemainingExpiration(accessToken);
 		redisTemplate.opsForValue().set("blacklist:" + accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
