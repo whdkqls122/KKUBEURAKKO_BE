@@ -62,7 +62,7 @@ public class SecurityConfig {
 			.formLogin(auth -> auth.disable())
 			.httpBasic((auth) -> auth.disable())
 			.addFilterBefore(
-				new JwtFilter(jwtUtil),
+				new JwtFilter(jwtUtil, redisTemplate),
 				UsernamePasswordAuthenticationFilter.class
 			)
 			.addFilterBefore(
