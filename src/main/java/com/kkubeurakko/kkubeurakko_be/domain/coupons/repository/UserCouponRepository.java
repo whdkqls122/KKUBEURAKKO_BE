@@ -33,6 +33,7 @@ public interface UserCouponRepository extends JpaRepository<UsersCoupons, Long> 
 		WHERE uc.user.userNumber = :userNumber
 		AND uc.coupon.validUntil >= CURRENT_DATE
 		AND uc.coupon.validFrom <= CURRENT_DATE
+		AND uc.isUsed = false
 		""")
 	List<UsersCoupons> findAllUserOwned(@Param("userNumber") String userNumber);
 
