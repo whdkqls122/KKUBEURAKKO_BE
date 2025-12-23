@@ -2,6 +2,7 @@ package com.kkubeurakko.kkubeurakko_be.global.jwt.filter;
 
 import java.io.IOException;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 	private final JwtUtil jwtUtil;
+	private final RedisTemplate<String, String> redisTemplate;
 
 	@Override
 	protected void doFilterInternal(
@@ -40,6 +42,11 @@ public class JwtFilter extends OncePerRequestFilter {
 		}
 		//Bearer 제거
 		accessToken = accessToken.substring(7);
+
+		if (isBlacklisted(accessToken)) {
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			return;
+		}
 
 		try {
 			if (jwtUtil.isExpired(accessToken)) {
@@ -74,5 +81,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
 		// ✅ 다음 필터로 진행
 		filterChain.doFilter(request, response);
+	}
+
+	private boolean isBlacklisted(String accessToken) {
+		return Boolean.TRUE.equals(
+			redisTemplate.hasKey("blacklist:" + accessToken)
+		);
 	}
 }
