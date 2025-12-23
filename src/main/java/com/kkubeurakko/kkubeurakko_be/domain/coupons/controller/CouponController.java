@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -68,7 +69,7 @@ public class CouponController {
 		summary = "쿠폰 발급 API",
 		description = "쿠폰을 발급할 때 사용합니다."
 	)
-	@GetMapping("/issued/{couponId}")
+	@PostMapping("/issued/{couponId}")
 	public ResponseEntity<ApiResponse<Void>> issueCoupon(
 		@PathVariable("couponId")
 		Long couponId,
