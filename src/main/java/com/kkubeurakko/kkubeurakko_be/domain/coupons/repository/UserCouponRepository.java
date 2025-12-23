@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 
 @Repository
@@ -32,9 +31,10 @@ public interface UserCouponRepository extends JpaRepository<UsersCoupons, Long> 
 		FROM UsersCoupons uc
 		JOIN FETCH uc.coupon
 		WHERE uc.user.userNumber = :userNumber
-		AND uc.coupon.status = :status
+		AND uc.coupon.validUntil >= CURRENT_DATE
+		AND uc.coupon.validFrom <= CURRENT_DATE
 		""")
-	List<UsersCoupons> findAllUserOwned(@Param("userNumber") String userNumber, Status status);
+	List<UsersCoupons> findAllUserOwned(@Param("userNumber") String userNumber);
 
 	boolean existsByUserUserNumberAndCouponId(String userNumber, Long couponId);
 

@@ -43,7 +43,7 @@ public class CouponServiceImpl implements CouponService {
 	@Transactional(readOnly = true)
 	public List<IssuedCouponResponseDto> getAllUserOwned(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
-		List<UsersCoupons> couponsList = userCouponRepository.findAllUserOwned(user.getUserNumber(), Status.OFFER);
+		List<UsersCoupons> couponsList = userCouponRepository.findAllUserOwned(user.getUserNumber());
 
 		log.info("보유 쿠폰 조회 성공");
 		return toIssuedResponseDto(couponsList);
