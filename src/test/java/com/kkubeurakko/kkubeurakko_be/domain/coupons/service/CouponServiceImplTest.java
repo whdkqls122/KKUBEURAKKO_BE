@@ -75,13 +75,13 @@ class CouponServiceImplTest {
 		when(oauthUser.getName()).thenReturn("U123");
 
 		when(userService.getUser("U123")).thenReturn(testUser);
-		when(couponRepository.findAllUserDoesNotHave("U123"))
+		when(couponRepository.findAllUserDoesNotHave("U123", Status.OFFER))
 			.thenReturn(List.of(coupon1, coupon2));
 
 		List<CouponResponseDto> result = couponService.getAllCouponDoesNotHave(oauthUser);
 
 		assertThat(result).hasSize(2);
-		verify(couponRepository).findAllUserDoesNotHave("U123");
+		verify(couponRepository).findAllUserDoesNotHave("U123", Status.OFFER);
 	}
 
 	@Test
@@ -93,7 +93,7 @@ class CouponServiceImplTest {
 		when(userService.getUser("U123")).thenReturn(testUser);
 
 		UsersCoupons userCoupon = TestFixture.createUserCoupon(1L, testUser, coupon1, false);
-		when(userCouponRepository.findAllUserOwned("U123", Status.OFFER))
+		when(userCouponRepository.findAllUserOwned("U123"))
 			.thenReturn(List.of(userCoupon));
 
 		List<IssuedCouponResponseDto> result = couponService.getAllUserOwned(oauthUser);
@@ -103,7 +103,7 @@ class CouponServiceImplTest {
 			.extracting("id", "name", "couponNumber")
 			.containsExactly(userCoupon.getId(), coupon1.getName(), userCoupon.getCouponsNumber());
 
-		verify(userCouponRepository).findAllUserOwned("U123", Status.OFFER);
+		verify(userCouponRepository).findAllUserOwned("U123");
 	}
 
 	@Test
