@@ -12,12 +12,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
-import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserVerifyFacadeServiceImpl;
+import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserVerifyFacadeService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -26,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "User API", description = "사용자 관련 API")
 public class UserController {
 	private final UserService userService;
-	private final UserVerifyFacadeServiceImpl userVerifyFacadeService;
+	private final UserVerifyFacadeService userVerifyFacadeService;
 
 	@Operation(
 		summary = "사용자 정보 조회 API",
@@ -74,9 +76,11 @@ public class UserController {
 	@DeleteMapping("")
 	public ResponseEntity<ApiResponse<Void>> deleteUser(
 		@AuthenticationPrincipal
-		CustomOAuth2User customOAuth2User
+		CustomOAuth2User customOAuth2User,
+		HttpServletRequest request,
+		HttpServletResponse response
 	) {
-		userVerifyFacadeService.deleteUserAndUnlink(customOAuth2User);
+		userVerifyFacadeService.deleteUserAndUnlink(customOAuth2User, request, response);
 
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
