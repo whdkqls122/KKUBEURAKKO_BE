@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 
 import jakarta.persistence.LockModeType;
 
@@ -23,8 +24,9 @@ public interface CouponRepository extends JpaRepository<Coupons, Long> {
 		    AND c.validUntil >= CURRENT_DATE
 		    AND c.validFrom <= CURRENT_DATE
 		    AND c.quantity > 0
+		    AND c.status = :status
 		""")
-	List<Coupons> findAllUserDoesNotHave(@Param("userNumber") String userNumber);
+	List<Coupons> findAllUserDoesNotHave(@Param("userNumber") String userNumber, @Param("status") Status status);
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("SELECT c FROM Coupons c WHERE c.id = :couponId")
