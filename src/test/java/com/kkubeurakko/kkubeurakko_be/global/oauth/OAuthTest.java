@@ -120,9 +120,14 @@ class OAuthTest {
 		when(refreshTokenRepository.existsByRefresh(refreshToken)).thenReturn(true);
 
 		logoutFilter.doFilter(request, response, filterChain);
-
+		CustomOAuth2User principal = new CustomOAuth2User(
+			UserDto.builder()
+				.userNumber(TEST_USER)
+				.role(UserRole.CUSTOMER)
+				.build()
+		);
 		// RefreshToken 삭제 확인
-		verify(refreshTokenRepository, times(1)).deleteByRefresh(refreshToken);
+		verify(refreshTokenRepository, times(1)).deleteById(principal.getName());
 		// Redis 블랙리스트 등록 확인
 		verify(valueOps, times(1)).set(startsWith("blacklist:"), eq("logout"), anyLong(), eq(TimeUnit.MILLISECONDS));
 	}

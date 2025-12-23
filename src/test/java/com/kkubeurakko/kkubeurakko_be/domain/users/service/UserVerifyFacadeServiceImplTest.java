@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.kkubeurakko.kkubeurakko_be.domain.auth.service.LogoutService;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
@@ -19,6 +20,9 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.exception.UserVerifyException
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.exception.OAUthUnlinkException;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.service.OAuthUnlinkService;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @ExtendWith(MockitoExtension.class)
 class UserVerifyFacadeServiceImplTest {
@@ -30,6 +34,15 @@ class UserVerifyFacadeServiceImplTest {
 
 	@Mock
 	private OAuthUnlinkService oAuthUnlinkService;
+
+	@Mock
+	private LogoutService logoutService;
+
+	@Mock
+	private HttpServletRequest request;
+
+	@Mock
+	private HttpServletResponse response;
 
 	@InjectMocks
 	private UserVerifyFacadeServiceImpl facadeService;
@@ -92,10 +105,11 @@ class UserVerifyFacadeServiceImplTest {
 		when(user.getUserNumber()).thenReturn("kakao_1234");
 
 		// when
-		facadeService.deleteUserAndUnlink(customOAuth2User);
+		facadeService.deleteUserAndUnlink(customOAuth2User, request, response);
 
 		// then
 		verify(oAuthUnlinkService).revokeOAuthAccount("kakao_1234");
+		verify(logoutService).forceLogout(customOAuth2User, request, response);
 		verify(userService).deleteUser(user);
 	}
 
@@ -104,14 +118,16 @@ class UserVerifyFacadeServiceImplTest {
 	void deleteUserAndUnlinkThrowsException() {
 		// given
 		when(userService.getUser("kakao_1234")).thenReturn(user);
+		when(user.getUserNumber()).thenReturn("kakao_1234");
 		doThrow(new RuntimeException("OAuthUnlink 실패"))
 			.when(oAuthUnlinkService).revokeOAuthAccount("kakao_1234");
 
 		// when & then
 		assertThrows(OAUthUnlinkException.class,
-			() -> facadeService.deleteUserAndUnlink(customOAuth2User)
+			() -> facadeService.deleteUserAndUnlink(customOAuth2User, request, response)
 		);
 
+		verify(logoutService, never()).forceLogout(any(), any(), any());
 		verify(userService, never()).deleteUser(any());
 	}
 }
