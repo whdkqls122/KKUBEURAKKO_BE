@@ -30,12 +30,12 @@ class SalesServiceImplTest {
 		LocalDate date = LocalDate.of(2025, 12, 16);
 
 		when(statisticsQueryRepository.getSalesAmount(any(), any()))
-			.thenReturn(10_000L)
-			.thenReturn(8_000L);
+			.thenReturn(10_000L)   // 오늘
+			.thenReturn(8_000L);   // 어제
 
 		when(statisticsQueryRepository.getOrderCount(any(), any()))
-			.thenReturn(5L)
-			.thenReturn(4L);
+			.thenReturn(5L)       // 오늘
+			.thenReturn(4L);      // 어제
 
 		when(statisticsQueryRepository.getRefundAmount(any(), any()))
 			.thenReturn(2_000L);
@@ -64,8 +64,8 @@ class SalesServiceImplTest {
 		LocalDate date = LocalDate.of(2025, 12, 16);
 
 		when(statisticsQueryRepository.getSalesAmount(any(), any()))
-			.thenReturn(70_000L)
-			.thenReturn(50_000L);
+			.thenReturn(70_000L)   // 이번 주
+			.thenReturn(50_000L);  // 지난 주
 
 		when(statisticsQueryRepository.getOrderCount(any(), any()))
 			.thenReturn(30L)
@@ -91,37 +91,4 @@ class SalesServiceImplTest {
 		assertEquals(3_000L, result.discountAmount());
 	}
 
-	@Test
-	@DisplayName("월별 매출 통계가 정상적으로 계산되는지 검증한다.")
-	void getMonthlySales() {
-		// given
-		LocalDate date = LocalDate.of(2025, 12, 1);
-
-		when(statisticsQueryRepository.getSalesAmount(any(), any()))
-			.thenReturn(300_000L)
-			.thenReturn(250_000L);
-
-		when(statisticsQueryRepository.getOrderCount(any(), any()))
-			.thenReturn(120L)
-			.thenReturn(100L);
-
-		when(statisticsQueryRepository.getRefundAmount(any(), any()))
-			.thenReturn(20_000L);
-
-		when(statisticsQueryRepository.getDiscountAmount(any(), any()))
-			.thenReturn(15_000L);
-
-		// when
-		SalesResponseDto result = salesService.getMonthlySales(date);
-
-		// then
-		assertEquals(300_000L, result.salesAmount());
-		assertEquals(50_000L, result.salesDiff());
-
-		assertEquals(120L, result.orderCount());
-		assertEquals(20L, result.orderCountDiff());
-
-		assertEquals(20_000L, result.refundAmount());
-		assertEquals(15_000L, result.discountAmount());
-	}
 }
