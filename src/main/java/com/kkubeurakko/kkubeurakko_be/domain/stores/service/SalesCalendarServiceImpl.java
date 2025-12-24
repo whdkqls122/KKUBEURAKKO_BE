@@ -19,28 +19,30 @@ public class SalesCalendarServiceImpl implements SalesCalendarService {
 	private final SalesRepository salesRepository;
 
 	@Override
-	public MonthlySalesCalendarResponseDto getMonthlySalesCalendar(int year, int month) {
-
+	public MonthlySalesCalendarResponseDto getMonthlySalesCalendar(
+		int year,
+		int month
+	) {
 		LocalDate start = LocalDate.of(year, month, 1);
 		LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
 
 		List<Sales> salesList =
 			salesRepository.findByDateBetween(start, end);
 
-		int totalSales = salesList.stream()
-			.mapToInt(Sales::getTotalPrice)
-			.sum();
-
-		int totalRefund = salesList.stream()
-			.mapToInt(Sales::getRefundPrice)
-			.sum();
+		int totalSales = 0;
+		int totalRefund = 0;
 
 		List<DailySalesCalendarDto> dailySales = salesList.stream()
-			.map(sales -> new DailySalesCalendarDto(
-				sales.getDate(),
-				sales.getTotalPrice(),
-				sales.getRefundPrice()
-			))
+			.map(sales -> {
+				totalSales += sales.getTotalPrice();
+				totalRefund += sales.getRefundPrice();
+
+				return new DailySalesCalendarDto(
+					sales.getDate(),
+					sales.getTotalPrice(),
+					sales.getRefundPrice()
+				);
+			})
 			.toList();
 
 		return new MonthlySalesCalendarResponseDto(
