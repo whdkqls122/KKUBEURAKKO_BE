@@ -38,9 +38,6 @@ public class Sales {
 	@Column(name = "total_price", nullable = false)
 	private int totalPrice;
 
-	@Column(name = "refund_price", nullable = false)
-	private int refundPrice;
-
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "stores_id", nullable = false)
 	private Stores store;
