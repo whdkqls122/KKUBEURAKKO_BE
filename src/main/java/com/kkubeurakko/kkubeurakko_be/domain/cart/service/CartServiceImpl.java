@@ -37,7 +37,7 @@ public class CartServiceImpl implements CartService {
 	private final CartItemOptionRepository cartItemOptionRepository;
 
 	@Override
-	@Transactional(readOnly = true)
+	@Transactional
 	public CartResponseDto getCartList(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 
@@ -48,6 +48,7 @@ public class CartServiceImpl implements CartService {
 						.build()
 				)
 			);
+		user.updateCart(cart);
 		log.info("장바구니 조회 완료");
 		return CartResponseDto.builder()
 			.cartId(cart.getId())
@@ -116,28 +117,30 @@ public class CartServiceImpl implements CartService {
 		Cart cart = Cart.builder()
 			.user(user)
 			.build();
+
+		user.updateCart(cart);
+
 		return cartRepository.save(cart);
 	}
 
 	private boolean increaseQuantityIfExists(Cart cart, Menus menu, CartRequestDto cartRequestDto) {
 		for (CartItem existItem : cart.getCartItemList()) {
-			if (existItem.getMenu().equals(menu)) {
-				List<Long> existOpionIdList = existItem.getOptionList().stream()
-					.map(opt -> opt.getOption().getId())
-					.sorted()
-					.toList();
+			if (!existItem.getMenu().equals(menu)) {
+				continue;
+			}
 
-				List<Long> newOptionIdList = cartRequestDto.optionIdList().stream()
-					.sorted()
-					.toList();
+			List<Long> existOpionIdList = existItem.getOptionList().stream()
+				.map(opt -> opt.getOption().getId())
+				.sorted()
+				.toList();
 
-				if (existOpionIdList.equals(newOptionIdList)) {
-					existItem.update(
-						existItem.getQuantity() + cartRequestDto.quantity(),
-						existItem.getOptionList()
-					);
-					return true;
-				}
+			List<Long> newOptionIdList = cartRequestDto.optionIdList().stream()
+				.sorted()
+				.toList();
+
+			if (existOpionIdList.equals(newOptionIdList)) {
+				existItem.increaseQuantity(cartRequestDto.quantity());
+				return true;
 			}
 		}
 		return false;
