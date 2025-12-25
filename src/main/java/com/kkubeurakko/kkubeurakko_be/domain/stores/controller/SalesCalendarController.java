@@ -10,15 +10,22 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.MonthlySalesCalendarResp
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.SalesCalendarService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/sales")
+@Tag(name = "Sales API", description = "매출 달력 API")
 public class SalesCalendarController {
 
 	private final SalesCalendarService salesCalendarService;
 
+	@Operation(
+		summary = "매출 달력 데이터 조회",
+		description = "달력에 표시할 매출 데이터를 조회합니다."
+	)
 	@GetMapping("/monthly")
 	public ResponseEntity<ApiResponse<MonthlySalesCalendarResponseDto>> getMonthlySales(
 		@RequestParam int year,
