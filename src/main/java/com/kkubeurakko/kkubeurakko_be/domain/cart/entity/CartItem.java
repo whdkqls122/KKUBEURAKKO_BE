@@ -61,9 +61,11 @@ public class CartItem {
 	public void update(int quantity, List<CartItemOption> cartItemOptionList) {
 		this.quantity = quantity;
 		this.clearOptions();
-		for (CartItemOption option : cartItemOptionList) {
-			this.addOption(option);
-		}
+		cartItemOptionList.forEach(this::addOption);
+	}
+
+	public void increaseQuantity(int quantity) {
+		this.quantity += quantity;
 	}
 
 	private void clearOptions() {
