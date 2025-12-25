@@ -43,10 +43,9 @@ public class SalesCalendarServiceImpl implements SalesCalendarService {
 			))
 			.toList();
 
-		return new MonthlySalesCalendarResponseDto(
-			totalSales,
-			totalRefund,
-			dailySales
-		);
+		return MonthlySalesCalendarResponseDto.builder().
+			monthTotalSales(totalSales).
+			monthTotalRefund(totalRefund).
+			dailySales(dailySales).build();
 	}
 }
