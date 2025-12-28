@@ -20,11 +20,11 @@ public record OrderCreateRequest(
 	Long addressId,
 
 	@Nullable
-	@Size(max = 15, message = "가게 요청사항은 최대 15자까지 가능합니다.")
+	@Size(max = 100, message = "가게 요청사항은 최대 100자까지 가능합니다.")
 	String storeRequest,
 
 	@Nullable
-	@Size(max = 15, message = "배달 요청사항은 최대 15자까지 가능합니다.")
+	@Size(max = 100, message = "배달 요청사항은 최대 100자까지 가능합니다.")
 	String deliveryRequest,
 
 	@NotNull(message = "주문 타입은 필수입니다.")
