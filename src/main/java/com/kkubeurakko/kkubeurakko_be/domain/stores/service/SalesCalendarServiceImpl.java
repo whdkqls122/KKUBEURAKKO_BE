@@ -36,11 +36,12 @@ public class SalesCalendarServiceImpl implements SalesCalendarService {
 			.sum();
 
 		List<DailySalesCalendarDto> dailySales = salesList.stream()
-			.map(sales -> new DailySalesCalendarDto(
-				sales.getDate(),
-				sales.getTotalPrice(),
-				sales.getRefundPrice()
-			))
+			.map(sales -> DailySalesCalendarDto.builder()
+				.date(sales.getDate())
+				.salesAmount(sales.getTotalPrice())
+				.refundAmount(sales.getRefundPrice())
+				.build()
+			)
 			.toList();
 
 		return MonthlySalesCalendarResponseDto.builder().
