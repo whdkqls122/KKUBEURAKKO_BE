@@ -15,11 +15,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import com.kkubeurakko.kkubeurakko_be.domain.auth.service.LogoutService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.global.exception.GlobalAccessDeniedHandler;
 import com.kkubeurakko.kkubeurakko_be.global.exception.GlobalAuthenticationEntryPoint;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.filter.JwtFilter;
-import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenRepository;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.handler.CustomSuccessHandler;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.service.CustomOAuth2UserService;
@@ -36,8 +36,8 @@ public class SecurityConfig {
 	private final GlobalAccessDeniedHandler accessDeniedHandler;
 	private final CustomOAuth2UserService customOAuth2UserService;
 	private final CustomSuccessHandler customSuccessHandler;
-	private final RefreshTokenRepository refreshTokenRepository;
 	private final RedisTemplate<String, String> redisTemplate;
+	private final LogoutService logoutService;
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -66,7 +66,7 @@ public class SecurityConfig {
 				UsernamePasswordAuthenticationFilter.class
 			)
 			.addFilterBefore(
-				new CustomLogoutFilter(jwtUtil, refreshTokenRepository, redisTemplate),
+				new CustomLogoutFilter(logoutService),
 				LogoutFilter.class
 			)
 			.oauth2Login(
