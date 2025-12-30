@@ -16,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kkubeurakko.kkubeurakko_be.domain.auth.service.LogoutService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
@@ -60,6 +61,9 @@ class OAuthTest {
 	@Mock
 	private OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
 
+	@Mock
+	private LogoutService logoutService;
+
 	private JwtUtil jwtUtil;
 	private CustomSuccessHandler successHandler;
 	private CustomLogoutFilter logoutFilter;
@@ -78,7 +82,7 @@ class OAuthTest {
 			1000L * 60 * 10);
 		org.springframework.test.util.ReflectionTestUtils.setField(successHandler, "refreshTokenExpiry",
 			1000L * 60 * 60 * 24);
-		logoutFilter = new CustomLogoutFilter(jwtUtil, refreshTokenRepository, redisTemplate);
+		logoutFilter = new CustomLogoutFilter(logoutService);
 	}
 
 	@Test
