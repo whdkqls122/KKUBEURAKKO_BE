@@ -30,15 +30,30 @@ public class LogoutServiceImpl implements LogoutService {
 	private final UserService userService;
 
 	@Override
-	public void logout(CustomOAuth2User customOAuth2User, String accessToken, String refreshToken) {
-		if (refreshToken == null) {
-			return;
-		}
-		Users user = userService.getUser(customOAuth2User.getName());
-		validateRefreshToken(user.getUserNumber(), refreshToken);
-		refreshTokenRepository.deleteById(user.getUserNumber());
+	public void logout(
+		HttpServletRequest request,
+		HttpServletResponse response
+	) {
+		String accessToken = extractAccessToken(request);
+		String refreshToken = extractRefreshToken(request)
+			.orElse(null);
+		String userNumber = jwtUtil.getUserNumber(accessToken);
+		Users user = userService.getUser(userNumber);
 
 		blacklistAccessToken(accessToken);
+
+		if (refreshToken != null) {
+			try {
+				validateRefreshToken(user.getUserNumber(), refreshToken);
+				refreshTokenRepository.deleteById(user.getUserNumber());
+				log.info("RefreshToken 삭제 완료: user={}", user.getUserNumber());
+			} catch (IllegalArgumentException e) {
+				log.warn("RefreshToken 처리 중 문제 발생, 무시하고 진행: {}", e.getMessage());
+			} catch (Exception e) {
+				log.error("RefreshToken 삭제 중 예상치 못한 오류 발생, 무시하고 진행", e);
+			}
+		}
+		removeCookie(response);
 	}
 
 	@Override
@@ -51,13 +66,14 @@ public class LogoutServiceImpl implements LogoutService {
 			Users user = userService.getUser(customOAuth2User.getName());
 			String accessToken = extractAccessToken(request);
 			String refreshToken = extractRefreshToken(request)
-				.orElseThrow(IllegalArgumentException::new);
+				.orElse(null);
 
 			blacklistAccessToken(accessToken);
 
-			if (refreshToken != null) {
+			if (refreshToken != null && refreshTokenRepository.existsById(user.getUserNumber())) {
 				refreshTokenRepository.deleteById(user.getUserNumber());
 			}
+
 			removeCookie(response);
 			log.info("회원 탈퇴로 인한 강제 로그아웃 완료");
 		} catch (Exception e) {
