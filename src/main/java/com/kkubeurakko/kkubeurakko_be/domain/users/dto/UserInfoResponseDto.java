@@ -6,6 +6,7 @@ import lombok.Builder;
 public record UserInfoResponseDto(
 	String provider,
 	String nickname,
-	String email
+	String email,
+	String phone
 ) {
 }
