@@ -48,7 +48,7 @@ public class MenuGroups extends BaseEntity {
 	private MenuStatus menuStatus;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "stroes_id", nullable = false)
+	@JoinColumn(name = "stores_id", nullable = false)
 	private Stores store;
 
 	@OneToMany(mappedBy = "menuGroup",

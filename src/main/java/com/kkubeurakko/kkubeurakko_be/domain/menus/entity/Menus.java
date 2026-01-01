@@ -50,8 +50,11 @@ public class Menus extends BaseEntity {
 	@Column(name = "price", nullable = false)
 	private int price;
 
-	@Column(name = "img", nullable = false, length = 500)
+	@Column(name = "img", length = 500)
 	private String img;
+
+	@Column(name = "s3_key")
+	private String s3Key;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "menu_groups_id", nullable = false)
