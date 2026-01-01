@@ -103,11 +103,10 @@ class MenuGroupServiceImplTest {
 		MenuGroupRequestDto dto = new MenuGroupRequestDto("인기메뉴", "꾸브라꼬 대표 인기 메뉴");
 		Stores mockStore = Stores.builder()
 			.id(1L)
-			.address("경기도 안양시 동안구 관양로 123")
-			.tel("031-111-2222")
 			.isOpen(true)
-			.minOrderPrice(12000)
-			.delivery_region("안양 전지역")
+			.minOrderPrice(10000)
+			.deliveryAvgTime(60)
+			.packagingAvgTime(10)
 			.build();
 
 		when(storeRepository.findById(1L)).thenReturn(Optional.of(mockStore));
