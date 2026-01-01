@@ -13,8 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuDetailDto;
@@ -34,6 +35,8 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
+import com.kkubeurakko.kkubeurakko_be.global.aws.dto.S3UploadResponseDto;
+import com.kkubeurakko.kkubeurakko_be.global.aws.service.S3Service;
 
 @ExtendWith(MockitoExtension.class)
 class MenuServiceImplTest {
@@ -50,11 +53,13 @@ class MenuServiceImplTest {
 	@InjectMocks
 	private MenuServiceImpl menuService;
 
-	@BeforeEach
-	void setup() {
-		MockitoAnnotations.openMocks(this);
-		menuService = new MenuServiceImpl(menuRepository, optionGroupRepository, menuGroupRepository);
-	}
+	@Mock
+	private S3Service s3Service;
+
+	// @BeforeEach
+	// void setup() {
+	// 	MockitoAnnotations.openMocks(this);
+	// }
 
 	private Stores store;
 	private MenuGroups group;
@@ -216,7 +221,7 @@ class MenuServiceImplTest {
 
 		// when & then
 		assertThatThrownBy(() -> menuService.getMenuDetail(menuId))
-			.isInstanceOf(NullPointerException.class)
+			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("조회된 메뉴가 없습니다.");
 
 		verify(menuRepository, times(1)).findById(menuId);
@@ -323,16 +328,29 @@ class MenuServiceImplTest {
 
 	@Test
 	@DisplayName("관리자 메뉴 생성이 정상적으로 이루어지는지 검증한다.")
-	void createMenu() {
+	void createMenu() throws Exception {
 		// given
 		AdminMenuRequestDto request = AdminMenuRequestDto.builder()
 			.name("새로운메뉴")
 			.description("맛있는 메뉴")
 			.price(15000)
 			.status(MenuStatus.ON_SALE)
-			.img("new.jpg")
 			.menuGroupId(1L)
 			.optionGroupIds(List.of(10L, 11L))
+			.build();
+
+		MenuGroups menuGroup = TestFixture.createMenuGroup(1L, store);
+
+		MockMultipartFile image = new MockMultipartFile(
+			"image",
+			"test.jpg",
+			"image/jpeg",
+			"dummy-image".getBytes()
+		);
+
+		S3UploadResponseDto s3Response = S3UploadResponseDto.builder()
+			.imageUrl("https://cloudfront/test.jpg")
+			.imageKey("menu/test.jpg")
 			.build();
 
 		Menus saved = Menus.builder()
@@ -341,7 +359,8 @@ class MenuServiceImplTest {
 			.description("맛있는 메뉴")
 			.price(15000)
 			.menuStatus(MenuStatus.ON_SALE)
-			.img("new.jpg")
+			.img(s3Response.imageUrl())
+			.s3Key(s3Response.imageKey())
 			.build();
 
 		OptionGroups og1 = OptionGroups.builder()
@@ -354,13 +373,19 @@ class MenuServiceImplTest {
 			.name("옵션그룹2")
 			.build();
 
+		when(menuGroupRepository.findById(1L))
+			.thenReturn(Optional.of(menuGroup));
+
+		when(s3Service.uploadImage(any(MultipartFile.class)))
+			.thenReturn(s3Response);
+
 		when(menuRepository.save(any(Menus.class))).thenReturn(saved);
 
 		when(optionGroupRepository.findAllById(List.of(10L, 11L)))
 			.thenReturn(List.of(og1, og2));
 
 		// when
-		menuService.createMenu(request);
+		menuService.createMenu(request, image);
 
 		// then
 		verify(menuRepository, times(1)).save(any(Menus.class));
