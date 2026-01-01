@@ -33,15 +33,17 @@ public class DailySalesBatchService {
 		LocalDateTime start = targetDate.atStartOfDay();
 		LocalDateTime end = targetDate.atTime(23, 59, 59);
 
-		Long totalSales =
+		Long totalSalesLong =
 			statisticsQueryRepository.getSalesAmount(start, end);
 
-		Long refundAmount =
+		Long refundAmountLong =
 			statisticsQueryRepository.getRefundAmount(start, end);
-
-		// 단일 매장 가정
+		
 		Stores store = storeRepository.findById(1L)
 			.orElseThrow(() -> new IllegalStateException("매장 없음"));
+
+		int totalSales = totalSalesLong != null ? totalSalesLong.intValue() : 0;
+		int refundAmount = refundAmountLong != null ? refundAmountLong.intValue() : 0;
 
 		Sales sales = Sales.builder()
 			.date(targetDate)
