@@ -1,7 +1,9 @@
 package com.kkubeurakko.kkubeurakko_be.domain.menus.controller;
 
+import java.io.IOException;
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -11,7 +13,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuDetailDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuRequestDto;
@@ -79,11 +83,15 @@ public class MenuController {
 		summary = "메뉴 추가",
 		description = "관리자가 새로운 메뉴를 등록합니다."
 	)
-	@PostMapping("/admin")
+	@PostMapping(
+		value = "/admin",
+		consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+	)
 	public ResponseEntity<ApiResponse<Void>> createMenu(
-		@Valid @RequestBody AdminMenuRequestDto request
-	) {
-		menuService.createMenu(request);
+		@Valid @RequestPart("menuRequest") AdminMenuRequestDto request,
+		@RequestPart(value = "image", required = false) MultipartFile image
+	) throws IOException {
+		menuService.createMenu(request, image);
 
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
