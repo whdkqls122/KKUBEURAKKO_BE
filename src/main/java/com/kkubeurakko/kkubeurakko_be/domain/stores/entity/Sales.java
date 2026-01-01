@@ -36,10 +36,10 @@ public class Sales {
 	private LocalDate date;
 
 	@Column(name = "total_price", nullable = false)
-	private Long totalPrice;
+	private int totalPrice;
 
 	@Column(name = "refund_price", nullable = false)
-	private Long refundPrice;
+	private int refundPrice;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "stores_id", nullable = false)
