@@ -39,10 +39,10 @@ public class Stores extends BaseEntity {
 	@Column(name = "min_order_price", nullable = false)
 	private int minOrderPrice;
 
-	@Column(name = "packaging_avg_time", nullable = false,)
+	@Column(name = "packaging_avg_time", nullable = false)
 	private int packagingAvgTime;
 
-	@Column(name = "delivery_avg_time", nullable = false
+	@Column(name = "delivery_avg_time", nullable = false)
 	private int deliveryAvgTime;
 
 	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -62,8 +62,8 @@ public class Stores extends BaseEntity {
 		int deliveryAvgTime,
 		int packagingAvgTime
 	) {
-			this.minOrderPrice = minOrderPrice;
-			this.deliveryAvgTime = deliveryAvgTime;
-			this.packagingAvgTime = packagingAvgTime;
+		this.minOrderPrice = minOrderPrice;
+		this.deliveryAvgTime = deliveryAvgTime;
+		this.packagingAvgTime = packagingAvgTime;
 	}
 }
