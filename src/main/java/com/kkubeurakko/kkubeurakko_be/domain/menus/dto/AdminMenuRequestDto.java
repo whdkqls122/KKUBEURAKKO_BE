@@ -16,7 +16,7 @@ public record AdminMenuRequestDto(
 	@Size(max = 30, message = "메뉴 이름은 최대 24자까지 가능합니다.")
 	String name,
 
-	@Size(max = 30, message = "메뉴 이름은 최대 120자까지 가능합니다.")
+	@Size(max = 120, message = "메뉴 설명은 최대 120자까지 가능합니다.")
 	String description,
 
 	@NotNull(message = "메뉴 가격은 필수입니다.")
@@ -24,8 +24,6 @@ public record AdminMenuRequestDto(
 
 	@NotNull(message = "메뉴 상태는 필수입니다.")
 	MenuStatus status,
-
-	String img,
 
 	@NotNull(message = "메뉴 그룹 아이디는 필수입니다.")
 	Long menuGroupId,
