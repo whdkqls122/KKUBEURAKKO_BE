@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/sales")
+@RequestMapping("/v1/sales")
 @Tag(name = "Sales API", description = "매출 달력 API")
 public class SalesCalendarController {
 
