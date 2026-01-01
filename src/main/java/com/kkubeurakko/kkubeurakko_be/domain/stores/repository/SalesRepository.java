@@ -10,4 +10,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Sales;
 public interface SalesRepository extends JpaRepository<Sales, Long> {
 
 	List<Sales> findByDateBetween(LocalDate start, LocalDate end);
+
+	boolean existsByDate(LocalDate date);
 }
