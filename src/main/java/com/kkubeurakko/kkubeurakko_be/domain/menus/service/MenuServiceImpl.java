@@ -1,10 +1,12 @@
 package com.kkubeurakko.kkubeurakko_be.domain.menus.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuDetailDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuRequestDto;
@@ -20,6 +22,8 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
+import com.kkubeurakko.kkubeurakko_be.global.aws.dto.S3UploadResponseDto;
+import com.kkubeurakko.kkubeurakko_be.global.aws.service.S3Service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +36,7 @@ public class MenuServiceImpl implements MenuService {
 	private final MenuRepository menuRepository;
 	private final OptionGroupRepository optionGroupRepository;
 	private final MenuGroupRepository menuGroupRepository;
+	private final S3Service s3Service;
 
 	@Override
 	public List<MenuResponseDto> getAllMenuByMenuGroup(Long menuGroupId) {
@@ -68,17 +73,22 @@ public class MenuServiceImpl implements MenuService {
 
 	@Override
 	@Transactional
-	public void createMenu(AdminMenuRequestDto request) {
+	public void createMenu(AdminMenuRequestDto request, MultipartFile image) throws IOException {
 
 		MenuGroups menuGroup = menuGroupRepository.findById(request.menuGroupId())
 			.orElseThrow(() -> new IllegalArgumentException("메뉴 그룹이 존재하지 않습니다."));
 
+		S3UploadResponseDto responseDto = null;
+		if (image != null && !image.isEmpty()) {
+			responseDto = s3Service.uploadImage(image);
+		}
 		Menus menu = Menus.builder()
 			.name(request.name())
 			.description(request.description())
 			.price(request.price())
 			.menuStatus(request.status())
-			.img(request.img())
+			.img(responseDto != null ? responseDto.imageUrl() : null)
+			.s3Key(responseDto != null ? responseDto.imageKey() : null)
 			.menuGroup(menuGroup)
 			.build();
 

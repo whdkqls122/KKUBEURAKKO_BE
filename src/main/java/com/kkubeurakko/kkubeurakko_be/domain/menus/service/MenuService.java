@@ -1,6 +1,9 @@
 package com.kkubeurakko.kkubeurakko_be.domain.menus.service;
 
+import java.io.IOException;
 import java.util.List;
+
+import org.springframework.web.multipart.MultipartFile;
 
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuDetailDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.AdminMenuRequestDto;
@@ -18,7 +21,7 @@ public interface MenuService {
 	AdminMenuDetailDto getMenuDetailForAdmin(Long menuId);
 
 	//메뉴 생성 (관리자)
-	void createMenu(AdminMenuRequestDto request);
+	void createMenu(AdminMenuRequestDto request, MultipartFile image) throws IOException;
 
 	//메뉴 수정 (관리자)
 	void updateMenu(Long menuId, AdminMenuUpdateDto request);
