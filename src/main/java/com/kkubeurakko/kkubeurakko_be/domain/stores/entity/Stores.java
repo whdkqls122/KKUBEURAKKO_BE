@@ -39,11 +39,11 @@ public class Stores extends BaseEntity {
 	@Column(name = "min_order_price", nullable = false)
 	private int minOrderPrice;
 
-	@Column(name = "packaging_avg_time", nullable = false)
-	private String packagingAvgTime;
+	@Column(name = "packaging_avg_time", nullable = false,)
+	private int packagingAvgTime;
 
-	@Column(name = "delivery_avg_time", nullable = false)
-	private String deliveryAvgTime;
+	@Column(name = "delivery_avg_time", nullable = false
+	private int deliveryAvgTime;
 
 	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Coupons> couponsList = new ArrayList<>();
@@ -56,4 +56,14 @@ public class Stores extends BaseEntity {
 
 	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<DeliveryRegion> deliveryRegionList = new ArrayList<>();
+
+	public void updateBasicInfo(
+		int minOrderPrice,
+		int deliveryAvgTime,
+		int packagingAvgTime
+	) {
+			this.minOrderPrice = minOrderPrice;
+			this.deliveryAvgTime = deliveryAvgTime;
+			this.packagingAvgTime = packagingAvgTime;
+	}
 }
