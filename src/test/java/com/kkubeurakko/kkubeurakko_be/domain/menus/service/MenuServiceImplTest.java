@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.menus.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -272,7 +273,7 @@ class MenuServiceImplTest {
 
 	@Test
 	@DisplayName("관리자 메뉴 수정이 정상적으로 이루어지는지 검증한다.")
-	void updateMenu_success() {
+	void updateMenu_success() throws IOException {
 		// given
 		Long menuId = 1L;
 
@@ -283,6 +284,7 @@ class MenuServiceImplTest {
 			.price(10000)
 			.menuStatus(MenuStatus.ON_SALE)
 			.img("old.jpg")
+			.s3Key("menu/old.jpg")
 			.build();
 
 		when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
@@ -292,38 +294,46 @@ class MenuServiceImplTest {
 			.description("새로운설명")
 			.price(15000)
 			.status(MenuStatus.ON_SALE)
-			.img("new.jpg")
 			.optionGroupIds(List.of(10L, 11L))
 			.build();
 
-		OptionGroups og1 = OptionGroups.builder()
-			.id(10L)
-			.name("추가옵션1")
+		MockMultipartFile image = new MockMultipartFile(
+			"image",
+			"new.jpg",
+			"image/jpeg",
+			"new-image".getBytes()
+		);
+
+		S3UploadResponseDto s3Response = S3UploadResponseDto.builder()
+			.imageUrl("https://cloudfront/new.jpg")
+			.imageKey("menu/new.jpg")
 			.build();
 
-		OptionGroups og2 = OptionGroups.builder()
-			.id(11L)
-			.name("추가옵션2")
-			.build();
+		when(s3Service.uploadImage(any(MultipartFile.class)))
+			.thenReturn(s3Response);
+
+		OptionGroups og1 = OptionGroups.builder().id(10L).build();
+		OptionGroups og2 = OptionGroups.builder().id(11L).build();
 
 		when(optionGroupRepository.findAllById(List.of(10L, 11L)))
 			.thenReturn(List.of(og1, og2));
 
 		// when
-		menuService.updateMenu(menuId, request);
+		menuService.updateMenu(menuId, request, image);
 
 		// then
 		assertThat(menu.getName()).isEqualTo("새로운메뉴명");
 		assertThat(menu.getDescription()).isEqualTo("새로운설명");
 		assertThat(menu.getPrice()).isEqualTo(15000);
-		assertThat(menu.getImg()).isEqualTo("new.jpg");
+		assertThat(menu.getImg()).isEqualTo("https://cloudfront/new.jpg");
+		assertThat(menu.getS3Key()).isEqualTo("menu/new.jpg");
+
+		verify(s3Service, times(1)).uploadImage(any(MultipartFile.class));
+		verify(s3Service, times(1)).deleteImage("menu/old.jpg");
 
 		assertThat(menu.getMenuOptionGroups())
 			.extracting(mog -> mog.getOptionGroup().getId())
 			.containsExactlyInAnyOrder(10L, 11L);
-
-		verify(menuRepository, times(1)).findById(menuId);
-		verify(optionGroupRepository, times(1)).findAllById(List.of(10L, 11L));
 	}
 
 	@Test
