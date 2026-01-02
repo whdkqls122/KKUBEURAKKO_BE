@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -55,6 +56,10 @@ public class MenuServiceImpl implements MenuService {
 	}
 
 	@Override
+	@Cacheable(
+		value = "menuDetail",
+		key = "#menuId"
+	)
 	@Transactional(readOnly = true)
 	public MenuDetailResponseDto getMenuDetail(Long menuId) {
 		Menus menu = menuRepository.findById(menuId)
@@ -79,10 +84,10 @@ public class MenuServiceImpl implements MenuService {
 
 	@Override
 	@Transactional
-	@CacheEvict(
-		value = "menuGroupMenus",
-		key = "#request.menuGroupId()"
-	)
+	@Caching(evict = {
+		@CacheEvict(value = "menuGroupMenus", key = "#request.menuGroupId()"),
+		@CacheEvict(value = "storeMenus", allEntries = true)
+	})
 	public void createMenu(AdminMenuRequestDto request, MultipartFile image) throws IOException {
 
 		MenuGroups menuGroup = menuGroupRepository.findById(request.menuGroupId())
@@ -116,10 +121,11 @@ public class MenuServiceImpl implements MenuService {
 
 	@Override
 	@Transactional
-	@CacheEvict(
-		value = "menuGroupMenus",
-		allEntries = true
-	)
+	@Caching(evict = {
+		@CacheEvict(value = "menuDetail", key = "#menuId"),
+		@CacheEvict(value = "menuGroupMenus", allEntries = true),
+		@CacheEvict(value = "storeMenus", allEntries = true)
+	})
 	public void updateMenu(Long menuId, AdminMenuUpdateDto request, MultipartFile image) throws IOException {
 
 		Menus menu = menuRepository.findById(menuId)
@@ -164,6 +170,11 @@ public class MenuServiceImpl implements MenuService {
 
 	@Override
 	@Transactional
+	@Caching(evict = {
+		@CacheEvict(value = "menuDetail", key = "#menuId"),
+		@CacheEvict(value = "menuGroupMenus", allEntries = true),
+		@CacheEvict(value = "storeMenus", allEntries = true)
+	})
 	public void changeMenuStatus(Long menuId, MenuStatus status) {
 
 		Menus menu = menuRepository.findById(menuId)

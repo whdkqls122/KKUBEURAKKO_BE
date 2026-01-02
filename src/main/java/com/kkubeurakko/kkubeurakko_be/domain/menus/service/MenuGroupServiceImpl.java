@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +35,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 	private final StoreRepository storeRepository;
 
 	@Override
+	@Cacheable("menuGroups")
 	public List<MenuGroupResponseDto> getAllMenuGroupName() {
 		List<MenuGroups> menuGroupList = menuGroupRepository.findByMenuStatus(MenuStatus.ON_SALE);
 		if (menuGroupList.isEmpty()) {
@@ -43,6 +47,11 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 	}
 
 	@Override
+	@Caching(evict = {
+		@CacheEvict(value = "menuGroups", allEntries = true),
+		@CacheEvict(value = "storeMenus", allEntries = true),
+		@CacheEvict(value = "menuGroupMenus", allEntries = true)
+	})
 	public void createMenuGroup(MenuGroupRequestDto dto) {
 		Stores store = storeRepository.findById(1L)
 			.orElseThrow(() -> new IllegalArgumentException("해당 매장을 찾을 수 없습니다."));
@@ -59,6 +68,11 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 
 	@Override
 	@Transactional
+	@Caching(evict = {
+		@CacheEvict(value = "menuGroups", allEntries = true),
+		@CacheEvict(value = "storeMenus", allEntries = true),
+		@CacheEvict(value = "menuGroupMenus", allEntries = true)
+	})
 	public void updateMenuGroup(MenuGroupUpdateDto menuGroupUpdateDto) {
 		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupUpdateDto.menuGroupId())
 			.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 메뉴 그룹입니다."));
@@ -68,6 +82,11 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 
 	@Override
 	@Transactional
+	@Caching(evict = {
+		@CacheEvict(value = "menuGroups", allEntries = true),
+		@CacheEvict(value = "storeMenus", allEntries = true),
+		@CacheEvict(value = "menuGroupMenus", allEntries = true)
+	})
 	public void updateMenuGroupStatus(Long menuGroupId, MenuStatus status) {
 		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupId)
 			.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 메뉴 그룹입니다."));
@@ -77,6 +96,10 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 
 	@Override
 	@Transactional(readOnly = true)
+	@Cacheable(
+		value = "storeMenus",
+		key = "#storeId"
+	)
 	public List<MenuGroupWithMenusDto> getAllMenuGroupsWithMenus(Long storeId) {
 		List<MenuGroups> groups = menuGroupRepository.findAllByStoreIdWithMenus(storeId);
 
@@ -86,6 +109,11 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 	}
 
 	@Override
+	@Caching(evict = {
+		@CacheEvict(value = "menuGroups", allEntries = true),
+		@CacheEvict(value = "storeMenus", allEntries = true),
+		@CacheEvict(value = "menuGroupMenus", allEntries = true)
+	})
 	public void deleteMenuGroup(Long menuGroupId) {
 		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupId)
 			.orElseThrow(() -> new EntityNotFoundException("메뉴 그룹이 존재하지 않습니다."));
