@@ -11,7 +11,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.SalesRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -22,7 +21,6 @@ public class DailySalesBatchService {
 	private final SalesRepository salesRepository;
 	private final StoreRepository storeRepository;
 
-	@Transactional
 	public void saveDailySales(LocalDate targetDate) {
 
 		// 이미 저장된 날짜면 스킵
@@ -38,7 +36,7 @@ public class DailySalesBatchService {
 
 		Long refundAmountLong =
 			statisticsQueryRepository.getRefundAmount(start, end);
-		
+
 		Stores store = storeRepository.findById(1L)
 			.orElseThrow(() -> new IllegalStateException("매장 없음"));
 
