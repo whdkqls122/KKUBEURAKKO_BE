@@ -22,9 +22,9 @@ public class StoreServiceImpl implements StoreService {
 			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
 
 		store.updateBasicInfo(
-			request.getMinOrderPrice(),
-			request.getDeliveryAvgTime(),
-			request.getPackagingAvgTime()
+			request.minOrderPrice(),
+			request.deliveryAvgTime(),
+			request.packagingAvgTime()
 		);
 	}
 }
