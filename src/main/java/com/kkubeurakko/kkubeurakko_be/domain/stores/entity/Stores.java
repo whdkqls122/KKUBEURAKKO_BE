@@ -55,6 +55,9 @@ public class Stores extends BaseEntity {
 	private List<Sales> salesList = new ArrayList<>();
 
 	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<StoreBusinessHours> storeBusinessHoursList = new ArrayList<>();
+
+	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<DeliveryRegion> deliveryRegionList = new ArrayList<>();
 
 	public void updateBasicInfo(
