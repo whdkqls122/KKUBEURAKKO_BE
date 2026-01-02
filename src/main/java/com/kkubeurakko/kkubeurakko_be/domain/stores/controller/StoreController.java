@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class StoreController {
 	private final StoreService storeService;
 
-	@PatchMapping("/{storeId}operations")
+	@PatchMapping("/{storeId}/operations")
 	public ResponseEntity<ApiResponse<Void>> updateStore(
 		@PathVariable Long storeId,
 		@RequestBody StoreUpdateRequest request
