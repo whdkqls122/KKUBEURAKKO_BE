@@ -21,6 +21,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
+import com.kkubeurakko.kkubeurakko_be.global.aws.service.S3Service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 
 	private final MenuGroupRepository menuGroupRepository;
 	private final StoreRepository storeRepository;
+	private final S3Service s3Service;
 
 	@Override
 	@Cacheable("menuGroups")
@@ -119,6 +121,9 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 			.orElseThrow(() -> new EntityNotFoundException("메뉴 그룹이 존재하지 않습니다."));
 
 		for (Menus menu : new ArrayList<>(menuGroup.getMenus())) {
+			if (menu.getS3Key() != null) {
+				s3Service.deleteImage(menu.getS3Key());
+			}
 			menuGroup.removeMenu(menu);
 		}
 
