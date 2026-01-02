@@ -5,6 +5,11 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -89,3 +94,14 @@ spring:
       channel-key: ${PORT_ONE_PAYMENT_CHANNEL_KEY}
     verify:
       channel-key: ${PORT_ONE_VERIFY_CHANNEL_KEY}
+
+cloud:
+  aws:
+    region: ${AWS_REGION}
+    s3:
+      bucket: ${AWS_BUCKET_NAME}
+    cloudfront:
+      domain: ${AWS_CLOUDFRONT_DOMAIN}
+    credentials:
+      access-key: ${AWS_CREDENTIALS_ACCESS_KEY}
+      secret-key: ${AWS_CREDENTIALS_SECRET_KEY}
