@@ -26,6 +26,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
+import com.kkubeurakko.kkubeurakko_be.global.aws.service.S3Service;
 
 @ExtendWith(MockitoExtension.class)
 class MenuGroupServiceImplTest {
@@ -38,10 +39,13 @@ class MenuGroupServiceImplTest {
 	@InjectMocks
 	private MenuGroupServiceImpl menuGroupService;
 
+	@Mock
+	private S3Service s3Service;
+
 	@BeforeEach
 	void setup() {
 		MockitoAnnotations.openMocks(this);
-		menuGroupService = new MenuGroupServiceImpl(menuGroupRepository, storeRepository);
+		menuGroupService = new MenuGroupServiceImpl(menuGroupRepository, storeRepository, s3Service);
 	}
 
 	@Test
