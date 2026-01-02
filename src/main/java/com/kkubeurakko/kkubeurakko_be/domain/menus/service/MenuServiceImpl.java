@@ -120,17 +120,34 @@ public class MenuServiceImpl implements MenuService {
 		value = "menuGroupMenus",
 		allEntries = true
 	)
-	public void updateMenu(Long menuId, AdminMenuUpdateDto request) {
+	public void updateMenu(Long menuId, AdminMenuUpdateDto request, MultipartFile image) throws IOException {
 
 		Menus menu = menuRepository.findById(menuId)
 			.orElseThrow(() -> new EntityNotFoundException("메뉴가 존재하지 않습니다."));
 
+		String imageUrl;
+		String s3Key = menu.getS3Key();
+
+		if (image != null && !image.isEmpty()) {
+			if (s3Key != null) {
+				s3Service.deleteImage(s3Key);
+			}
+
+			S3UploadResponseDto upload = s3Service.uploadImage(image);
+			imageUrl = upload.imageUrl();
+			s3Key = upload.imageKey();
+		} else {
+			s3Service.deleteImage(s3Key);
+			imageUrl = null;
+			s3Key = null;
+		}
 		menu.update(
 			request.name(),
 			request.description(),
 			request.price(),
 			request.status(),
-			request.img()
+			imageUrl,
+			s3Key
 		);
 
 		menu.clearOptionGroups();

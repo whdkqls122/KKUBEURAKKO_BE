@@ -24,8 +24,6 @@ public record AdminMenuUpdateDto(
 	@NotNull(message = "메뉴 상태는 필수입니다.")
 	MenuStatus status,
 
-	String img,
-
 	List<Long> optionGroupIds
 ) {
 }

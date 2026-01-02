@@ -24,7 +24,7 @@ public interface MenuService {
 	void createMenu(AdminMenuRequestDto request, MultipartFile image) throws IOException;
 
 	//메뉴 수정 (관리자)
-	void updateMenu(Long menuId, AdminMenuUpdateDto request);
+	void updateMenu(Long menuId, AdminMenuUpdateDto request, MultipartFile image) throws IOException;
 
 	//메뉴 상태 변경 (관리자)
 	void changeMenuStatus(Long menuId, MenuStatus status);
