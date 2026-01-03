@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartItemQuantityResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.service.CartService;
@@ -44,6 +45,25 @@ public class CartController {
 			ApiResponse.success(
 				"장바구니 목록이 조회되었습니다.",
 				cartResponseDto
+			)
+		);
+	}
+
+	@Operation(
+		summary = "장바구니 수량 조회",
+		description = "장바구니 수량을 조회할 때 사용합니다."
+	)
+	@GetMapping("/quantity")
+	public ResponseEntity<ApiResponse<CartItemQuantityResponseDto>> getCartItemQuantity(
+		@AuthenticationPrincipal
+		CustomOAuth2User customOAuth2User
+	) {
+		CartItemQuantityResponseDto cartItemQuantityResponseDto = cartService.getCartItemQuantity(customOAuth2User);
+
+		return ResponseEntity.ok().body(
+			ApiResponse.success(
+				"장바구니 수량이 조회되었습니다.",
+				cartItemQuantityResponseDto
 			)
 		);
 	}
