@@ -109,7 +109,7 @@ public class OrderServiceImpl implements OrderService {
 
 		try {
 			Users user = userService.getUser(customOAuth2User.getName());
-			Cart cart = cartRepository.findByUser(user)
+			Cart cart = cartRepository.findByUserNumber(user.getUserNumber())
 				.orElseThrow(() -> new IllegalStateException("장바구니가 비어있습니다."));
 
 			if (cart.getCartItemList().isEmpty()) {
