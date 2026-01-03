@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartItemOptionResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartItemQuantityResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartItemResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartResponseDto;
@@ -53,6 +54,25 @@ public class CartServiceImpl implements CartService {
 		return CartResponseDto.builder()
 			.cartId(cart.getId())
 			.cartItemResponseDtoList(toResponseDto(cart))
+			.build();
+	}
+
+	@Override
+	public CartItemQuantityResponseDto getCartItemQuantity(CustomOAuth2User customOAuth2User) {
+		Users user = userService.getUser(customOAuth2User.getName());
+		Cart cart = cartRepository.findByUserNumber(user.getUserNumber());
+
+		if (cart == null) {
+			return CartItemQuantityResponseDto.builder()
+				.cartItemQuantity(0)
+				.build();
+		}
+
+		Integer quantity = cartItemRepository.countCartItem(cart.getId());
+		if (quantity == null)
+			quantity = 0;
+		return CartItemQuantityResponseDto.builder()
+			.cartItemQuantity(quantity)
 			.build();
 	}
 
