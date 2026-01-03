@@ -47,7 +47,7 @@ class CartServiceImplTest {
 	private CartItemOptionRepository cartItemOptionRepository;
 
 	@InjectMocks
-	private CartServiceImpl cartService;
+	private CartService cartService;
 
 	private Users user;
 	private CustomOAuth2User oAuth2User;
@@ -89,7 +89,7 @@ class CartServiceImplTest {
 	void getCartList() {
 		Cart cart = Cart.builder().id(1L).user(user).build();
 		when(userService.getUser(oAuth2User.getName())).thenReturn(user);
-		when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
+		when(cartRepository.findByUserNumber(user.getUserNumber())).thenReturn(Optional.of(cart));
 
 		CartResponseDto response = cartService.getCartList(oAuth2User);
 
@@ -102,7 +102,7 @@ class CartServiceImplTest {
 	void getCartList_WhenCartDoesNotExist() {
 		Cart cart = Cart.builder().id(1L).user(user).build();
 		when(userService.getUser(oAuth2User.getName())).thenReturn(user);
-		when(cartRepository.findByUser(user)).thenReturn(Optional.empty());
+		when(cartRepository.findByUserNumber(user.getUserNumber())).thenReturn(Optional.empty());
 		when(cartRepository.save(any(Cart.class))).thenReturn(cart);
 
 		CartResponseDto response = cartService.getCartList(oAuth2User);
@@ -118,7 +118,7 @@ class CartServiceImplTest {
 		Cart cart = Cart.builder().id(1L).user(user).build();
 
 		when(userService.getUser(oAuth2User.getName())).thenReturn(user);
-		when(cartRepository.findByUser(user)).thenReturn(Optional.empty());
+		when(cartRepository.findByUserNumber(user.getUserNumber())).thenReturn(Optional.empty());
 		when(cartRepository.save(any(Cart.class))).thenReturn(cart);
 		when(menuRepository.findById(requestDto.menuId())).thenReturn(Optional.of(menu));
 		when(optionRepository.findAllById(requestDto.optionIdList())).thenReturn(List.of(option));
