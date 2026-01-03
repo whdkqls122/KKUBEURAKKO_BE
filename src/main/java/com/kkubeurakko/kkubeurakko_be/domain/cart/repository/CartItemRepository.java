@@ -9,6 +9,10 @@ import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItem;
 
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
-	@Query("select sum(c.quantity) from CartItem c where c.cart.id = :cartId")
-	Integer countCartItem(@Param("cartId") Long cartId);
+	@Query("""
+		    select coalesce(sum(c.quantity), 0)
+		    from CartItem c
+		    where c.cart.user.userNumber = :userNumber
+		""")
+	long sumQuantityByUserNumber(@Param("userNumber") String userNumber);
 }
