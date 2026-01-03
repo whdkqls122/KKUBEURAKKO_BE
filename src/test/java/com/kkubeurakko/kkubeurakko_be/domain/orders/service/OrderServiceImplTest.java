@@ -167,12 +167,12 @@ class OrderServiceImplTest {
 		);
 
 		when(userService.getUser("kakao_1234")).thenReturn(user);
-		when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
+		when(cartRepository.findByUserNumber(user.getUserNumber())).thenReturn(Optional.of(cart));
 		when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
 
 		Orders savedOrder = Orders.builder().id(10L).build();
 		when(orderRepository.save(any())).thenReturn(savedOrder);
-		
+
 		PortOnePaymentResponseDto portOneResponse =
 			TestFixture.createPortOnePaymentResponse(
 				"paymentid",

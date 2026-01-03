@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartItemQuantityResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.dto.CartResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
@@ -47,7 +48,7 @@ class CartServiceImplTest {
 	private CartItemOptionRepository cartItemOptionRepository;
 
 	@InjectMocks
-	private CartService cartService;
+	private CartServiceImpl cartService;
 
 	private Users user;
 	private CustomOAuth2User oAuth2User;
@@ -170,4 +171,26 @@ class CartServiceImplTest {
 
 		assertTrue(cart.getCartItemList().isEmpty());
 	}
+
+	@Test
+	@DisplayName("장바구니 총 수량이 정상적으로 조회되는지 검증한다.")
+	void getCartItemQuantity() {
+		// given
+		when(userService.getUser(oAuth2User.getName())).thenReturn(user);
+		when(cartItemRepository.sumQuantityByUserNumber(user.getUserNumber()))
+			.thenReturn(5L);
+
+		// when
+		CartItemQuantityResponseDto response =
+			cartService.getCartItemQuantity(oAuth2User);
+
+		// then
+		assertNotNull(response);
+		assertEquals(5L, response.cartItemQuantity());
+
+		verify(userService, times(1)).getUser(oAuth2User.getName());
+		verify(cartItemRepository, times(1))
+			.sumQuantityByUserNumber(user.getUserNumber());
+	}
+
 }
