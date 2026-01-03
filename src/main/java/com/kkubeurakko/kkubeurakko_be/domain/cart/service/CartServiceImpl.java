@@ -58,19 +58,12 @@ public class CartServiceImpl implements CartService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public CartItemQuantityResponseDto getCartItemQuantity(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
-		Cart cart = cartRepository.findByUserNumber(user.getUserNumber());
 
-		if (cart == null) {
-			return CartItemQuantityResponseDto.builder()
-				.cartItemQuantity(0)
-				.build();
-		}
+		long quantity = cartItemRepository.sumQuantityByUserNumber(user.getUserNumber());
 
-		Integer quantity = cartItemRepository.countCartItem(cart.getId());
-		if (quantity == null)
-			quantity = 0;
 		return CartItemQuantityResponseDto.builder()
 			.cartItemQuantity(quantity)
 			.build();
