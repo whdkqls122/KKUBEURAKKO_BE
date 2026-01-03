@@ -42,7 +42,7 @@ public class CartServiceImpl implements CartService {
 	public CartResponseDto getCartList(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 
-		Cart cart = cartRepository.findByUser(user)
+		Cart cart = cartRepository.findByUserNumber(user.getUserNumber())
 			.orElseGet(() -> cartRepository.save(
 					Cart.builder()
 						.user(user)
@@ -75,7 +75,7 @@ public class CartServiceImpl implements CartService {
 	public void createCartItem(CartRequestDto cartRequestDto, CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 
-		Cart cart = cartRepository.findByUser(user)
+		Cart cart = cartRepository.findByUserNumber(user.getUserNumber())
 			.orElseGet(() -> createCartForUser(user));
 		log.info("장바구니 생성 완료");
 
