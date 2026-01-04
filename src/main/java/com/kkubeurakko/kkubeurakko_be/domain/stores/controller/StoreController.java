@@ -1,16 +1,19 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +25,10 @@ import lombok.RequiredArgsConstructor;
 public class StoreController {
 	private final StoreService storeService;
 
+	@Operation(
+		summary = "운영 정보 수정",
+		description = "가게의 운영 정보를 수정합니다."
+	)
 	@PatchMapping("/{storeId}/operations")
 	public ResponseEntity<ApiResponse<Void>> updateStore(
 		@PathVariable Long storeId,
@@ -29,5 +36,18 @@ public class StoreController {
 	) {
 		storeService.updateStoreBasicInfo(storeId, request);
 		return ResponseEntity.ok(ApiResponse.success("운영 정보 수정이 완료되었습니다.", null));
+	}
+
+	@Operation(
+		summary = "운영 정보 조회",
+		description = "가게의 운영 정보를 조회합니다."
+	)
+	@GetMapping("/{storeId}/operations")
+	public ResponseEntity<ApiResponse<StoreOperationInfoResponse>> getOperationInfo(@PathVariable Long storeId) {
+
+		StoreOperationInfoResponse responseDto =
+			storeService.getOperationInfo(storeId);
+
+		return ResponseEntity.ok(ApiResponse.success("운영 정보 조회가 완료되었습니다.", responseDto));
 	}
 }
