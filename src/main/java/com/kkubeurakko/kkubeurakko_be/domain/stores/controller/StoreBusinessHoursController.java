@@ -33,6 +33,6 @@ public class StoreBusinessHoursController {
 		@RequestBody StoreBusinessHoursRequest request
 	) {
 		storeBusinessHoursService.saveBusinessHours(storeId, request);
-		return ResponseEntity.ok(ApiResponse.success("영업시간 설정이 완료되었습니다.", null));
+		return ResponseEntity.ok(ApiResponse.success("영업 시간 설정이 완료되었습니다.", null));
 	}
 }

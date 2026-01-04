@@ -13,6 +13,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreBusinessHoursRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -22,6 +23,8 @@ public class StoreBusinessHoursServiceImpl implements StoreBusinessHoursService 
 	private final StoreBusinessHoursRepository businessHoursRepository;
 	private final StoreRepository storeRepository;
 
+	@Override
+	@Transactional
 	public void saveBusinessHours(Long storeId, StoreBusinessHoursRequest request) {
 
 		Stores store = storeRepository.findById(storeId)
