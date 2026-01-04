@@ -1,7 +1,10 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -24,29 +27,39 @@ public class SalesCalendarServiceImpl implements SalesCalendarService {
 		LocalDate start = LocalDate.of(year, month, 1);
 		LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
 
-		List<Sales> salesList =
-			salesRepository.findByDateBetween(start, end);
+		List<Sales> salesList = salesRepository.findByDateBetween(start, end);
 
-		int totalSales = salesList.stream()
-			.mapToInt(Sales::getTotalPrice)
-			.sum();
+		Map<LocalDate, Sales> salesMap = salesList.stream()
+			.collect(Collectors.toMap(Sales::getDate, s -> s));
 
-		int totalRefund = salesList.stream()
-			.mapToInt(Sales::getRefundPrice)
-			.sum();
+		List<DailySalesCalendarDto> dailySales = new ArrayList<>();
 
-		List<DailySalesCalendarDto> dailySales = salesList.stream()
-			.map(sales -> DailySalesCalendarDto.builder()
-				.date(sales.getDate())
-				.salesAmount(sales.getTotalPrice())
-				.refundAmount(sales.getRefundPrice())
-				.build()
-			)
-			.toList();
+		int totalSales = 0;
+		int totalRefund = 0;
 
-		return MonthlySalesCalendarResponseDto.builder().
-			monthTotalSales(totalSales).
-			monthTotalRefund(totalRefund).
-			dailySales(dailySales).build();
+		for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+
+			Sales sales = salesMap.get(date);
+
+			int salesAmount = sales != null ? sales.getTotalPrice() : 0;
+			int refundAmount = sales != null ? sales.getRefundPrice() : 0;
+
+			totalSales += salesAmount;
+			totalRefund += refundAmount;
+
+			dailySales.add(
+				DailySalesCalendarDto.builder()
+					.date(date)
+					.salesAmount(salesAmount)
+					.refundAmount(refundAmount)
+					.build()
+			);
+		}
+
+		return MonthlySalesCalendarResponseDto.builder()
+			.monthTotalSales(totalSales)
+			.monthTotalRefund(totalRefund)
+			.dailySales(dailySales)
+			.build();
 	}
 }
