@@ -105,3 +105,8 @@ cloud:
     credentials:
       access-key: ${AWS_CREDENTIALS_ACCESS_KEY}
       secret-key: ${AWS_CREDENTIALS_SECRET_KEY}
+
+admin:
+  initial:
+    id: ${ADMIN_ID}
+    password: ${ADMIN_PASSWORD}
