@@ -1,5 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.entity;
 
+import java.time.DayOfWeek;
+
 public enum BusinessDay {
 	MONDAY,
 	TUESDAY,
@@ -8,5 +10,9 @@ public enum BusinessDay {
 	FRIDAY,
 	SATURDAY,
 	SUNDAY,
-	ALLDAY
+	ALLDAY;
+
+	public static BusinessDay from(DayOfWeek dayOfWeek) {
+		return BusinessDay.valueOf(dayOfWeek.name());
+	}
 }
