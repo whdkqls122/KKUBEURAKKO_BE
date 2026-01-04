@@ -12,6 +12,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -24,7 +25,7 @@ public class StoreController {
 	@PatchMapping("/{storeId}/operations")
 	public ResponseEntity<ApiResponse<Void>> updateStore(
 		@PathVariable Long storeId,
-		@RequestBody StoreUpdateRequest request
+		@Valid @RequestBody StoreUpdateRequest request
 	) {
 		storeService.updateStoreBasicInfo(storeId, request);
 		return ResponseEntity.ok(ApiResponse.success("운영 정보 수정이 완료되었습니다.", null));
