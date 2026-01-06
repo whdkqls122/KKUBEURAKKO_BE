@@ -107,7 +107,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 
 		return groups.stream()
 			.map(this::toMenuGroupWithMenusDto)
-			.toList();
+			.collect(Collectors.toList());
 	}
 
 	@Override
@@ -143,7 +143,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 
 	private MenuGroupWithMenusDto toMenuGroupWithMenusDto(MenuGroups group) {
 
-		List<Menus> menus = group.getMenus() != null ? group.getMenus() : List.of();
+		List<Menus> menus = group.getMenus() != null ? group.getMenus() : new ArrayList<>();
 
 		return MenuGroupWithMenusDto.builder()
 			.id(group.getId())
@@ -153,7 +153,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 			.menus(
 				menus.stream()
 					.map(this::toMenuSummaryDto)
-					.toList()
+					.collect(Collectors.toList())
 			)
 			.build();
 	}
