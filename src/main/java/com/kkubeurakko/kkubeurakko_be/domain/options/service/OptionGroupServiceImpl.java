@@ -1,9 +1,11 @@
 package com.kkubeurakko.kkubeurakko_be.domain.options.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupNameResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
@@ -48,6 +50,12 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 			.toList();
 	}
 
+	public List<OptionGroupNameResponseDto> getAllOptionGroupName() {
+		return optionGroupRepository.findAll().stream()
+			.map(this::toGroupNameResponseDto)
+			.collect(Collectors.toList());
+	}
+
 	@Override
 	public void updateOptionGroup(Long id, OptionGroupRequestDto requestDto) {
 		OptionGroups optionGroup = optionGroupRepository.findById(id)
@@ -71,7 +79,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 
 		optionGroupRepository.delete(optionGroup);
 	}
-	
+
 	private OptionGroupResponseDto toResponseDto(OptionGroups optionGroup) {
 		return OptionGroupResponseDto.builder()
 			.id(optionGroup.getId())
@@ -94,4 +102,10 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 			.build();
 	}
 
+	private OptionGroupNameResponseDto toGroupNameResponseDto(OptionGroups optionGroup) {
+		return OptionGroupNameResponseDto.builder()
+			.id(optionGroup.getId())
+			.name(optionGroup.getName())
+			.build();
+	}
 }

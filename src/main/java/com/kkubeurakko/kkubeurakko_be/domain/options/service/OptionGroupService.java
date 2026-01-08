@@ -2,6 +2,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.options.service;
 
 import java.util.List;
 
+import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupNameResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 
@@ -15,6 +16,8 @@ public interface OptionGroupService {
 
 	//옵션 그룹 전체 조회
 	List<OptionGroupResponseDto> getAllOptionGroups();
+
+	List<OptionGroupNameResponseDto> getAllOptionGroupName();
 
 	//옵션 그룹 수정
 	void updateOptionGroup(Long id, OptionGroupRequestDto requestDto);
