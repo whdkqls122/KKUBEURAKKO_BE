@@ -7,12 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupNameResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType;
@@ -207,6 +209,41 @@ class OptionGroupServiceImplTest {
 			group.options().forEach(opt ->
 				System.out.println(" - " + opt.name() + " (" + opt.price() + "원, 상태: " + opt.optionStatus() + ")")
 			);
+			System.out.println("------------------------------");
+		});
+	}
+
+	@Test
+	@DisplayName("옵션 그룹의 이름과 id 리스트가 정상적으로 조회되는지 검증한다.")
+	void getAllOptionGroupName() {
+		// given
+		OptionGroups group1 = OptionGroups.builder()
+			.id(1L)
+			.name("맵기 선택")
+			.build();
+
+		OptionGroups group2 = OptionGroups.builder()
+			.id(2L)
+			.name("부위")
+			.description("부위를 선택하세요")
+			.build();
+
+		when(optionGroupRepository.findAll()).thenReturn(List.of(group1, group2));
+
+		// when
+		List<OptionGroupNameResponseDto> responseList = optionGroupService.getAllOptionGroupName();
+
+		// then
+		assertEquals(2, responseList.size());
+		assertEquals("맵기 선택", responseList.get(0).name());
+		assertEquals("부위", responseList.get(1).name());
+		verify(optionGroupRepository, times(1)).findAll();
+
+		// 출력
+		System.out.println("=== 전체 옵션 그룹 조회 결과 ===");
+		responseList.forEach(group -> {
+			System.out.println("그룹 ID: " + group.id());
+			System.out.println("그룹 이름: " + group.name());
 			System.out.println("------------------------------");
 		});
 	}
