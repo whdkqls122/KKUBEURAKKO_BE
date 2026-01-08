@@ -30,8 +30,8 @@ public class DeliveryRegion {
 	@Column(name = "address_name", nullable = false, length = 50)
 	private String addressName;
 
-	@Column(name = "is_delivery", nullable = false)
-	private boolean isDelivery;
+	@Column(name = "is_available", nullable = false)
+	private boolean isAvailable;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "stores_id", nullable = false)
