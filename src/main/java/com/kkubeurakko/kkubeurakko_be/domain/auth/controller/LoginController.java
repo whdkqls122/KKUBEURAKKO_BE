@@ -34,10 +34,9 @@ public class LoginController {
 		HttpServletResponse response
 	) {
 		String accessToken = loginService.adminLogin(loginRequestDto, response);
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", accessToken);
+
 		return ResponseEntity.ok()
-			.headers(headers)
+			.header(HttpHeaders.AUTHORIZATION, accessToken)
 			.body(ApiResponse.success("로그인 성공", null));
 
 	}

@@ -3,6 +3,8 @@ package com.kkubeurakko.kkubeurakko_be.domain.auth.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,7 +19,6 @@ import com.kkubeurakko.kkubeurakko_be.global.jwt.entity.RefreshToken;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenRepository;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,24 +61,31 @@ public class LoginServiceImpl implements LoginService {
 		String accessToken = jwtUtil.createAccessToken(admin.getId(), admin.getRole().toString(), accessTokenExpiry);
 		String refreshToken = jwtUtil.createRefreshToken(admin.getId(), admin.getRole().toString(), refreshTokenExpiry);
 
-		RefreshToken refreshTokenEntity = RefreshToken.builder()
-			.refresh(refreshToken)
-			.userNumber(admin.getId())
-			.build();
+		saveRefreshToken(admin.getId(), refreshToken);
 
-		refreshTokenRepository.save(refreshTokenEntity);
-
-		response.addCookie(createCookie(refreshToken));
+		ResponseCookie cookie = createCookie(refreshToken);
+		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
 		return accessToken;
 	}
 
-	private Cookie createCookie(String value) {
-		Cookie cookie = new Cookie("refresh", value);
-		cookie.setMaxAge((int)refreshTokenExpiry / 1000); // 7일
-		// cookie.setSecure(true);	//https
-		cookie.setPath("/");
-		cookie.setHttpOnly(true);
-		return cookie;
+	private ResponseCookie createCookie(String value) {
+		return ResponseCookie.from("refresh", value)
+			.maxAge(refreshTokenExpiry / 1000)
+			.secure(true)
+			// .httpOnly(true)
+			.sameSite("None")
+			.path("/")
+			// .domain(".kkubeurakko-anyang.shop")
+			.build();
+	}
+
+	private void saveRefreshToken(String adminId, String refreshToken) {
+		RefreshToken refreshTokenEntity = RefreshToken.builder()
+			.refresh(refreshToken)
+			.userNumber(adminId)
+			.build();
+
+		refreshTokenRepository.save(refreshTokenEntity);
 	}
 }
