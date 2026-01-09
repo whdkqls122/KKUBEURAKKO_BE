@@ -50,7 +50,7 @@ public class SecurityConfig {
 					"https://www.kkubeurakko-anyang.shop",
 					"http://www.kkubeurakko-anyang.shop"
 				));
-				configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+				configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 				configuration.setAllowCredentials(true);
 				configuration.setAllowedHeaders(Collections.singletonList("*"));
 				configuration.setMaxAge(3600L);
