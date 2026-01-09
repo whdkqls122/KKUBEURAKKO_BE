@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupNameResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.service.OptionGroupService;
@@ -58,6 +59,16 @@ public class OptionGroupController {
 	@GetMapping
 	public ResponseEntity<ApiResponse<List<OptionGroupResponseDto>>> getAllOptionGroups() {
 		List<OptionGroupResponseDto> responseDtoList = optionGroupService.getAllOptionGroups();
+		return ResponseEntity.ok(ApiResponse.success("전체 옵션 그룹이 조회되었습니다.", responseDtoList));
+	}
+
+	@Operation(
+		summary = "옵션 그룹 이름 전체 조회",
+		description = "모든 옵션 그룹의 이름들만 조회합니다."
+	)
+	@GetMapping("/names")
+	public ResponseEntity<ApiResponse<List<OptionGroupNameResponseDto>>> getAllOptionGroupName() {
+		List<OptionGroupNameResponseDto> responseDtoList = optionGroupService.getAllOptionGroupName();
 		return ResponseEntity.ok(ApiResponse.success("전체 옵션 그룹이 조회되었습니다.", responseDtoList));
 	}
 
