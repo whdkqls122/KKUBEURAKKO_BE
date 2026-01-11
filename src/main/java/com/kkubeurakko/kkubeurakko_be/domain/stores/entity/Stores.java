@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.entity;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +46,12 @@ public class Stores extends BaseEntity {
 	@Column(name = "delivery_avg_time", nullable = false)
 	private int deliveryAvgTime;
 
+	@Column(name = "pause_start_at")
+	private LocalDateTime pauseStartAt;
+
+	@Column(name = "pause_end_at")
+	private LocalDateTime pauseEndAt;
+
 	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Coupons> couponsList = new ArrayList<>();
 
@@ -74,4 +81,15 @@ public class Stores extends BaseEntity {
 		this.isOpen = isOpen;
 	}
 
+	public void pause(LocalDateTime start, LocalDateTime end) {
+		this.isOpen = false;
+		this.pauseStartAt = start;
+		this.pauseEndAt = end;
+	}
+
+	public void reopen() {
+		this.isOpen = true;
+		this.pauseStartAt = null;
+		this.pauseEndAt = null;
+	}
 }

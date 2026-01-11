@@ -4,12 +4,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreCloseRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoResponse;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StorePauseRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
@@ -57,15 +58,11 @@ public class StoreController {
 		summary = "영업 일시중지",
 		description = "가게의 영업 상태를 변경합니다."
 	)
-	@PatchMapping("/{storeId}/open-status")
-	public ResponseEntity<ApiResponse<Void>> updateOpenStatus(
+	@PostMapping("/{storeId}/pause")
+	public ResponseEntity<ApiResponse<Void>> pauseStore(
 		@PathVariable Long storeId,
-		@RequestBody @Valid StoreCloseRequest request
+		@RequestBody @Valid StorePauseRequest request
 	) {
-		storeService.updateStoreOpenStatus(storeId, request.isOpen());
-
-		return ResponseEntity.ok(
-			ApiResponse.success("영업 상태가 변경되었습니다.", null)
-		);
+		return ResponseEntity.ok(ApiResponse.success("영업이 일시 중지 되었습니다.", null));
 	}
 }

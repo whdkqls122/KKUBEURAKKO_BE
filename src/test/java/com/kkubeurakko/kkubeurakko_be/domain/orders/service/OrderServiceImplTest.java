@@ -189,4 +189,5 @@ class OrderServiceImplTest {
 		// then
 		assertThat(orderId).isEqualTo(10L);
 	}
+
 }

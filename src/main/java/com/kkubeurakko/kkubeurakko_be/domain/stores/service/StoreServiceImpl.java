@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoResponse;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StorePauseRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.BusinessDay;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
@@ -59,14 +60,17 @@ public class StoreServiceImpl implements StoreService {
 		return toResponse(store, businessHours);
 	}
 
-	@Transactional
 	@Override
-	public void updateStoreOpenStatus(Long storeId, boolean isOpen) {
+	@Transactional
+	public void pauseStore(Long storeId, StorePauseRequest request) {
 
 		Stores store = storeRepository.findById(storeId)
 			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
 
-		store.setOpen(isOpen);
+		store.pause(
+			request.startDateTime(),
+			request.endDateTime()
+		);
 	}
 
 	private StoreOperationInfoResponse toResponse(
