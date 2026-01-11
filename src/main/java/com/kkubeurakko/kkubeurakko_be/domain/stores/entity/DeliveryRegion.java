@@ -36,4 +36,8 @@ public class DeliveryRegion {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "stores_id", nullable = false)
 	private Stores store;
+
+	public void changeAvailability(boolean isAvailable) {
+		this.isAvailable = isAvailable;
+	}
 }
