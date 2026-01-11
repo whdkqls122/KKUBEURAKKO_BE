@@ -131,10 +131,19 @@ public class MenuServiceImpl implements MenuService {
 		Menus menu = menuRepository.findById(menuId)
 			.orElseThrow(() -> new EntityNotFoundException("메뉴가 존재하지 않습니다."));
 
-		String imageUrl;
+		String imageUrl = menu.getImg();
 		String s3Key = menu.getS3Key();
 
-		if (image != null && !image.isEmpty()) {
+		boolean hasNewImage = image != null && !image.isEmpty();
+		boolean deleteImage = request.isImageDeleted();
+
+		if (deleteImage) {
+			if (s3Key != null) {
+				s3Service.deleteImage(s3Key);
+			}
+			imageUrl = null;
+			s3Key = null;
+		} else if (hasNewImage) {
 			if (s3Key != null) {
 				s3Service.deleteImage(s3Key);
 			}
@@ -142,11 +151,8 @@ public class MenuServiceImpl implements MenuService {
 			S3UploadResponseDto upload = s3Service.uploadImage(image);
 			imageUrl = upload.imageUrl();
 			s3Key = upload.imageKey();
-		} else {
-			s3Service.deleteImage(s3Key);
-			imageUrl = null;
-			s3Key = null;
 		}
+
 		menu.update(
 			request.name(),
 			request.description(),
