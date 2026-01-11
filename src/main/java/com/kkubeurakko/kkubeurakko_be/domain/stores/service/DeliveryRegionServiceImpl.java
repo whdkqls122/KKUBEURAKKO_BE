@@ -3,11 +3,13 @@ package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionCreateRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionStatusUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.DeliveryRegion;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.DeliveryRegionRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -30,5 +32,17 @@ public class DeliveryRegionServiceImpl implements DeliveryRegionService {
 			.build();
 
 		deliveryRegionRepository.save(deliveryRegion);
+	}
+
+	@Transactional
+	@Override
+	public void updateDeliveryRegionStatus(
+		Long storeId,
+		DeliveryRegionStatusUpdateRequest request
+	) {
+		DeliveryRegion deliveryRegion = deliveryRegionRepository.findById(request.deliveryRegionId())
+			.orElseThrow(() -> new IllegalArgumentException("배달 지역을 찾을 수 없습니다."));
+
+		deliveryRegion.changeAvailability(request.isAvailable());
 	}
 }
