@@ -1,8 +1,10 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 
+import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionCreateRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionStatusUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.DeliveryRegion;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
@@ -79,5 +82,31 @@ class DeliveryRegionServiceImplTest {
 		assertFalse(deliveryRegion.isAvailable());
 		verify(deliveryRegionRepository, times(1)).findById(1L);
 		verify(deliveryRegionRepository, never()).save(any());
+	}
+
+	@Test
+	@DisplayName("배달 가능 지역 리스트가 정상적으로 조회된다")
+	void getDeliveryRegions() {
+		Stores store = Stores.builder().id(1L).build();
+
+		DeliveryRegion region = DeliveryRegion.builder()
+			.id(1L)
+			.addressName("경기 안양시 동안구 비산2동")
+			.isAvailable(true)
+			.store(store)
+			.build();
+
+		when(deliveryRegionRepository.findByStoreId(1L))
+			.thenReturn(List.of(region));
+
+		List<DeliveryRegionResponseDto> result =
+			deliveryRegionService.getDeliveryRegions(1L);
+
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).deliveryRegionId()).isEqualTo(1L);
+		assertThat(result.get(0).addressName()).isEqualTo("경기 안양시 동안구 비산2동");
+		assertThat(result.get(0).isAvailable()).isTrue();
+
+		verify(deliveryRegionRepository, times(1)).findByStoreId(1L);
 	}
 }

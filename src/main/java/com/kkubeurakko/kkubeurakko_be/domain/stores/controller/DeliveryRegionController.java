@@ -1,6 +1,9 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionCreateRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionStatusUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.DeliveryRegionService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
@@ -58,6 +62,23 @@ public class DeliveryRegionController {
 
 		return ResponseEntity.ok(
 			ApiResponse.success("배달 지역 상태를 성공적으로 변경했습니다.", null)
+		);
+	}
+
+	@Operation(
+		summary = "배달 지역 조회",
+		description = "배달 지역 전체 리스트를 조회합니다."
+	)
+	@GetMapping("/{storeId}")
+	public ResponseEntity<ApiResponse<List<DeliveryRegionResponseDto>>> getDeliveryRegions(
+		@PathVariable Long storeId
+	) {
+		List<DeliveryRegionResponseDto> responseDto = deliveryRegionService.getDeliveryRegions(storeId);
+		return ResponseEntity.ok(
+			ApiResponse.success(
+				"배달 지역 리스트를 성공적으로 조회했습니다.",
+				responseDto
+			)
 		);
 	}
 }
