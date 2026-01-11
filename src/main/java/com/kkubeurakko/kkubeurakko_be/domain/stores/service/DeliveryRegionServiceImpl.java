@@ -61,10 +61,10 @@ public class DeliveryRegionServiceImpl implements DeliveryRegionService {
 	}
 
 	private DeliveryRegionResponseDto toResponse(DeliveryRegion region) {
-		return new DeliveryRegionResponseDto(
-			region.getId(),
-			region.getAddressName(),
-			region.isAvailable()
-		);
+		return DeliveryRegionResponseDto.builder()
+			.deliveryRegionId(region.getId())
+			.addressName(region.getAddressName())
+			.isAvailable(region.isAvailable())
+			.build();
 	}
 }
