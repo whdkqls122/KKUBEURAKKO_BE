@@ -1,8 +1,11 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionCreateRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionStatusUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.DeliveryRegion;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
@@ -45,5 +48,23 @@ public class DeliveryRegionServiceImpl implements DeliveryRegionService {
 				+ "."));
 
 		deliveryRegion.changeAvailability(request.isAvailable());
+	}
+
+	@Override
+	public List<DeliveryRegionResponseDto> getDeliveryRegions(Long storeId) {
+
+		List<DeliveryRegion> regions = deliveryRegionRepository.findByStoreId(storeId);
+
+		return regions.stream()
+			.map(this::toResponse)
+			.toList();
+	}
+
+	private DeliveryRegionResponseDto toResponse(DeliveryRegion region) {
+		return new DeliveryRegionResponseDto(
+			region.getId(),
+			region.getAddressName(),
+			region.isAvailable()
+		);
 	}
 }
