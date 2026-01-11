@@ -63,6 +63,10 @@ public class StoreController {
 		@PathVariable Long storeId,
 		@RequestBody @Valid StorePauseRequest request
 	) {
-		return ResponseEntity.ok(ApiResponse.success("영업이 일시 중지 되었습니다.", null));
+		storeService.pauseStore(storeId, request);
+
+		return ResponseEntity.ok(
+			ApiResponse.success("영업이 일시 중지되었습니다.", null)
+		);
 	}
 }

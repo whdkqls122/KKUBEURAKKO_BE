@@ -2,10 +2,13 @@ package com.kkubeurakko.kkubeurakko_be.domain.stores.dto;
 
 import java.time.LocalDateTime;
 
-import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public record StorePauseRequest(
-	@NotNull LocalDateTime startDateTime,
-	@NotNull LocalDateTime endDateTime
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+	LocalDateTime startDateTime,
+
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+	LocalDateTime endDateTime
 ) {
 }

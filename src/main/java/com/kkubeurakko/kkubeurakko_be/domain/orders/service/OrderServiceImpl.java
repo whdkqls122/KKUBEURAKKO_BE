@@ -34,7 +34,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
@@ -117,14 +116,14 @@ public class OrderServiceImpl implements OrderService {
 				throw new IllegalStateException("장바구니에 담긴 메뉴가 없습니다.");
 			}
 
-			Stores store = cart.getCartItemList().get(0)
-				.getMenu()
-				.getMenuGroup()
-				.getStore();
-
-			if (!store.isOpen()) {
-				throw new IllegalStateException("현재 가게가 영업 중이 아닙니다.");
-			}
+			// Stores store = cart.getCartItemList().get(0)
+			// 	.getMenu()
+			// 	.getMenuGroup()
+			// 	.getStore();
+			//
+			// if (!store.isOpen()) {
+			// 	throw new IllegalStateException("현재 가게가 영업 중이 아닙니다.");
+			// }
 
 			Addresses address = null;
 			if (request.orderType() == OrderType.DELIVERY) {
