@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 
+import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalTime;
@@ -15,8 +16,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.BusinessTimeDto;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreBusinessHoursRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreBusinessHoursResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.BusinessDay;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.OperationType;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreBusinessHoursRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
@@ -59,5 +62,25 @@ class StoreBusinessHoursServiceImplTest {
 		storeBusinessHoursService.saveBusinessHours(1L, request);
 
 		verify(businessHoursRepository, times(7)).save(any());
+	}
+
+	@Test
+	@DisplayName("SAME 타입이면 영업시간 1개만 조회된다")
+	void getBusinessHours() {
+		StoreBusinessHours hours = StoreBusinessHours.builder()
+			.operationType(OperationType.SAME)
+			.dayOfWeek(BusinessDay.ALLDAY)
+			.openTime(LocalTime.of(9, 0))
+			.closeTime(LocalTime.of(22, 0))
+			.hasBreakTime(false)
+			.build();
+
+		when(businessHoursRepository.findByStoreId(1L))
+			.thenReturn(List.of(hours));
+
+		List<StoreBusinessHoursResponseDto> result =
+			storeBusinessHoursService.getBusinessHours(1L);
+
+		assertThat(result).hasSize(1);
 	}
 }

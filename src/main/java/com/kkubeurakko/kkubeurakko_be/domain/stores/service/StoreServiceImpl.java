@@ -59,6 +59,16 @@ public class StoreServiceImpl implements StoreService {
 		return toResponse(store, businessHours);
 	}
 
+	@Transactional
+	@Override
+	public void updateStoreOpenStatus(Long storeId, boolean isOpen) {
+
+		Stores store = storeRepository.findById(storeId)
+			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
+
+		store.setOpen(isOpen);
+	}
+
 	private StoreOperationInfoResponse toResponse(
 		Stores store,
 		StoreBusinessHours businessHours

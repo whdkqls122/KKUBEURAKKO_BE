@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreCloseRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreService;
@@ -21,8 +22,9 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/store")
-@Tag(name = "Store API", description = "가게 운영 정보 API")
+@Tag(name = "Store API", description = "가게 운영 API")
 public class StoreController {
+
 	private final StoreService storeService;
 
 	@Operation(
@@ -49,5 +51,21 @@ public class StoreController {
 			storeService.getOperationInfo(storeId);
 
 		return ResponseEntity.ok(ApiResponse.success("운영 정보 조회가 완료되었습니다.", responseDto));
+	}
+
+	@Operation(
+		summary = "영업 일시중지",
+		description = "가게의 영업 상태를 변경합니다."
+	)
+	@PatchMapping("/{storeId}/open-status")
+	public ResponseEntity<ApiResponse<Void>> updateOpenStatus(
+		@PathVariable Long storeId,
+		@RequestBody @Valid StoreCloseRequest request
+	) {
+		storeService.updateStoreOpenStatus(storeId, request.isOpen());
+
+		return ResponseEntity.ok(
+			ApiResponse.success("영업 상태가 변경되었습니다.", null)
+		);
 	}
 }

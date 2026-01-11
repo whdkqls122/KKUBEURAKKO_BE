@@ -69,4 +69,9 @@ public class Stores extends BaseEntity {
 		this.deliveryAvgTime = deliveryAvgTime;
 		this.packagingAvgTime = packagingAvgTime;
 	}
+
+	public void setOpen(boolean isOpen) {
+		this.isOpen = isOpen;
+	}
+
 }
