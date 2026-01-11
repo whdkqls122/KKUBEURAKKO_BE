@@ -295,6 +295,7 @@ class MenuServiceImplTest {
 			.price(15000)
 			.status(MenuStatus.ON_SALE)
 			.optionGroupIds(List.of(10L, 11L))
+			.isImageDeleted(false)
 			.build();
 
 		MockMultipartFile image = new MockMultipartFile(
@@ -330,6 +331,52 @@ class MenuServiceImplTest {
 
 		verify(s3Service, times(1)).uploadImage(any(MultipartFile.class));
 		verify(s3Service, times(1)).deleteImage("menu/old.jpg");
+
+		assertThat(menu.getMenuOptionGroups())
+			.extracting(mog -> mog.getOptionGroup().getId())
+			.containsExactlyInAnyOrder(10L, 11L);
+	}
+
+	@Test
+	@DisplayName("관리자 메뉴 수정에서 이미지가 삭제되었더라도 정상적으로 이루어지는지 검증한다.")
+	void updateMenu_success_image_deleted() throws IOException {
+		// given
+		Long menuId = 1L;
+
+		Menus menu = Menus.builder()
+			.id(menuId)
+			.name("이전메뉴명")
+			.description("이전설명")
+			.price(10000)
+			.menuStatus(MenuStatus.ON_SALE)
+			.img("old.jpg")
+			.s3Key("menu/old.jpg")
+			.build();
+
+		when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
+
+		AdminMenuUpdateDto request = AdminMenuUpdateDto.builder()
+			.name("새로운메뉴명")
+			.description("새로운설명")
+			.price(15000)
+			.status(MenuStatus.ON_SALE)
+			.optionGroupIds(List.of(10L, 11L))
+			.isImageDeleted(true)
+			.build();
+
+		OptionGroups og1 = OptionGroups.builder().id(10L).build();
+		OptionGroups og2 = OptionGroups.builder().id(11L).build();
+
+		when(optionGroupRepository.findAllById(List.of(10L, 11L)))
+			.thenReturn(List.of(og1, og2));
+
+		// when
+		menuService.updateMenu(menuId, request, null);
+
+		// then
+		assertThat(menu.getName()).isEqualTo("새로운메뉴명");
+		assertThat(menu.getDescription()).isEqualTo("새로운설명");
+		assertThat(menu.getPrice()).isEqualTo(15000);
 
 		assertThat(menu.getMenuOptionGroups())
 			.extracting(mog -> mog.getOptionGroup().getId())
