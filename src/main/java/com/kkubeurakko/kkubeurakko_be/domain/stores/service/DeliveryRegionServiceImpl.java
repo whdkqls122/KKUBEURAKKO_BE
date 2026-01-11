@@ -41,7 +41,8 @@ public class DeliveryRegionServiceImpl implements DeliveryRegionService {
 		DeliveryRegionStatusUpdateRequest request
 	) {
 		DeliveryRegion deliveryRegion = deliveryRegionRepository.findById(request.deliveryRegionId())
-			.orElseThrow(() -> new IllegalArgumentException("배달 지역을 찾을 수 없습니다."));
+			.orElseThrow(() -> new IllegalArgumentException("배달 지역을 찾을 수 없습니다"
+				+ "."));
 
 		deliveryRegion.changeAvailability(request.isAvailable());
 	}
