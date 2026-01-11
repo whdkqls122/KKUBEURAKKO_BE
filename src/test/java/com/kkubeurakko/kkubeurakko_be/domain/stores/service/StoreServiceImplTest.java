@@ -90,4 +90,18 @@ class StoreServiceImplTest {
 		assertThat(result.closeTime()).isEqualTo(LocalTime.of(22, 0));
 		assertThat(result.minOrderPrice()).isEqualTo(17000);
 	}
+
+	@Test
+	@DisplayName("영업 상태를 정상적으로 변경한다")
+	void updateStoreOpenStatus() {
+		Stores store = Stores.builder().isOpen(true).build();
+
+		when(storeRepository.findById(1L))
+			.thenReturn(Optional.of(store));
+
+		storeService.updateStoreOpenStatus(1L, false);
+
+		assertThat(store.isOpen()).isFalse();
+	}
+
 }
