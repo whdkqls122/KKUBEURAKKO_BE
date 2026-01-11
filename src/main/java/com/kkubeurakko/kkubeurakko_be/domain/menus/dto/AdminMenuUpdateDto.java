@@ -24,6 +24,9 @@ public record AdminMenuUpdateDto(
 	@NotNull(message = "메뉴 상태는 필수입니다.")
 	MenuStatus status,
 
+	@NotNull(message = "이미지 삭제 여부는 필수입니다.")
+	Boolean isImageDeleted,
+
 	List<Long> optionGroupIds
 ) {
 }
