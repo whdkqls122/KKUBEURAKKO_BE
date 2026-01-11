@@ -8,4 +8,7 @@ public interface StoreService {
 
 	//가게 운영정보 조회
 	StoreOperationInfoResponse getOperationInfo(Long storeId);
+
+	//가게 영업 일시 중지
+	void updateStoreOpenStatus(Long storeId, boolean isOpen);
 }

@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,5 +17,7 @@ public interface StoreBusinessHoursRepository
 		Long storeId,
 		BusinessDay dayOfWeek
 	);
+
+	List<StoreBusinessHours> findByStoreId(Long storeId);
 
 }

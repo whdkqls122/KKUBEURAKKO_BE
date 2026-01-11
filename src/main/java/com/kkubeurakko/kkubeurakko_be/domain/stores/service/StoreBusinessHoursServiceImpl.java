@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.BusinessTimeDto;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreBusinessHoursRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreBusinessHoursResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.BusinessDay;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.OperationType;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
@@ -37,6 +38,27 @@ public class StoreBusinessHoursServiceImpl implements StoreBusinessHoursService 
 		} else {
 			saveWeeklyTime(store, request.commonTime());
 		}
+	}
+
+	@Override
+	public List<StoreBusinessHoursResponseDto> getBusinessHours(Long storeId) {
+
+		List<StoreBusinessHours> hours =
+			businessHoursRepository.findByStoreId(storeId);
+
+		if (hours.isEmpty()) {
+			return List.of();
+		}
+
+		OperationType type = hours.get(0).getOperationType();
+
+		if (type == OperationType.SAME) {
+			return List.of(toResponse(hours.get(0)));
+		}
+
+		return hours.stream()
+			.map(this::toResponse)
+			.toList();
 	}
 
 	private void saveSameTime(Stores store, BusinessTimeDto dto) {
@@ -75,4 +97,17 @@ public class StoreBusinessHoursServiceImpl implements StoreBusinessHoursService 
 			.breakEndTime(dto.breakEndTime())
 			.build();
 	}
+
+	private StoreBusinessHoursResponseDto toResponse(StoreBusinessHours entity) {
+		return StoreBusinessHoursResponseDto.builder()
+			.operationType(entity.getOperationType())
+			.dayOfWeek(entity.getDayOfWeek())
+			.openTime(entity.getOpenTime())
+			.closeTime(entity.getCloseTime())
+			.hasBreakTime(entity.isHasBreakTime())
+			.breakStartTime(entity.getBreakStartTime())
+			.breakEndTime(entity.getBreakEndTime())
+			.build();
+	}
+
 }
