@@ -27,7 +27,7 @@ public class DeliveryRegion {
 	@Column(name = "delivery_region_id")
 	private Long id;
 
-	@Column(name = "address_name", nullable = false, length = 50)
+	@Column(name = "address_name", nullable = false, length = 60)
 	private String addressName;
 
 	@Column(name = "is_available", nullable = false)
