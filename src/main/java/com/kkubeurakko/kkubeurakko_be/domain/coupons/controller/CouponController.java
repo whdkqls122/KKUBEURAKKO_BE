@@ -7,9 +7,11 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.service.CouponService;
@@ -18,6 +20,7 @@ import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -81,6 +84,19 @@ public class CouponController {
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
 				"쿠폰이 발급되었습니다.",
+				null
+			)
+		);
+	}
+
+	@PostMapping("/{storeId}")
+	public ResponseEntity<ApiResponse<Void>> createCoupon(
+		@PathVariable Long storeId,
+		@Valid @RequestBody CouponCreateRequest request
+	) {
+		return ResponseEntity.ok().body(
+			ApiResponse.success(
+				"쿠폰이 성공적으로 발행되었습니다.",
 				null
 			)
 		);
