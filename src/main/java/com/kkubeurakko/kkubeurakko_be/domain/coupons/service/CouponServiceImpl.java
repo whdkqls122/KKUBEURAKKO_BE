@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
@@ -14,6 +15,8 @@ import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.exception.DuplicatedCouponNumberException;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.CouponRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
@@ -28,6 +31,7 @@ public class CouponServiceImpl implements CouponService {
 	private final UserService userService;
 	private final CouponRepository couponRepository;
 	private final UserCouponRepository userCouponRepository;
+	private final StoreRepository storeRepository;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -90,6 +94,27 @@ public class CouponServiceImpl implements CouponService {
 
 		log.info("쿠폰 사용 성공");
 		userCoupon.updateIsUsed();
+	}
+
+	@Override
+	public void createCoupon(Long storeId, CouponCreateRequest request) {
+
+		Stores store = storeRepository.findById(storeId)
+			.orElseThrow(() -> new IllegalArgumentException("가게를 찾을 수 없습니다."));
+
+		Coupons coupon = Coupons.builder()
+			.name(request.name())
+			.discountAmount(request.discountAmount())
+			.minOrderAmount(request.minOrderAmount())
+			.couponType(request.couponType())
+			.validFrom(request.validFrom())
+			.validUntil(request.validUntil())
+			.quantity(request.quantity())
+			.status(Status.OFFER)
+			.store(store)
+			.build();
+
+		Coupons savedCoupon = couponRepository.save(coupon);
 	}
 
 	private List<CouponResponseDto> toResponseDto(List<Coupons> couponList) {
