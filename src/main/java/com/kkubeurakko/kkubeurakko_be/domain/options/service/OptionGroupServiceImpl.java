@@ -83,11 +83,11 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 
 	@Override
 	@Transactional
-	public void updateStatus(Long id, OptionStatus newOptionStatus) {
+	public void updateStatus(Long id, OptionStatus newOptionGroupStatus) {
 		OptionGroups optionGroup = optionGroupRepository.findById(id)
 			.orElseThrow(() -> new IllegalArgumentException("해당 옵션 그룹이 없습니다. id=" + id));
 
-		optionGroup.updateStatus(newOptionStatus);
+		optionGroup.updateStatus(newOptionGroupStatus);
 	}
 
 	private OptionGroupResponseDto toResponseDto(OptionGroups optionGroup) {

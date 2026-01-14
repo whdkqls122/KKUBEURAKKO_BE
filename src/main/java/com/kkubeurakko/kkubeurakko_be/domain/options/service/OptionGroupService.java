@@ -27,5 +27,5 @@ public interface OptionGroupService {
 	void deleteOptionGroup(Long id);
 
 	//옵션 그룹 상태 변경
-	void updateStatus(Long id, OptionStatus newOptionStatus);
+	void updateStatus(Long id, OptionStatus newOptionGroupStatus);
 }
