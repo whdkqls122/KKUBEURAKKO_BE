@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.dto.AddressRequestDto;
@@ -160,21 +161,27 @@ public class AddressServiceImpl implements AddressService {
 	}
 
 	private Addresses toEntity(AddressRequestDto addressRequestDto, Users user) {
+		String addressName = hasText(addressRequestDto.addressName())
+			? addressRequestDto.addressName()
+			: addressRequestDto.roadName();
+
+		String encryptedDetailAddress = aesUtil.encryptToBase64(addressRequestDto.detailAddress());
+
+		String encryptedEntrancePassword = hasText(addressRequestDto.entrancePassword())
+			? aesUtil.encryptToBase64(addressRequestDto.entrancePassword())
+			: null;
+
 		return Addresses.builder()
-			.addressName(addressRequestDto.addressName() != null ?
-				addressRequestDto.addressName() : addressRequestDto.roadName())    //지정된 주소 이름이 없다면 도로명 주소로
+			.addressName(addressName)    //지정된 주소 이름이 없다면 도로명 주소로
 			.roadName(addressRequestDto.roadName())
-			.detailAddress(aesUtil.encryptToBase64(addressRequestDto.detailAddress()))
+			.detailAddress(encryptedDetailAddress)
 			.postalCode(addressRequestDto.postalCode())
 			.latitude(addressRequestDto.latitude())
 			.longitude(addressRequestDto.longitude())
 			.isPrimary(true)
 			.category(addressRequestDto.category())
 			.requestContent(addressRequestDto.requestContent())
-			.entrancePassword(
-				addressRequestDto.entrancePassword() != null ?
-					aesUtil.encryptToBase64(addressRequestDto.entrancePassword()) : null
-			)
+			.entrancePassword(encryptedEntrancePassword)
 			.directionsInfo(addressRequestDto.directionsInfo())
 			.user(user)
 			.build();
@@ -240,5 +247,9 @@ public class AddressServiceImpl implements AddressService {
 
 	private String resolveAddressName(String roadName, String detailAddress) {
 		return roadName + " " + aesUtil.decryptFromBase64(detailAddress);
+	}
+
+	private boolean hasText(String value) {
+		return StringUtils.hasText(value);
 	}
 }
