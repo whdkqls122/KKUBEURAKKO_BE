@@ -310,4 +310,29 @@ class OptionGroupServiceImplTest {
 		verify(optionGroupRepository, times(1)).delete(group);
 
 	}
+
+	//옵션 그룹 상태 변경
+	@Test
+	void updateStatus() {
+		// given
+		OptionGroups optionGroup = OptionGroups.builder()
+			.id(1L)
+			.name("맵기 선택")
+			.description("맵기 단계를 선택해 주세요")
+			.required(true)
+			.optionStatus(OptionStatus.ON_SALE)
+			.optionGroupType(com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroupType.SINGLE)
+			.build();
+
+		when(optionGroupRepository.findById(1L))
+			.thenReturn(Optional.of(optionGroup));
+
+		// when
+		optionGroupService.updateStatus(1L, OptionStatus.HIDE);
+
+		// then
+		assertEquals(OptionStatus.HIDE, optionGroup.getOptionStatus());
+		verify(optionGroupRepository).findById(1L);
+		verify(optionGroupRepository, never()).save(any());
+	}
 }
