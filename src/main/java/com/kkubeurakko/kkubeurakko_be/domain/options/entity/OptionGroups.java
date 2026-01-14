@@ -72,4 +72,8 @@ public class OptionGroups extends BaseEntity {
 		this.optionGroupType = type;
 		this.selectedNum = selectedNum;
 	}
+
+	public void updateStatus(OptionStatus optionStatus) {
+		this.optionStatus = optionStatus;
+	}
 }
