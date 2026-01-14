@@ -5,16 +5,19 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupNameResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.service.OptionGroupService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
@@ -86,5 +89,18 @@ public class OptionGroupController {
 	public ResponseEntity<ApiResponse<Void>> deleteOptionGroup(@PathVariable Long optionGroupId) {
 		optionGroupService.deleteOptionGroup(optionGroupId);
 		return ResponseEntity.ok(ApiResponse.success("옵션 그룹 삭제가 완료되었습니다.", null));
+	}
+
+	@Operation(
+		summary = "옵션 그룹 상태 변경",
+		description = "옵션의 판매 상태를 변경합니다."
+	)
+	@PatchMapping("/{optionGroupId}/status")
+	public ResponseEntity<ApiResponse<Void>> updateOptionGroupStatus(
+		@PathVariable Long optionGroupId,
+		@RequestParam OptionStatus optionGroupStatus) {
+
+		optionGroupService.updateStatus(optionGroupId, optionGroupStatus);
+		return ResponseEntity.ok(ApiResponse.success("옵션 그룹 상태가 변경되었습니다.", null));
 	}
 }
