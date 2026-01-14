@@ -5,6 +5,7 @@ import java.util.List;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupNameResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 
 public interface OptionGroupService {
 
@@ -24,4 +25,7 @@ public interface OptionGroupService {
 
 	//옵션 그룹 삭제
 	void deleteOptionGroup(Long id);
+
+	//옵션 그룹 상태 변경
+	void updateStatus(Long id, OptionStatus newOptionStatus);
 }

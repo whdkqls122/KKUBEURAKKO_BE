@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupNameResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupRequestDto;
@@ -78,6 +79,15 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 			.orElseThrow(() -> new IllegalArgumentException("해당 옵션 그룹이 없습니다. id=" + id));
 
 		optionGroupRepository.delete(optionGroup);
+	}
+
+	@Override
+	@Transactional
+	public void updateStatus(Long id, OptionStatus newOptionStatus) {
+		OptionGroups optionGroup = optionGroupRepository.findById(id)
+			.orElseThrow(() -> new IllegalArgumentException("해당 옵션 그룹이 없습니다. id=" + id));
+
+		optionGroup.updateStatus(newOptionStatus);
 	}
 
 	private OptionGroupResponseDto toResponseDto(OptionGroups optionGroup) {
