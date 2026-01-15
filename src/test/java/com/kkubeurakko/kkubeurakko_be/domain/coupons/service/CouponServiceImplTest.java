@@ -242,4 +242,31 @@ class CouponServiceImplTest {
 		verify(couponRepository).save(any(Coupons.class));
 	}
 
+	@Test
+	@DisplayName("가게에 등록된 쿠폰 목록을 조회한다")
+	void getCouponsByStore() {
+		// given
+		Coupons coupon = Coupons.builder()
+			.id(1L)
+			.name("10% 할인 쿠폰")
+			.discountRate(10)
+			.minOrderAmount(20000)
+			.couponType(CouponType.TAKEOUT)
+			.validFrom(LocalDate.now())
+			.validUntil(LocalDate.now().plusDays(10))
+			.quantity(50)
+			.status(Status.OFFER)
+			.build();
+
+		when(couponRepository.findByStoreId(1L))
+			.thenReturn(List.of(coupon));
+
+		// when
+		var result = couponService.getCouponsByStore(1L);
+
+		// then
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).name()).isEqualTo("10% 할인 쿠폰");
+		verify(couponRepository).findByStoreId(1L);
+	}
 }
