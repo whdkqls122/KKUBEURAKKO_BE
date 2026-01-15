@@ -100,11 +100,14 @@ public class CouponServiceImpl implements CouponService {
 	public void createCoupon(Long storeId, CouponCreateRequest request) {
 
 		Stores store = storeRepository.findById(storeId)
-			.orElseThrow(() -> new IllegalArgumentException("가게를 찾을 수 없습니다."));
+			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
+
+		validateDiscount(request);
 
 		Coupons coupon = Coupons.builder()
 			.name(request.name())
 			.discountAmount(request.discountAmount())
+			.discountRate(request.discountRate())
 			.minOrderAmount(request.minOrderAmount())
 			.couponType(request.couponType())
 			.validFrom(request.validFrom())
@@ -114,7 +117,17 @@ public class CouponServiceImpl implements CouponService {
 			.store(store)
 			.build();
 
-		Coupons savedCoupon = couponRepository.save(coupon);
+		couponRepository.save(coupon);
+
+	}
+
+	private void validateDiscount(CouponCreateRequest request) {
+		if (request.discountAmount() == null && request.discountRate() == null) {
+			throw new IllegalArgumentException("할인 금액 또는 할인율 중 하나는 필수입니다.");
+		}
+		if (request.discountAmount() != null && request.discountRate() != null) {
+			throw new IllegalArgumentException("할인 금액과 할인율은 동시에 설정할 수 없습니다.");
+		}
 	}
 
 	private List<CouponResponseDto> toResponseDto(List<Coupons> couponList) {

@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponType;
@@ -27,6 +28,8 @@ import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.CouponRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
@@ -40,6 +43,9 @@ class CouponServiceImplTest {
 	CouponRepository couponRepository;
 	@Mock
 	UserCouponRepository userCouponRepository;
+
+	@Mock
+	private StoreRepository storeRepository;
 
 	@InjectMocks
 	CouponServiceImpl couponService;
@@ -207,4 +213,33 @@ class CouponServiceImplTest {
 
 		executor.shutdown();
 	}
+
+	@Test
+	@DisplayName("할인 쿠폰이 정상적으로 생성된다")
+	void createCoupon() {
+
+		Stores store = Stores.builder().build();
+
+		when(storeRepository.findById(1L))
+			.thenReturn(Optional.of(store));
+
+		when(couponRepository.save(any()))
+			.thenAnswer(invocation -> invocation.getArgument(0));
+
+		CouponCreateRequest request = new CouponCreateRequest(
+			"3000원 할인 쿠폰",
+			3000,
+			null,
+			15000,
+			CouponType.DELIVERY,
+			LocalDate.now(),
+			LocalDate.now().plusDays(7),
+			100
+		);
+
+		couponService.createCoupon(1L, request);
+
+		verify(couponRepository).save(any(Coupons.class));
+	}
+
 }

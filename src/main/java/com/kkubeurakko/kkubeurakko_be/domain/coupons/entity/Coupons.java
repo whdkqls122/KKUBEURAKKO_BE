@@ -44,7 +44,10 @@ public class Coupons extends BaseEntity {
 	private String name;
 
 	@Column(name = "discount_amount", nullable = false, length = 10)
-	private String discountAmount;
+	private Integer discountAmount;
+
+	@Column(name = "discount_rate")
+	private Integer discountRate;
 
 	@Column(name = "min_order_amount", nullable = false)
 	private int minOrderAmount;

@@ -298,7 +298,7 @@ public class OrderServiceImpl implements OrderService {
 
 		usersCoupon.use();
 
-		return Integer.parseInt(coupon.getDiscountAmount());
+		return coupon.getDiscountAmount();
 	}
 
 	private void sendOrderToStore(Orders order) {

@@ -92,8 +92,10 @@ public class CouponController {
 	@PostMapping("/{storeId}")
 	public ResponseEntity<ApiResponse<Void>> createCoupon(
 		@PathVariable Long storeId,
-		@Valid @RequestBody CouponCreateRequest request
+		@RequestBody @Valid CouponCreateRequest request
 	) {
+		couponService.createCoupon(storeId, request);
+		
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
 				"쿠폰이 성공적으로 발행되었습니다.",

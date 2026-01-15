@@ -12,7 +12,7 @@ import lombok.Builder;
 public record CouponResponseDto(
 	Long id,
 	String name,
-	String discountAmount,
+	Integer discountAmount,
 	int minOrderAmount,
 	CouponType couponType,
 	@JsonFormat(pattern = "yyyy-MM-dd")

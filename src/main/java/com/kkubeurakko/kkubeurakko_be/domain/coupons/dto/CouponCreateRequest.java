@@ -10,7 +10,8 @@ import jakarta.validation.constraints.NotNull;
 
 public record CouponCreateRequest(
 	@NotBlank String name,
-	@NotBlank String discountAmount,
+	Integer discountAmount,
+	Integer discountRate,
 	@Min(0) int minOrderAmount,
 	@NotNull CouponType couponType,
 	@NotNull LocalDate validFrom,

@@ -275,7 +275,7 @@ public class TestFixture {
 		return Coupons.builder()
 			.id(id)
 			.name(name)
-			.discountAmount("1000원") // 예시
+			.discountAmount(1000) // 예시
 			.minOrderAmount(12000)
 			.couponType(couponType)
 			.validFrom(validFrom)
