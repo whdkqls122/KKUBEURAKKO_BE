@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.AdminCouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto;
@@ -95,11 +96,23 @@ public class CouponController {
 		@RequestBody @Valid CouponCreateRequest request
 	) {
 		couponService.createCoupon(storeId, request);
-		
+
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
 				"쿠폰이 성공적으로 발행되었습니다.",
 				null
+			)
+		);
+	}
+
+	@GetMapping("/{storeId}")
+	public ResponseEntity<ApiResponse<List<AdminCouponResponseDto>>> getCoupons(
+		@PathVariable Long storeId
+	) {
+		return ResponseEntity.ok(
+			ApiResponse.success(
+				"쿠폰 목록을 성공적으로 조회했습니다.",
+				couponService.getCouponsByStore(storeId)
 			)
 		);
 	}

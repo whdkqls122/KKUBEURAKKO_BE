@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.AdminCouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto;
@@ -121,6 +122,15 @@ public class CouponServiceImpl implements CouponService {
 
 	}
 
+	@Override
+	public List<AdminCouponResponseDto> getCouponsByStore(Long storeId) {
+
+		return couponRepository.findByStoreId(storeId)
+			.stream()
+			.map(this::toResponseAdminDto)
+			.toList();
+	}
+
 	private void validateDiscount(CouponCreateRequest request) {
 		if (request.discountAmount() == null && request.discountRate() == null) {
 			throw new IllegalArgumentException("할인 금액 또는 할인율 중 하나는 필수입니다.");
@@ -145,6 +155,21 @@ public class CouponServiceImpl implements CouponService {
 				.build()
 			)
 			.toList();
+	}
+
+	private AdminCouponResponseDto toResponseAdminDto(Coupons coupon) {
+		return AdminCouponResponseDto.builder()
+			.couponId(coupon.getId())
+			.name(coupon.getName())
+			.discountAmount(coupon.getDiscountAmount())
+			.discountRate(coupon.getDiscountRate())
+			.minOrderAmount(coupon.getMinOrderAmount())
+			.couponType(coupon.getCouponType())
+			.validFrom(coupon.getValidFrom())
+			.validUntil(coupon.getValidUntil())
+			.quantity(coupon.getQuantity())
+			.status(coupon.getStatus())
+			.build();
 	}
 
 	private List<IssuedCouponResponseDto> toIssuedResponseDto(List<UsersCoupons> couponList) {

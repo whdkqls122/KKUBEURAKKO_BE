@@ -31,4 +31,6 @@ public interface CouponRepository extends JpaRepository<Coupons, Long> {
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("SELECT c FROM Coupons c WHERE c.id = :couponId")
 	Optional<Coupons> findByIdForUpdate(@Param("couponId") Long couponId);
+
+	List<Coupons> findByStoreId(Long storeId);
 }

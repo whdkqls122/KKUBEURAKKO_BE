@@ -2,6 +2,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.coupons.service;
 
 import java.util.List;
 
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.AdminCouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto;
@@ -22,4 +23,7 @@ public interface CouponService {
 
 	//가게측 쿠폰 발행
 	void createCoupon(Long storeId, CouponCreateRequest request);
+
+	//가게측 쿠폰 전체 조회
+	List<AdminCouponResponseDto> getCouponsByStore(Long storeId);
 }
