@@ -68,13 +68,19 @@ public class Stores extends BaseEntity {
 	private List<DeliveryRegion> deliveryRegionList = new ArrayList<>();
 
 	public void updateBasicInfo(
-		int minOrderPrice,
-		int deliveryAvgTime,
-		int packagingAvgTime
+		Integer minOrderPrice,
+		Integer deliveryAvgTime,
+		Integer packagingAvgTime
 	) {
-		this.minOrderPrice = minOrderPrice;
-		this.deliveryAvgTime = deliveryAvgTime;
-		this.packagingAvgTime = packagingAvgTime;
+		if (minOrderPrice != null) {
+			this.minOrderPrice = minOrderPrice;
+		}
+		if (deliveryAvgTime != null) {
+			this.deliveryAvgTime = deliveryAvgTime;
+		}
+		if (packagingAvgTime != null) {
+			this.packagingAvgTime = packagingAvgTime;
+		}
 	}
 
 	public void setOpen(boolean isOpen) {

@@ -80,12 +80,22 @@ public class StoreBusinessHoursServiceImpl implements StoreBusinessHoursService 
 		}
 	}
 
+	private void validateBreakTime(BusinessTimeDto dto) {
+		if (dto.hasBreakTime()) {
+			if (dto.breakStartTime() == null || dto.breakEndTime() == null) {
+				throw new IllegalArgumentException("브레이크 시간이 설정되지 않았습니다.");
+			}
+		}
+	}
+
 	private StoreBusinessHours createEntity(
 		Stores store,
 		OperationType type,
 		BusinessDay day,
 		BusinessTimeDto dto
 	) {
+		validateBreakTime(dto);
+
 		return StoreBusinessHours.builder()
 			.store(store)
 			.operationType(type)
@@ -109,5 +119,6 @@ public class StoreBusinessHoursServiceImpl implements StoreBusinessHoursService 
 			.breakEndTime(entity.getBreakEndTime())
 			.build();
 	}
+
 
 }

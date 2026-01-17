@@ -4,9 +4,8 @@ import lombok.Builder;
 
 @Builder
 public record StoreUpdateRequest(
-
-	int minOrderPrice,
-	int deliveryAvgTime,
-	int packagingAvgTime
+	Integer minOrderPrice,
+	Integer deliveryAvgTime,
+	Integer packagingAvgTime
 ) {
 }
