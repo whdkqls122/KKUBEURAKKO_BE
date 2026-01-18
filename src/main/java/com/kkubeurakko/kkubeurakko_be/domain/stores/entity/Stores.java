@@ -67,6 +67,9 @@ public class Stores extends BaseEntity {
 	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<DeliveryRegion> deliveryRegionList = new ArrayList<>();
 
+	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<StoreHoliday> storeHolidayList = new ArrayList<>();
+
 	public void updateBasicInfo(
 		Integer minOrderPrice,
 		Integer deliveryAvgTime,
