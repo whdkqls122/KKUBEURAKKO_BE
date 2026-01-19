@@ -186,7 +186,7 @@ public class OrderServiceImpl implements OrderService {
 			.toList();
 
 		String address =
-			order.getAddressSnapshot().getAddressName()
+			order.getAddressSnapshot().getRoadName()
 				+ " "
 				+ aesUtil.decryptFromBase64(order.getAddressSnapshot().getDetailAddress());
 
