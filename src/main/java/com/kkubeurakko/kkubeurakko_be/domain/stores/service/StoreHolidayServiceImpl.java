@@ -1,12 +1,11 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreHolidayCreateRequest;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreHolidayResponse;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.OnceHolidayCreateRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.WeeklyHolidayCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.HolidayType;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreHoliday;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
@@ -25,16 +24,25 @@ public class StoreHolidayServiceImpl implements StoreHolidayService {
 	private final StoreHolidayRepository holidayRepository;
 
 	@Override
-	public void createHoliday(Long storeId, StoreHolidayCreateRequest request) {
-		Stores store = storeRepository.findById(storeId)
-			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
-
-		validate(request);
+	public void createOnceHoliday(Long storeId, OnceHolidayCreateRequest request) {
+		Stores store = findStore(storeId);
 
 		StoreHoliday holiday = StoreHoliday.builder()
 			.store(store)
-			.holidayType(request.holidayType())
+			.holidayType(HolidayType.ONCE)
 			.holidayDate(request.holidayDate())
+			.build();
+
+		holidayRepository.save(holiday);
+	}
+
+	@Override
+	public void createWeeklyHoliday(Long storeId, WeeklyHolidayCreateRequest request) {
+		Stores store = findStore(storeId);
+
+		StoreHoliday holiday = StoreHoliday.builder()
+			.store(store)
+			.holidayType(HolidayType.WEEKLY)
 			.dayOfWeek(request.dayOfWeek())
 			.build();
 
@@ -42,37 +50,19 @@ public class StoreHolidayServiceImpl implements StoreHolidayService {
 	}
 
 	@Override
-	public List<StoreHolidayResponse> getHolidays(Long storeId) {
-		return holidayRepository.findByStoreId(storeId).stream()
-			.map(this::toResponse)
-			.toList();
-	}
-
-	@Override
 	public boolean isHoliday(Long storeId, LocalDate date) {
 		return holidayRepository.findByStoreId(storeId).stream()
-			.anyMatch(holiday ->
-				(holiday.getHolidayType() == HolidayType.ONCE &&
-					date.equals(holiday.getHolidayDate())) ||
-					(holiday.getHolidayType() == HolidayType.WEEKLY &&
-						date.getDayOfWeek() == holiday.getDayOfWeek())
+			.anyMatch(h ->
+				(h.getHolidayType() == HolidayType.ONCE &&
+					date.equals(h.getHolidayDate())) ||
+					(h.getHolidayType() == HolidayType.WEEKLY &&
+						date.getDayOfWeek() == h.getDayOfWeek())
 			);
 	}
 
-	private void validate(StoreHolidayCreateRequest request) {
-		if (request.holidayType() == HolidayType.ONCE && request.holidayDate() == null) {
-			throw new IllegalArgumentException("단일 휴무는 날짜가 필요합니다.");
-		}
-		if (request.holidayType() == HolidayType.WEEKLY && request.dayOfWeek() == null) {
-			throw new IllegalArgumentException("반복 휴무는 요일이 필요합니다.");
-		}
+	private Stores findStore(Long storeId) {
+		return storeRepository.findById(storeId)
+			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
 	}
-
-	private StoreHolidayResponse toResponse(StoreHoliday entity) {
-		return StoreHolidayResponse.builder()
-			.holidayType(entity.getHolidayType())
-			.holidayDate(entity.getHolidayDate())
-			.dayOfWeek(entity.getDayOfWeek())
-			.build();
-	}
+	
 }

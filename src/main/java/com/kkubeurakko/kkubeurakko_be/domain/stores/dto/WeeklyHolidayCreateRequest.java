@@ -1,16 +1,14 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.dto;
 
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.HolidayType;
 
-import lombok.Builder;
+import jakarta.validation.constraints.NotNull;
 
-@Builder
-public record StoreHolidayResponse(
-	HolidayType holidayType,
-	LocalDate holidayDate,
+public record WeeklyHolidayCreateRequest(
+	@NotNull HolidayType holidayType,
+	@NotNull(message = "요일은 필수입니다.")
 	DayOfWeek dayOfWeek
 ) {
 }
