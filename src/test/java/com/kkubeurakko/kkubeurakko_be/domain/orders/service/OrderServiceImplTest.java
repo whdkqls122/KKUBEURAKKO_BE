@@ -111,7 +111,7 @@ class OrderServiceImplTest {
 		when(userService.getUser("user1")).thenReturn(user);
 		when(orderRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(order));
 		when(aesUtil.decryptFromBase64("암호화된 전화번호")).thenReturn("010-8337-6023");
-
+		when(aesUtil.decryptFromBase64("암호화된 상세주소")).thenReturn("101동 1004호");
 		// when
 		OrderDetailResponseDto result = orderService.getOrderDetailHistory(1L, customUser);
 
