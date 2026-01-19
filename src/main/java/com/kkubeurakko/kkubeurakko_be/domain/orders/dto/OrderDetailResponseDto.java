@@ -18,7 +18,7 @@ public record OrderDetailResponseDto(
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
 	LocalDateTime orderDate,
 	int completionTime,
-	String address,
+	OrderAddressResponseDto address,
 	String phoneNum,
 	List<OrderMenuResponseDto> orderMenuList,
 	PaymentResponseDto payment
