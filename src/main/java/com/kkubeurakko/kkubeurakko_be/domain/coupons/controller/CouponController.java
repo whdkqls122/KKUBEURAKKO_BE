@@ -90,6 +90,10 @@ public class CouponController {
 		);
 	}
 
+	@Operation(
+		summary = "쿠폰 발행 API",
+		description = "가게측에서 쿠폰을 발행합니다."
+	)
 	@PostMapping("/{storeId}")
 	public ResponseEntity<ApiResponse<Void>> createCoupon(
 		@PathVariable Long storeId,
@@ -105,6 +109,10 @@ public class CouponController {
 		);
 	}
 
+	@Operation(
+		summary = "쿠폰 조회 API",
+		description = "가게측에서 쿠폰을 조회합니다."
+	)
 	@GetMapping("/{storeId}")
 	public ResponseEntity<ApiResponse<List<AdminCouponResponseDto>>> getCoupons(
 		@PathVariable Long storeId
