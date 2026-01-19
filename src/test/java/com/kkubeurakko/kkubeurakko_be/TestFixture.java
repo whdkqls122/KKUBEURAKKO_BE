@@ -231,7 +231,7 @@ public class TestFixture {
 			.addressSnapshot(OrderAddressSnapshot.builder()
 				.addressName("우리집")
 				.roadName("서울시 강남구 테헤란로")
-				.detailAddress("101동 1004호")
+				.detailAddress("암호화된 상세주소")
 				.requestContent("문앞에 두세요")
 				.entrancePassword("1234#")
 				.directionsInfo("엘리베이터 오른쪽")
