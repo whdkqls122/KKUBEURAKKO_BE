@@ -16,6 +16,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.cart.repository.CartRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderAddressResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderItemsOptionResponseDto;
@@ -184,13 +185,21 @@ public class OrderServiceImpl implements OrderService {
 			)
 			.toList();
 
+		String address =
+			order.getAddressSnapshot().getAddressName()
+				+ " "
+				+ aesUtil.decryptFromBase64(order.getAddressSnapshot().getDetailAddress());
+
 		return OrderDetailResponseDto.builder()
 			.id(order.getId())
 			.orderType(order.getOrderType())
 			.orderStatus(order.getStatus())
 			.orderDate(order.getOrderDate())
 			.completionTime(order.getCompletionTime())
-			// .address(order.getAddress()) 엔티티 변경으로 인해 임시 주석 처리
+			.address(OrderAddressResponseDto.builder()
+				.address(address)
+				.requestContent(order.getAddressSnapshot().getRequestContent())
+				.build())
 			.phoneNum(aesUtil.decryptFromBase64(order.getUser().getPhone()))
 			.orderMenuList(orderMenuList)
 			.payment(PaymentResponseDto.from(order.getPayments()))
