@@ -29,6 +29,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.exception.OrderCreateException;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.dto.PaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
@@ -61,6 +62,7 @@ public class OrderServiceImpl implements OrderService {
 	private final AesUtil aesUtil;
 	private final PortOneService portOneService;
 	private final ApplicationEventPublisher eventPublisher;
+	private final OrderNumberUtil orderNumberUtil;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -135,7 +137,8 @@ public class OrderServiceImpl implements OrderService {
 			int discountAmount = applyCouponIfNecessary(user.getUserNumber(), cart, request);
 			int totalAmount = calculateCartTotal(cart);
 
-			Orders order = request.toOrderEntity(user, address, totalAmount);
+			String orderNumber = orderNumberUtil.createOrderNumber(1L, request.orderType());
+			Orders order = request.toOrderEntity(user, address, totalAmount, orderNumber);
 			Orders savedOrder = orderRepository.save(order);
 
 			createOrderItems(order, cart);
