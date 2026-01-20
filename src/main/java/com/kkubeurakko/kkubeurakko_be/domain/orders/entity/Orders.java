@@ -41,6 +41,9 @@ public class Orders {
 	@Column(name = "orders_id")
 	private Long id;
 
+	@Column(name = "order_number")
+	private String orderNumber;
+
 	@Column(name = "total_amount", nullable = false)
 	private int totalAmount;
 
