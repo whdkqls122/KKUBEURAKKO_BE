@@ -10,10 +10,10 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
@@ -30,6 +30,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
@@ -64,10 +65,9 @@ class OrderServiceImplTest {
 	private SimpMessagingTemplate messagingTemplate;
 
 	@Mock
-	private PortOneService portOneService;
-
+	private OrderNumberUtil orderNumberUtil;
 	@Mock
-	private ApplicationEventPublisher eventPublisher;
+	private PortOneService portOneService;
 
 	@InjectMocks
 	private OrderServiceImpl orderService;
@@ -190,4 +190,61 @@ class OrderServiceImplTest {
 		assertThat(orderId).isEqualTo(10L);
 	}
 
+	@DisplayName("배달 주문 생성 시 주문번호가 정상적으로 생성된다")
+	@Test
+	void createOrder_withOrderNumber() {
+
+		// given
+		Users user = TestFixture.createUser("kakao_1234", "01012345678");
+		Cart cart = TestFixture.createCartWithOneItem(user);
+		Addresses address = TestFixture.createAddress(1L, user);
+
+		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
+		when(customOAuth2User.getName()).thenReturn("kakao_1234");
+
+		OrderCreateRequest request = new OrderCreateRequest(
+			1L,
+			"요청사항",
+			"배달메모",
+			OrderType.DELIVERY,
+			null,
+			"paymentid",
+			20000,
+			3000
+		);
+
+		when(userService.getUser("kakao_1234")).thenReturn(user);
+		when(cartRepository.findByUserNumber(user.getUserNumber()))
+			.thenReturn(Optional.of(cart));
+		when(addressRepository.findById(1L))
+			.thenReturn(Optional.of(address));
+
+		when(orderNumberUtil.createOrderNumber(
+			anyLong(),
+			eq(OrderType.DELIVERY)
+		)).thenReturn("A-1");
+
+		Orders savedOrder = Orders.builder().id(10L).build();
+
+		ArgumentCaptor<Orders> captor =
+			ArgumentCaptor.forClass(Orders.class);
+
+		when(orderRepository.save(captor.capture()))
+			.thenReturn(savedOrder);
+
+		when(portOneService.getPortOnePayment("paymentid"))
+			.thenReturn(
+				TestFixture.createPortOnePaymentResponse(
+					"paymentid", "tx-123", 20000
+				)
+			);
+
+		// when
+		Long orderId = orderService.createOrder(request, customOAuth2User);
+
+		// then
+		assertThat(orderId).isEqualTo(10L);
+		assertThat(captor.getValue().getOrderNumber())
+			.isEqualTo("A-1");
+	}
 }
