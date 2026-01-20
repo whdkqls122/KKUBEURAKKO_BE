@@ -1,5 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -61,6 +63,37 @@ public class StoreBusinessHoursServiceImpl implements StoreBusinessHoursService 
 			.toList();
 	}
 
+	//영업 시간이 대부분 익일 새벽에 끝나는 이유로 해당 부분 계산
+	@Override
+	public LocalDate resolveBusinessDate(Long storeId) {
+
+		LocalDateTime now = LocalDateTime.now();
+		LocalDate today = now.toLocalDate();
+		LocalDate yesterday = today.minusDays(1);
+
+		// 오늘 영업시간 조회
+		StoreBusinessHours todayHours = findHours(storeId, today);
+		LocalDateTime todayClose = buildCloseDateTime(todayHours, today);
+
+		// 아직 오늘 영업이 끝나지 않았다면 → 오늘 영업일
+		if (now.isBefore(todayClose)) {
+			return today;
+		}
+
+		// 어제 영업시간
+		StoreBusinessHours yesterdayHours = findHours(storeId, yesterday);
+		LocalDateTime yesterdayClose =
+			buildCloseDateTime(yesterdayHours, yesterday);
+
+		// 어제 영업이 아직 끝나지 않았으면 → 어제 영업일
+		if (now.isBefore(yesterdayClose)) {
+			return yesterday;
+		}
+
+		// 그 외 → 오늘 영업일
+		return today;
+	}
+
 	private void saveSameTime(Stores store, BusinessTimeDto dto) {
 		for (BusinessDay day : BusinessDay.values()) {
 			if (day == BusinessDay.ALLDAY)
@@ -111,5 +144,34 @@ public class StoreBusinessHoursServiceImpl implements StoreBusinessHoursService 
 			.build();
 	}
 
+	private StoreBusinessHours findHours(Long storeId, LocalDate date) {
+
+		BusinessDay day = BusinessDay.from(date.getDayOfWeek());
+		List<StoreBusinessHours> hours =
+			businessHoursRepository.findByStoreId(storeId);
+
+		if (hours.isEmpty()) {
+			throw new IllegalStateException("영업 시간이 설정되지 않았습니다.");
+		}
+		if (hours.get(0).getOperationType() == OperationType.SAME) {
+			return hours.get(0);
+		}
+
+		return hours.stream()
+			.filter(h -> h.getDayOfWeek() == day)
+			.findFirst()
+			.orElseThrow(() -> new IllegalStateException("해당 요일 영업 시간이 없습니다."));
+	}
+
+	private LocalDateTime buildCloseDateTime(
+		StoreBusinessHours h,
+		LocalDate baseDate
+	) {
+		// 새벽 마감 (open > close) 고려
+		if (h.getCloseTime().isBefore(h.getOpenTime())) {
+			return LocalDateTime.of(baseDate.plusDays(1), h.getCloseTime());
+		}
+		return LocalDateTime.of(baseDate, h.getCloseTime());
+	}
 
 }
