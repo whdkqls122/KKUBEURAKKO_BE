@@ -13,6 +13,7 @@ import lombok.Builder;
 @Builder
 public record OrderDetailResponseDto(
 	Long id,
+	String orderNumber,
 	OrderType orderType,
 	Status orderStatus,
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")

@@ -11,6 +11,7 @@ import lombok.Builder;
 @Builder
 public record OrderResponseDto(
 	Long id,
+	String orderNumber,
 	String name,
 	int orderQuantity,
 	OrderType orderType,

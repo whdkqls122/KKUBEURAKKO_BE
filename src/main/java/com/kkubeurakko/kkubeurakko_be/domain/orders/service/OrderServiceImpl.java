@@ -96,6 +96,7 @@ public class OrderServiceImpl implements OrderService {
 
 				return OrderResponseDto.builder()
 					.id(ol.getId())
+					.orderNumber(ol.getOrderNumber())
 					.name(mainMenuName)
 					.orderDate(ol.getOrderDate())
 					.orderQuantity(ol.getOrderItemList().stream().mapToInt(OrderItems::getQuantity).sum())
@@ -195,6 +196,7 @@ public class OrderServiceImpl implements OrderService {
 
 		return OrderDetailResponseDto.builder()
 			.id(order.getId())
+			.orderNumber(order.getOrderNumber())
 			.orderType(order.getOrderType())
 			.orderStatus(order.getStatus())
 			.orderDate(order.getOrderDate())
