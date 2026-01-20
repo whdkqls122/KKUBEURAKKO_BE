@@ -42,7 +42,7 @@ public record OrderCreateRequest(
 	@PositiveOrZero(message = "할인 금액은 0 이상이어야 합니다.")
 	int discountAmount
 ) {
-	public Orders toOrderEntity(Users user, Addresses address, int totalAmount) {
+	public Orders toOrderEntity(Users user, Addresses address, int totalAmount, String orderNumber) {
 
 		OrderAddressSnapshot snapshot = null;
 		if (address != null) {
@@ -65,6 +65,7 @@ public record OrderCreateRequest(
 			.completionTime(0)
 			.totalAmount(totalAmount)
 			.addressSnapshot(snapshot)
+			.orderNumber(orderNumber)
 			.build();
 	}
 }
