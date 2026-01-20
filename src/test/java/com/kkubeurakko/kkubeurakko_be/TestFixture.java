@@ -223,6 +223,7 @@ public class TestFixture {
 		Orders order = Orders.builder()
 			.id(id)
 			.user(user)
+			.orderNumber("A-1")
 			.orderItemList(new ArrayList<>())
 			.orderType(OrderType.DELIVERY)
 			.status(Status.COMPLETED)
