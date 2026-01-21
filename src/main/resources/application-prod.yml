@@ -19,6 +19,7 @@ spring:
         format_sql: true
         hibernate.default_batch_fetch_size: 100
     defer-datasource-initialization: true
+    database-platform: org.hibernate.dialect.MySQLDialect
 
   data:
     redis:
