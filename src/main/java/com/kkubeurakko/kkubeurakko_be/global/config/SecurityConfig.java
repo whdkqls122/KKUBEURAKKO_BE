@@ -48,7 +48,7 @@ public class SecurityConfig {
 				configuration.setAllowedOrigins(Arrays.asList(
 					"http://localhost:5173",
 					"https://www.kkubeurakko-anyang.shop",
-					"http://www.kkubeurakko-anyang.shop"
+					"https://admin.kkubeurakko-anyang.shop"
 				));
 				configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 				configuration.setAllowCredentials(true);
@@ -92,7 +92,8 @@ public class SecurityConfig {
 					"/webjars/**",
 					"/v1/admin/login",
 					"/v1/menu/**",
-					"/v1/reissue"
+					"/v1/reissue",
+					"/actuator/health"
 				).permitAll()
 				.anyRequest().authenticated()
 			)
