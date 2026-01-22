@@ -72,9 +72,9 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 
 		response.addHeader("Set-Cookie", createCookie(refresh).toString());
 
-		String redirectUrl = "http://localhost:5173/home?success=" + true + "&firstLogin=" + firstLogin;
+		// String redirectUrl = "http://localhost:5173/home?success=" + true + "&firstLogin=" + firstLogin;
 		//실사용 url
-		// String redirectUrl = "https://www.kkubeurakko-anyang.shop/home?success=" + true + "&firstLogin=" + firstLogin;
+		String redirectUrl = "https://www.kkubeurakko-anyang.shop/home?success=" + true + "&firstLogin=" + firstLogin;
 		log.info("로그인 성공");
 		response.sendRedirect(redirectUrl);
 	}
