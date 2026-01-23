@@ -80,7 +80,7 @@ jobs:
             -e GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
             -e GOOGLE_REDIRECT_URI="${{ secrets.GOOGLE_REDIRECT_URI }}" \
             -e AES_SECRET="${{ secrets.AES_SECRET }}" \
-            -e PORT_ONE_REQUEST_URL="${{ secrets.AES_SECRET }}" \
+            -e PORT_ONE_REQUEST_URL="${{ secrets.PORT_ONE_REQUEST_URL }}" \
             -e PORT_ONE_STORE_ID="${{ secrets.PORT_ONE_STORE_ID }}" \
             -e PORT_ONE_SECRET="${{ secrets.PORT_ONE_SECRET }}" \
             -e PORT_ONE_PAYMENT_CHANNEL_KEY="${{ secrets.PORT_ONE_PAYMENT_CHANNEL_KEY }}" \
