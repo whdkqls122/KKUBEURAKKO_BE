@@ -25,11 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PortOneServiceImpl implements PortOneService {
 	private final RestTemplate restTemplate;
-	@Value("${spring.portone.store-id}")
+	@Value("${spring.portOne.store-id}")
 	private String storeId;
-	@Value("${spring.portone.request-uri}")
+	@Value("${spring.portOne.request-uri}")
 	private String requestUri;
-	@Value("${spring.portone.secret-key}")
+	@Value("${spring.portOne.secret-key}")
 	private String secretKey;
 
 	@Override
