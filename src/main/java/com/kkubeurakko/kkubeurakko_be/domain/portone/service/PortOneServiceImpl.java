@@ -64,6 +64,7 @@ public class PortOneServiceImpl implements PortOneService {
 	public PortOneVerifyInfoResponseDto getPortOneVerifyInfo(String identityVerificationId) {
 		try {
 			String url = requestUri + "/identity-verifications/" + identityVerificationId;
+			log.info(url);
 			HttpHeaders headers = new HttpHeaders();
 			headers.set("Authorization", "PortOne " + secretKey);
 			headers.setContentType(MediaType.APPLICATION_JSON);
@@ -82,6 +83,7 @@ public class PortOneServiceImpl implements PortOneService {
 			throw new PortOneVerifyException("PortOne 사용자 정보 조회 실패: 다시 요청 부탁드립니다.", e);
 		} catch (Exception e) {
 			log.error("PortOne 결제 조회 중 예외", e);
+			log.error(e.getMessage());
 			throw new PortOneVerifyException("PortOne 사용자 정보 조회 실패: 다시 요청 부탁드립니다.", e);
 		}
 	}
