@@ -64,21 +64,15 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 				: null;
 
 		saveOAuthToken(provider, userNumber, providerAccessToken, providerRefreshToken);
-		boolean firstLogin = customUserDetails.getUserDto().isFirstLogin();
-
-		String refresh = jwtUtil.createRefreshToken(userNumber, role, refreshTokenExpiry);
-
-		saveRefreshToken(userNumber, refresh);
-
-		response.addHeader("Set-Cookie", createCookie(refresh).toString());
 		String redirectUrl;
-
+		
+		boolean firstLogin = customUserDetails.getUserDto().isFirstLogin();
 		if (firstLogin) {
 			//redirectUrl = "http://localhost:5173/verify/agreement?success=" + true;
-			redirectUrl = "https://www.kkubeurakko-anyang.shop/verify/agreement?success=" + true;
+			redirectUrl = "https://www.kkubeurakko-anyang.shop/verify/agreement";
 		} else {
 			//redirectUrl = "http://localhost:5173/home?success=" + true;
-			redirectUrl = "https://www.kkubeurakko-anyang.shop/home?success=" + true;
+			redirectUrl = "https://www.kkubeurakko-anyang.shop/home?success=";
 		}
 		log.info("로그인 성공");
 		response.sendRedirect(redirectUrl);
