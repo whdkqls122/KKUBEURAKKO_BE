@@ -214,6 +214,7 @@ public class OrderServiceImpl implements OrderService {
 				.address(address)
 				.requestContent(requestContent)
 				.build())
+			.storeRequest(order.getStoreRequest())
 			.phoneNum(aesUtil.decryptFromBase64(order.getUser().getPhone()))
 			.orderMenuList(orderMenuList)
 			.payment(PaymentResponseDto.from(order.getPayments()))

@@ -20,6 +20,7 @@ public record OrderDetailResponseDto(
 	LocalDateTime orderDate,
 	int completionTime,
 	OrderAddressResponseDto address,
+	String storeRequest,
 	String phoneNum,
 	List<OrderMenuResponseDto> orderMenuList,
 	PaymentResponseDto payment
