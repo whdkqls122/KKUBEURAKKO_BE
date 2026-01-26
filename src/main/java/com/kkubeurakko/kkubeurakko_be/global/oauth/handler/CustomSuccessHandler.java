@@ -71,10 +71,15 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 		saveRefreshToken(userNumber, refresh);
 
 		response.addHeader("Set-Cookie", createCookie(refresh).toString());
+		String redirectUrl;
 
-		// String redirectUrl = "http://localhost:5173/home?success=" + true + "&firstLogin=" + firstLogin;
-		//실사용 url
-		String redirectUrl = "https://www.kkubeurakko-anyang.shop/home?success=" + true + "&firstLogin=" + firstLogin;
+		if (firstLogin) {
+			//redirectUrl = "http://localhost:5173/verify/agreement?success=" + true;
+			redirectUrl = "https://www.kkubeurakko-anyang.shop/verify/agreement?success=" + true;
+		} else {
+			//redirectUrl = "http://localhost:5173/home?success=" + true;
+			redirectUrl = "https://www.kkubeurakko-anyang.shop/home?success=" + true;
+		}
 		log.info("로그인 성공");
 		response.sendRedirect(redirectUrl);
 	}
