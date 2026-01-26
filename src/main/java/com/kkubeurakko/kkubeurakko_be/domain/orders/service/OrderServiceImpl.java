@@ -189,10 +189,17 @@ public class OrderServiceImpl implements OrderService {
 			)
 			.toList();
 
-		String address =
-			order.getAddressSnapshot().getRoadName()
-				+ " "
-				+ aesUtil.decryptFromBase64(order.getAddressSnapshot().getDetailAddress());
+		String address = null;
+		String requestContent = null;
+
+		if (order.getOrderType() == OrderType.DELIVERY && order.getAddressSnapshot() != null) {
+			address =
+				order.getAddressSnapshot().getRoadName()
+					+ " "
+					+ aesUtil.decryptFromBase64(order.getAddressSnapshot().getDetailAddress());
+
+			requestContent = order.getAddressSnapshot().getRequestContent();
+		}
 
 		return OrderDetailResponseDto.builder()
 			.id(order.getId())
@@ -201,9 +208,11 @@ public class OrderServiceImpl implements OrderService {
 			.orderStatus(order.getStatus())
 			.orderDate(order.getOrderDate())
 			.completionTime(order.getCompletionTime())
-			.address(OrderAddressResponseDto.builder()
+			.address(address == null
+				? null
+				: OrderAddressResponseDto.builder()
 				.address(address)
-				.requestContent(order.getAddressSnapshot().getRequestContent())
+				.requestContent(requestContent)
 				.build())
 			.phoneNum(aesUtil.decryptFromBase64(order.getUser().getPhone()))
 			.orderMenuList(orderMenuList)
