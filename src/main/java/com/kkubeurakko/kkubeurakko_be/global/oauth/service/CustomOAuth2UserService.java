@@ -28,7 +28,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 	private final UserRepository userRepository;
 	private final OAuth2ProviderResolver oAuth2ProviderResolver;
-	private final RedisTemplate<String, TempUserDto> redisTemplate;
+	private final RedisTemplate<String, Object> redisTemplate;
 
 	private static final String TEMP_USER_KEY_PREFIX = "TEMP_USER:";
 
