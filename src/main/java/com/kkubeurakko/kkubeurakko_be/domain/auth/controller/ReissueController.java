@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kkubeurakko.kkubeurakko_be.domain.auth.service.ReissueService;
+import com.kkubeurakko.kkubeurakko_be.domain.auth.service.TokenService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/v1")
 @Tag(name = "Reissue API", description = "AccessToken 재발급 API")
 public class ReissueController {
-	private final ReissueService reissueService;
+	private final TokenService tokenService;
 
 	@Operation(
 		summary = "AccessToken 재발급",
@@ -27,7 +27,7 @@ public class ReissueController {
 	)
 	@GetMapping("/reissue")
 	public ResponseEntity<ApiResponse<Void>> reissue(HttpServletRequest request) {
-		String newAccessToken = reissueService.reissue(request);
+		String newAccessToken = tokenService.reissue(request);
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Authorization", newAccessToken);
 		return ResponseEntity.ok()
