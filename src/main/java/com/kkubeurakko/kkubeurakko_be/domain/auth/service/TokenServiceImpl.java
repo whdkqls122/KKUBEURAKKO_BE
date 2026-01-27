@@ -8,6 +8,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
+import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
+import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.entity.RefreshToken;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenRepository;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
@@ -24,10 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 public class TokenServiceImpl implements TokenService {
 	private final JwtUtil jwtUtil;
 	private final RefreshTokenRepository refreshTokenRepository;
+	private final UserService userService;
+
 	@Value("${spring.jwt.access-token-expiry}")
 	private long accessTokenExpiry;
 	@Value("${spring.jwt.refresh-token-expiry}")
 	private long refreshTokenExpiry;
+	@Value("${spring.jwt.temp-token-expiry}")
+	private long tempTokenExpiry;
 
 	@Override
 	public String reissue(HttpServletRequest request) {
@@ -47,11 +53,54 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
+	public String createToken(
+		HttpServletRequest request,
+		HttpServletResponse response
+	) {
+		String tempToken = getTempToken(request);
+		removeTempCookie(response);
+
+		String userNumber = jwtUtil.getUserNumber(tempToken);
+		Users user = userService.getUser(userNumber);
+
+		String access = jwtUtil.createAccessToken(
+			user.getUserNumber(),
+			user.getRole().toString(),
+			accessTokenExpiry
+		);
+		String refresh = jwtUtil.createRefreshToken(
+			user.getUserNumber(),
+			user.getRole().toString(),
+			refreshTokenExpiry
+		);
+		saveRefreshToken(userNumber, refresh);
+		response.addHeader(HttpHeaders.SET_COOKIE, createCookie(refresh).toString());
+		return access;
+	}
+
+	@Override
 	public void createRefreshToken(HttpServletResponse response, String userNumber) {
 		String refresh = jwtUtil.createRefreshToken(userNumber, UserRole.CUSTOMER.toString(), refreshTokenExpiry);
 
 		saveRefreshToken(userNumber, refresh);
 		response.addHeader(HttpHeaders.SET_COOKIE, createCookie(refresh).toString());
+	}
+
+	@Override
+	public String getTempToken(HttpServletRequest request) {
+		return getTempTokenFromCookies(request);
+	}
+
+	@Override
+	public void removeTempToken(HttpServletResponse response) {
+		removeTempCookie(response);
+	}
+
+	@Override
+	public void createTempToken(HttpServletResponse response, String userNumber) {
+		String tempToken = jwtUtil.createAccessToken(userNumber, UserRole.TEMP.toString(), tempTokenExpiry);
+
+		response.addHeader(HttpHeaders.SET_COOKIE, createTempCookie(tempToken).toString());
 	}
 
 	private String getRefreshTokenFromCookies(HttpServletRequest request) {
@@ -69,17 +118,45 @@ public class TokenServiceImpl implements TokenService {
 		throw new BadCredentialsException("refreshToken이 없습니다.");
 	}
 
+	private String getTempTokenFromCookies(HttpServletRequest request) {
+		Cookie[] cookies = request.getCookies();
+		if (cookies == null) {
+			log.error("쿠키가 없음");
+			throw new AuthenticationCredentialsNotFoundException("쿠키가 없습니다.");
+		}
+		for (Cookie cookie : cookies) {
+			if ("temp".equals(cookie.getName())) {
+				return cookie.getValue();
+			}
+		}
+		log.error("temp 이름의 쿠키가 없음");
+		throw new BadCredentialsException("refreshToken이 없습니다.");
+	}
+
 	private void isExistRefreshToken(String refreshToken, String userNumber) {
 		RefreshToken findRefreshToken = refreshTokenRepository.findByUserNumber(userNumber);
 		if (findRefreshToken == null || !refreshToken.equals(findRefreshToken.getRefresh())) {
 			log.error("저장된 refreshToken과 불일치");
-			throw new RuntimeException();  // 로그아웃 요청을 보내도록 -> 재로그인 요청하도록(공통 예외처리 구현 이후 수정 예정)
+			throw new BadCredentialsException(
+				"저장된 refreshToken과 일치하지 않습니다."
+			);  // 로그아웃 요청을 보내도록 -> 재로그인 요청하도록(공통 예외처리 구현 이후 수정 예정)
 		}
 	}
 
 	private ResponseCookie createCookie(String value) {
 		return ResponseCookie.from("refresh", value)
 			.maxAge(refreshTokenExpiry / 1000)
+			.secure(true)
+			// .httpOnly(true)
+			.sameSite("None")
+			.path("/")
+			// .domain(".kkubeurakko-anyang.shop")
+			.build();
+	}
+
+	private ResponseCookie createTempCookie(String value) {
+		return ResponseCookie.from("temp", value)
+			.maxAge(tempTokenExpiry / 1000)
 			.secure(true)
 			// .httpOnly(true)
 			.sameSite("None")
@@ -96,5 +173,18 @@ public class TokenServiceImpl implements TokenService {
 			.build();
 
 		refreshTokenRepository.save(refreshToken);
+	}
+
+	private void removeTempCookie(HttpServletResponse response) {
+		ResponseCookie responseCookie = ResponseCookie.from("temp", null)
+			.maxAge(0)
+			.secure(true)
+			// .httpOnly(true)
+			.sameSite("None")
+			.path("/")
+			// .domain(".kkubeurakko-anyang.shop")
+			.build();
+
+		response.setHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
 	}
 }

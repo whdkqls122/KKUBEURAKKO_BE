@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.TokenService;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenRepository;
-import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class CustomSuccessHandler implements AuthenticationSuccessHandler {
-	private final JwtUtil jwtUtil;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final OAuth2AuthorizedClientService authorizedClientService;
 	private final RedisTemplate<String, String> redisTemplate;
@@ -65,6 +63,7 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 
 		boolean firstLogin = customUserDetails.getUserDto().isFirstLogin();
 		if (firstLogin) {
+			tokenService.createTempToken(response, userNumber);
 			redirectUrl = "http://localhost:5173/verify/agreement";
 			// redirectUrl = "https://www.kkubeurakko-anyang.shop/verify/agreement";
 		} else {
