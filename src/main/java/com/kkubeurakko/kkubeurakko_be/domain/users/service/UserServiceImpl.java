@@ -10,7 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUserDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserInfoResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.DuplicatePhoneException;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.PhoneHashingException;
@@ -30,8 +32,7 @@ public class UserServiceImpl implements UserService {
 	private final UserRepository userRepository;
 
 	@Override
-	@Transactional
-	public void saveUserPhone(Users user, PortOneVerifyInfoResponseDto responseDto) {
+	public void createUser(TempUserDto tempUserDto, PortOneVerifyInfoResponseDto responseDto) {
 		if (!"VERIFIED".equals(responseDto.status())) {
 			throw new IllegalStateException("본인인증 실패");
 		}
@@ -42,7 +43,17 @@ public class UserServiceImpl implements UserService {
 				log.error("중복된 사용자 전화 번호");
 				throw new IllegalStateException();
 			}
-			user.updateUsersPhone(phoneHash, aesUtil.encryptToBase64(phone));
+			Users user = Users.builder()
+				.userNumber(tempUserDto.userNumber())
+				.email(tempUserDto.email())
+				.nickname(tempUserDto.nickname())
+				.role(UserRole.CUSTOMER)
+				.phone(aesUtil.encryptToBase64(phone))
+				.phoneHash(phoneHash)
+				.build();
+
+			userRepository.save(user);
+			
 		} catch (IllegalStateException e) {
 			throw new DuplicatePhoneException("이미 가입된 계정이 존재합니다.", e);
 		}

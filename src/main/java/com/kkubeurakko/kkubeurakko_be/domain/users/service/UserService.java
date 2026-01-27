@@ -1,12 +1,13 @@
 package com.kkubeurakko.kkubeurakko_be.domain.users.service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUserDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 public interface UserService {
-	void saveUserPhone(Users user, PortOneVerifyInfoResponseDto responseDto);
+	void createUser(TempUserDto tempUserDto, PortOneVerifyInfoResponseDto responseDto);
 
 	Users getUser(String userNumber);
 

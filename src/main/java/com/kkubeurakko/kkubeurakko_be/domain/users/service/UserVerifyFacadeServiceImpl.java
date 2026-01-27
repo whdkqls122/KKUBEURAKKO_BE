@@ -1,13 +1,15 @@
 package com.kkubeurakko.kkubeurakko_be.domain.users.service;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import com.kkubeurakko.kkubeurakko_be.domain.auth.service.LogoutService;
+import com.kkubeurakko.kkubeurakko_be.domain.auth.service.TokenService;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUserDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
-import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.UserVerifyException;
+import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.exception.OAUthUnlinkException;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.service.OAuthUnlinkService;
@@ -24,25 +26,37 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 	private final PortOneService portOneService;
 	private final UserService userService;
 	private final OAuthUnlinkService oAuthUnlinkService;
-	private final LogoutService logoutService;
+	private final TokenService tokenService;
+	private final RedisTemplate<String, Object> redisTemplate;
+	private final JwtUtil jwtUtil;
+	private static final String TEMP_USER_PREFIX_KEY = "TEMP_USER:";
 
 	@Override
-	public void verifyAndSavePhone(UserVerifyRequestDto userVerifyRequestDto, CustomOAuth2User customOAuth2User) {
-		Users user = userService.getUser(customOAuth2User.getName());
+	public void verifyAndSaveUser(
+		UserVerifyRequestDto userVerifyRequestDto,
+		HttpServletRequest request,
+		HttpServletResponse response
+	) {
+		String tempToken = tokenService.getTempToken(request);
+		TempUserDto tempUserDto = (TempUserDto)redisTemplate.opsForValue()
+			.get(TEMP_USER_PREFIX_KEY + jwtUtil.getUserNumber(tempToken));
 		try {
 			PortOneVerifyInfoResponseDto responseDto =
 				portOneService.getPortOneVerifyInfo(userVerifyRequestDto.identityVerificationId());
 
-			userService.saveUserPhone(user, responseDto);
+			userService.createUser(tempUserDto, responseDto);
+
 		} catch (Exception e) {
-			userService.deleteUser(user);
 			try {
-				oAuthUnlinkService.revokeOAuthAccount(user.getUserNumber());
+				tokenService.removeTempToken(response);
+				oAuthUnlinkService.revokeOAuthAccount(tempUserDto.userNumber());
 			} catch (Exception ex) {
 				log.error("OAuth unlink 실패", ex);
 			}
 
 			throw new UserVerifyException(e.getMessage(), e);
+		} finally {
+			redisTemplate.delete(TEMP_USER_PREFIX_KEY + jwtUtil.getUserNumber(tempToken));
 		}
 	}
 
@@ -52,15 +66,15 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 		HttpServletRequest request,
 		HttpServletResponse response
 	) {
-		Users user = userService.getUser(customOAuth2User.getName());
+		TempUserDto tempUserDto = (TempUserDto)redisTemplate.opsForValue()
+			.get(TEMP_USER_PREFIX_KEY + customOAuth2User.getName());
 
 		try {
-			oAuthUnlinkService.revokeOAuthAccount(user.getUserNumber());
-			logoutService.forceLogout(customOAuth2User, request, response);
+			oAuthUnlinkService.revokeOAuthAccount(tempUserDto.userNumber());
 		} catch (Exception e) {
 			log.error("OAuth unlink 실패");
 			throw new OAUthUnlinkException("탈퇴 중 오류 발생, 가게에 문의 부탁드립니다.", e);
 		}
-		userService.deleteUser(user);
+		redisTemplate.delete(TEMP_USER_PREFIX_KEY + customOAuth2User.getName());
 	}
 }
