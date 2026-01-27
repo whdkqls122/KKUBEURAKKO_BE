@@ -1,14 +1,16 @@
 package com.kkubeurakko.kkubeurakko_be.domain.users.controller;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kkubeurakko.kkubeurakko_be.domain.auth.service.TokenService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
@@ -29,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 	private final UserService userService;
 	private final UserVerifyFacadeService userVerifyFacadeService;
+	private final TokenService tokenService;
 
 	@Operation(
 		summary = "사용자 정보 조회 API",
@@ -50,16 +53,16 @@ public class UserController {
 	}
 
 	@Operation(
-		summary = "사용자 인증 정보 조회 후 휴대폰 번호 저장 API",
-		description = "사용자 인증 정보 ID값을 받아 조회 후 휴대폰 번호를 저장합니다."
+		summary = "사용자 인증 정보 조회 후 사용자 정보 API",
+		description = "사용자 인증 정보 ID값을 받아 조회 후 사용자 정보를 저장합니다."
 	)
-	@PutMapping("/verify-phone")
-	public ResponseEntity<ApiResponse<Void>> updateUserPhone(
+	@PostMapping("/verify-phone")
+	public ResponseEntity<ApiResponse<Void>> verifyAndSaveUser(
 		@RequestBody UserVerifyRequestDto userVerifyRequestDto,
-		@AuthenticationPrincipal
-		CustomOAuth2User customOAuth2User
+		HttpServletRequest request,
+		HttpServletResponse response
 	) {
-		userVerifyFacadeService.verifyAndSavePhone(userVerifyRequestDto, customOAuth2User);
+		userVerifyFacadeService.verifyAndSaveUser(userVerifyRequestDto, request, response);
 
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
@@ -67,6 +70,30 @@ public class UserController {
 				null
 			)
 		);
+	}
+
+	@Operation(
+		summary = "회원가입 완료 이후 토큰 발급 요청 API",
+		description = "회원가입 완료 이후 Access/Refresh 토큰 발급을 요청하는 API 입니다."
+	)
+	@GetMapping("/complete-signup")
+	public ResponseEntity<ApiResponse<Void>> completeSignup(
+		HttpServletRequest request,
+		HttpServletResponse response
+	) {
+		String accessToken = tokenService.createToken(request, response);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", accessToken);
+
+		return ResponseEntity.ok()
+			.headers(headers)
+			.body(
+				ApiResponse.success(
+					"토큰이 발급되었습니다.",
+					null
+				)
+			);
 	}
 
 	@Operation(
