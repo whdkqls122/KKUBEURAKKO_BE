@@ -66,11 +66,6 @@ public class Users extends BaseEntity {
 	@JoinColumn(name = "cart_id")
 	private Cart cart;
 
-	public void updateUsersPhone(String phoneHash, String phone) {
-		this.phoneHash = phoneHash;
-		this.phone = phone;
-	}
-
 	public void updateNickname(String nickname) {
 		this.nickname = nickname;
 	}
