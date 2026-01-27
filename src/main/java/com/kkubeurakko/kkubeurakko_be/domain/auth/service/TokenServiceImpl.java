@@ -38,7 +38,7 @@ public class TokenServiceImpl implements TokenService {
 	@Override
 	public String reissue(HttpServletRequest request) {
 		log.info("Accesstoken 재발급 시작");
-		String refreshToken = getRefreshTokenFromCookies(request);
+		String refreshToken = getTokenFromCookies(request, "refresh");
 		//토큰 유효성 검사
 		jwtUtil.validateToken(refreshToken);
 
@@ -88,7 +88,7 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public String getTempToken(HttpServletRequest request) {
-		return getTempTokenFromCookies(request);
+		return getTokenFromCookies(request, "temp");
 	}
 
 	@Override
@@ -103,34 +103,17 @@ public class TokenServiceImpl implements TokenService {
 		response.addHeader(HttpHeaders.SET_COOKIE, createTempCookie(tempToken).toString());
 	}
 
-	private String getRefreshTokenFromCookies(HttpServletRequest request) {
+	private String getTokenFromCookies(HttpServletRequest request, String name) {
 		Cookie[] cookies = request.getCookies();
 		if (cookies == null) {
-			log.error("쿠키가 없음");
 			throw new AuthenticationCredentialsNotFoundException("쿠키가 없습니다.");
 		}
 		for (Cookie cookie : cookies) {
-			if ("refresh".equals(cookie.getName())) {
+			if (name.equals(cookie.getName())) {
 				return cookie.getValue();
 			}
 		}
-		log.error("refresh 이름의 쿠키가 없음");
-		throw new BadCredentialsException("refreshToken이 없습니다.");
-	}
-
-	private String getTempTokenFromCookies(HttpServletRequest request) {
-		Cookie[] cookies = request.getCookies();
-		if (cookies == null) {
-			log.error("쿠키가 없음");
-			throw new AuthenticationCredentialsNotFoundException("쿠키가 없습니다.");
-		}
-		for (Cookie cookie : cookies) {
-			if ("temp".equals(cookie.getName())) {
-				return cookie.getValue();
-			}
-		}
-		log.error("temp 이름의 쿠키가 없음");
-		throw new BadCredentialsException("refreshToken이 없습니다.");
+		throw new BadCredentialsException(name + " 토큰이 없습니다.");
 	}
 
 	private void isExistRefreshToken(String refreshToken, String userNumber) {
