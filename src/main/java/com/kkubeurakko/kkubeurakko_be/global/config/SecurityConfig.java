@@ -83,7 +83,6 @@ public class SecurityConfig {
 			.authorizeHttpRequests((auth) -> auth
 				.requestMatchers("/for_user").hasAnyRole(UserRole.CUSTOMER.toString(), UserRole.ADMIN.toString())
 				.requestMatchers("/for_admin").hasRole(UserRole.ADMIN.toString())
-				.requestMatchers("/verify-phone").hasRole(UserRole.TEMP.toString())
 				.requestMatchers(
 					"/",
 					"/swagger-ui/**",
@@ -94,7 +93,9 @@ public class SecurityConfig {
 					"/v1/admin/login",
 					"/v1/menu/**",
 					"/v1/reissue",
-					"/actuator/health"
+					"/actuator/health",
+					"/v1/user/verify-phone",
+					"/v1/user/complete-signup"
 				).permitAll()
 				.anyRequest().authenticated()
 			)
