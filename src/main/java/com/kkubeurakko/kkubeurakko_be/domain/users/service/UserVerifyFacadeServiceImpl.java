@@ -3,11 +3,13 @@ package com.kkubeurakko.kkubeurakko_be.domain.users.service;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.kkubeurakko.kkubeurakko_be.domain.auth.service.LogoutService;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.TokenService;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUserDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.UserVerifyException;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
@@ -27,6 +29,7 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 	private final UserService userService;
 	private final OAuthUnlinkService oAuthUnlinkService;
 	private final TokenService tokenService;
+	private final LogoutService logoutService;
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final JwtUtil jwtUtil;
 	private static final String TEMP_USER_PREFIX_KEY = "TEMP_USER:";
@@ -66,15 +69,15 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 		HttpServletRequest request,
 		HttpServletResponse response
 	) {
-		TempUserDto tempUserDto = (TempUserDto)redisTemplate.opsForValue()
-			.get(TEMP_USER_PREFIX_KEY + customOAuth2User.getName());
+		Users user = userService.getUser(customOAuth2User.getName());
 
 		try {
-			oAuthUnlinkService.revokeOAuthAccount(tempUserDto.userNumber());
+			oAuthUnlinkService.revokeOAuthAccount(user.getUserNumber());
+			logoutService.forceLogout(customOAuth2User, request, response);
 		} catch (Exception e) {
 			log.error("OAuth unlink 실패");
 			throw new OAUthUnlinkException("탈퇴 중 오류 발생, 가게에 문의 부탁드립니다.", e);
 		}
-		redisTemplate.delete(TEMP_USER_PREFIX_KEY + customOAuth2User.getName());
+		userService.deleteUser(user);
 	}
 }
