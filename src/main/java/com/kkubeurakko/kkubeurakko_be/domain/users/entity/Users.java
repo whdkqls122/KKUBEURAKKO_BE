@@ -37,17 +37,23 @@ public class Users extends BaseEntity {
 	@Column(name = "user_number")
 	private String userNumber;
 
-	@Column(name = "phone", unique = true)
+	@Column(name = "phone", unique = true, nullable = false)
 	private String phone;
 
-	@Column(name = "phone_hash", unique = true)
+	@Column(name = "phone_hash", unique = true, nullable = false)
 	private String phoneHash;
 
 	@Column(name = "nickname", nullable = false)
 	private String nickname;
 
-	@Column(name = "email", nullable = false)
+	@Column(name = "email")
 	private String email;
+
+	@Column(name = "id", unique = true, updatable = false, length = 20)
+	private String id;
+
+	@Column(name = "password")
+	private String password;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", nullable = false)
