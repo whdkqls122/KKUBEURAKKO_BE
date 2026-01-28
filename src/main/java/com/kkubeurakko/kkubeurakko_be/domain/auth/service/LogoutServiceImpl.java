@@ -28,6 +28,7 @@ public class LogoutServiceImpl implements LogoutService {
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final RedisTemplate<String, String> redisTemplate;
 	private final UserService userService;
+	private final TokenService tokenService;
 
 	@Override
 	public void logout(
@@ -53,7 +54,7 @@ public class LogoutServiceImpl implements LogoutService {
 				log.error("RefreshToken 삭제 중 예상치 못한 오류 발생, 무시하고 진행", e);
 			}
 		}
-		removeCookie(response);
+		tokenService.removeRefreshToken(response);
 	}
 
 	@Override
@@ -74,7 +75,7 @@ public class LogoutServiceImpl implements LogoutService {
 				refreshTokenRepository.deleteById(user.getUserNumber());
 			}
 
-			removeCookie(response);
+			tokenService.removeRefreshToken(response);
 			log.info("회원 탈퇴로 인한 강제 로그아웃 완료");
 		} catch (Exception e) {
 			log.error("강제 로그아웃 중 오류 발생", e);

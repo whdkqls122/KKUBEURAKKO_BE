@@ -58,7 +58,7 @@ public class TokenServiceImpl implements TokenService {
 		HttpServletResponse response
 	) {
 		String tempToken = getTempToken(request);
-		removeTempCookie(response);
+		removeCookie(response, "temp");
 
 		String userNumber = jwtUtil.getUserNumber(tempToken);
 		Users user = userService.getUser(userNumber);
@@ -93,7 +93,12 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public void removeTempToken(HttpServletResponse response) {
-		removeTempCookie(response);
+		removeCookie(response, "temp");
+	}
+
+	@Override
+	public void removeRefreshToken(HttpServletResponse response) {
+		removeCookie(response, "refresh");
 	}
 
 	@Override
@@ -158,8 +163,8 @@ public class TokenServiceImpl implements TokenService {
 		refreshTokenRepository.save(refreshToken);
 	}
 
-	private void removeTempCookie(HttpServletResponse response) {
-		ResponseCookie responseCookie = ResponseCookie.from("temp", null)
+	private void removeCookie(HttpServletResponse response, String name) {
+		ResponseCookie responseCookie = ResponseCookie.from(name, null)
 			.maxAge(0)
 			.secure(true)
 			// .httpOnly(true)
