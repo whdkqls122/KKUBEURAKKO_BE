@@ -100,16 +100,6 @@ public class LogoutServiceImpl implements LogoutService {
 		}
 	}
 
-	private void removeCookie(HttpServletResponse response) {
-		Cookie cookie = new Cookie("refresh", null);
-		cookie.setHttpOnly(true);
-		// cookie.setSecure(true); // HTTPS
-		cookie.setPath("/");
-		cookie.setMaxAge(0);
-		// cookie.setDomain(".kkubeurakko-anyang.shop");
-		response.addCookie(cookie);
-	}
-
 	private String extractAccessToken(HttpServletRequest request) {
 		String accessToken = request.getHeader("Authorization");
 		if (accessToken == null || !accessToken.startsWith("Bearer ")) {
