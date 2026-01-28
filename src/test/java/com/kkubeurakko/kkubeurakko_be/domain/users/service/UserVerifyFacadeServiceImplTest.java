@@ -133,25 +133,19 @@ class UserVerifyFacadeServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("임시 사용자 탈퇴 시 OAuth unlink 및 Redis 삭제 성공")
-	void deleteUserAndUnlink_success() {
+	@DisplayName("사용자 탈퇴 및 oAuthUnlink 요청이 정상적으로 이루어지는지 검증한다.")
+	void deleteUserAndUnlink() {
 		// given
-		CustomOAuth2User principal = mock(CustomOAuth2User.class);
-		when(principal.getName()).thenReturn("123");
-
-		TempUserDto tempUserDto = TempUserDto.builder()
-			.userNumber("123")
-			.build();
-
-		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-		when(valueOperations.get("TEMP_USER:123")).thenReturn(tempUserDto);
-
+		when(customOAuth2User.getName()).thenReturn("kakao_1234");
+		when(userService.getUser("kakao_1234")).thenReturn(user);
+		when(user.getUserNumber()).thenReturn("kakao_1234");
 		// when
-		facadeService.deleteUserAndUnlink(principal, request, response);
+		facadeService.deleteUserAndUnlink(customOAuth2User, request, response);
 
 		// then
-		verify(oAuthUnlinkService).revokeOAuthAccount("123");
-		verify(redisTemplate).delete("TEMP_USER:123");
+		verify(oAuthUnlinkService).revokeOAuthAccount("kakao_1234");
+		verify(logoutService).forceLogout(customOAuth2User, request, response);
+		verify(userService).deleteUser(user);
 	}
 
 	@Test
@@ -160,16 +154,6 @@ class UserVerifyFacadeServiceImplTest {
 		// given
 		CustomOAuth2User principal = mock(CustomOAuth2User.class);
 		when(principal.getName()).thenReturn("123");
-
-		TempUserDto tempUserDto = TempUserDto.builder()
-			.userNumber("123")
-			.build();
-
-		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-		when(valueOperations.get("TEMP_USER:123")).thenReturn(tempUserDto);
-
-		doThrow(new RuntimeException("unlink 실패"))
-			.when(oAuthUnlinkService).revokeOAuthAccount("123");
 
 		// when & then
 		assertThrows(OAUthUnlinkException.class, () ->
