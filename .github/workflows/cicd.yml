@@ -70,6 +70,7 @@ jobs:
             -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
             -e JWT_ACCESS_EXP="${{ secrets.JWT_ACCESS_EXP }}" \
             -e JWT_REFRESH_EXP="${{ secrets.JWT_REFRESH_EXP }}" \
+            -e JWT_TEMP_EXP="${{ secrets.JWT_TEMP_EXP }}" \
             -e KAKAO_CLIENT_ID="${{ secrets.KAKAO_CLIENT_ID }}" \
             -e KAKAO_CLIENT_SECRET="${{ secrets.KAKAO_CLIENT_SECRET }}" \
             -e KAKAO_REDIRECT_URI="${{ secrets.KAKAO_REDIRECT_URI }}" \
