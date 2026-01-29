@@ -180,7 +180,7 @@ public class OrderServiceImpl implements OrderService {
 		order.accept(completionTime);
 
 		Long storeId = extractStoreId(order);
-		orderSocketSender.send(storeId, order);
+		orderSocketSender.sendOrder(storeId, order);
 	}
 
 	@Override
@@ -192,7 +192,7 @@ public class OrderServiceImpl implements OrderService {
 		order.startCooking();
 
 		Long storeId = extractStoreId(order);
-		orderSocketSender.send(storeId, order);
+		orderSocketSender.sendOrder(storeId, order);
 	}
 
 	@Override
@@ -208,7 +208,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		Long storeId = extractStoreId(order);
-		orderSocketSender.send(storeId, order);
+		orderSocketSender.sendOrder(storeId, order);
 	}
 
 	private OrderDetailResponseDto toResponseDto(Orders order) {
@@ -368,7 +368,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	private void sendOrderToStore(Orders order, Long storeId) {
-		orderSocketSender.send(storeId, order);
+		orderSocketSender.sendOrder(storeId, order);
 	}
 
 	private Long extractStoreId(Orders order) {
