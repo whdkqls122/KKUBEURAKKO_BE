@@ -16,13 +16,13 @@ import com.kkubeurakko.kkubeurakko_be.domain.cart.repository.CartRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.config.OrderSocketSender;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderAddressResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderItemsOptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderMenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItems;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItemsOptions;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
@@ -36,6 +36,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
@@ -63,6 +64,7 @@ public class OrderServiceImpl implements OrderService {
 	private final PortOneService portOneService;
 	private final ApplicationEventPublisher eventPublisher;
 	private final OrderNumberUtil orderNumberUtil;
+	private final OrderSocketSender orderSocketSender;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -120,11 +122,11 @@ public class OrderServiceImpl implements OrderService {
 				throw new IllegalStateException("장바구니에 담긴 메뉴가 없습니다.");
 			}
 
-			// Stores store = cart.getCartItemList().get(0)
-			// 	.getMenu()
-			// 	.getMenuGroup()
-			// 	.getStore();
-			//
+			Stores store = cart.getCartItemList().get(0)
+				.getMenu()
+				.getMenuGroup()
+				.getStore();
+
 			// if (!store.isOpen()) {
 			// 	throw new IllegalStateException("현재 가게가 영업 중이 아닙니다.");
 			// }
@@ -152,7 +154,7 @@ public class OrderServiceImpl implements OrderService {
 
 			cart.clearItems();
 
-			sendOrderToStore(order);
+			sendOrderToStore(savedOrder, store.getId());
 
 			return savedOrder.getId();
 
@@ -170,18 +172,43 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
+	@Transactional
 	public void acceptOrder(Long orderId, int completionTime) {
+		Orders order = orderRepository.findById(orderId)
+			.orElseThrow(() -> new IllegalArgumentException("주문 없음"));
 
+		order.accept(completionTime);
+
+		Long storeId = extractStoreId(order);
+		orderSocketSender.send(storeId, order);
 	}
 
 	@Override
+	@Transactional
 	public void startCooking(Long orderId) {
+		Orders order = orderRepository.findById(orderId)
+			.orElseThrow(() -> new IllegalArgumentException("주문 없음"));
 
+		order.startCooking();
+
+		Long storeId = extractStoreId(order);
+		orderSocketSender.send(storeId, order);
 	}
 
 	@Override
+	@Transactional
 	public void completeOrder(Long orderId) {
+		Orders order = orderRepository.findById(orderId)
+			.orElseThrow(() -> new IllegalArgumentException("주문 없음"));
 
+		if (order.getOrderType() == OrderType.DELIVERY) {
+			order.startDelivery();
+		} else {
+			order.complete();
+		}
+
+		Long storeId = extractStoreId(order);
+		orderSocketSender.send(storeId, order);
 	}
 
 	private OrderDetailResponseDto toResponseDto(Orders order) {
@@ -340,10 +367,18 @@ public class OrderServiceImpl implements OrderService {
 		return coupon.getDiscountAmount();
 	}
 
-	private void sendOrderToStore(Orders order) {
-		messagingTemplate.convertAndSend(
-			"/topic/store/" + order.getUser().getUserNumber(),
-			OrderSocketResponse.from(order)
-		);
+	private void sendOrderToStore(Orders order, Long storeId) {
+		orderSocketSender.send(storeId, order);
 	}
+
+	private Long extractStoreId(Orders order) {
+		return order.getOrderItemList().stream()
+			.findFirst()
+			.orElseThrow(() -> new IllegalStateException("주문 메뉴가 없습니다."))
+			.getMenu()
+			.getMenuGroup()
+			.getStore()
+			.getId();
+	}
+
 }

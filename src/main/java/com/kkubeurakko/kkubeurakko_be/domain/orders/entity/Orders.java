@@ -98,16 +98,18 @@ public class Orders {
 		this.status = Status.COOKING;
 	}
 
+	public void startDelivery() {
+		if (this.status != Status.COOKING) {
+			throw new IllegalStateException("조리 중인 주문만 배달 시작할 수 있습니다.");
+		}
+		this.status = Status.ON_DELIVERY;
+	}
+
 	public void complete() {
 		if (this.status != Status.COOKING) {
-			throw new IllegalStateException("완료 처리 불가");
+			throw new IllegalStateException("조리 중인 주문만 완료할 수 있습니다.");
 		}
-
-		if (this.orderType == OrderType.DELIVERY) {
-			this.status = Status.ON_DELIVERY;
-		} else {
-			this.status = Status.COMPLETED;
-		}
+		this.status = Status.COMPLETED;
 	}
 
 }
