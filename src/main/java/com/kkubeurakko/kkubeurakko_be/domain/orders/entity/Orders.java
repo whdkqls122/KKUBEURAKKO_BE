@@ -82,4 +82,32 @@ public class Orders {
 	public void revokeUser() {
 		this.user = null;
 	}
+
+	public void accept(int completionTime) {
+		if (this.status != Status.PENDING) {
+			throw new IllegalStateException("접수할 수 없는 상태입니다.");
+		}
+		this.status = Status.ACCEPTED;
+		this.completionTime = completionTime;
+	}
+
+	public void startCooking() {
+		if (this.status != Status.ACCEPTED) {
+			throw new IllegalStateException("조리 시작 불가");
+		}
+		this.status = Status.COOKING;
+	}
+
+	public void complete() {
+		if (this.status != Status.COOKING) {
+			throw new IllegalStateException("완료 처리 불가");
+		}
+
+		if (this.orderType == OrderType.DELIVERY) {
+			this.status = Status.ON_DELIVERY;
+		} else {
+			this.status = Status.COMPLETED;
+		}
+	}
+
 }

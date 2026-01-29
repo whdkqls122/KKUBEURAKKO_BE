@@ -169,6 +169,21 @@ public class OrderServiceImpl implements OrderService {
 		}
 	}
 
+	@Override
+	public void acceptOrder(Long orderId, int completionTime) {
+
+	}
+
+	@Override
+	public void startCooking(Long orderId) {
+
+	}
+
+	@Override
+	public void completeOrder(Long orderId) {
+
+	}
+
 	private OrderDetailResponseDto toResponseDto(Orders order) {
 
 		List<OrderMenuResponseDto> orderMenuList = order.getOrderItemList().stream()

@@ -17,6 +17,7 @@ import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -34,7 +35,7 @@ public class StoreBusinessHoursController {
 	@PostMapping("/{storeId}/operations/time")
 	public ResponseEntity<ApiResponse<Void>> saveBusinessHours(
 		@PathVariable Long storeId,
-		@RequestBody StoreBusinessHoursRequest request
+		@RequestBody @Valid StoreBusinessHoursRequest request
 	) {
 		storeBusinessHoursService.saveBusinessHours(storeId, request);
 		return ResponseEntity.ok(ApiResponse.success("영업 시간 설정이 완료되었습니다.", null));

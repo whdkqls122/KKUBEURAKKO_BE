@@ -16,4 +16,11 @@ public interface OrderService {
 
 	//주문 생성/요청
 	Long createOrder(OrderCreateRequest request, CustomOAuth2User customOAuth2User);
+
+	void acceptOrder(Long orderId, int completionTime);
+
+	void startCooking(Long orderId);
+
+	void completeOrder(Long orderId);
+
 }
