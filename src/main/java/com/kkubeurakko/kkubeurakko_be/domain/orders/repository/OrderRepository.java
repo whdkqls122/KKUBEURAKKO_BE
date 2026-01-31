@@ -8,7 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
+
+import io.lettuce.core.dynamic.annotation.Param;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Orders, Long> {
@@ -20,5 +23,21 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
 		    WHERE o.id = :orderId AND o.user = :user
 		""")
 	Optional<Orders> findByIdAndUser(Long orderId, Users user);
+
+	@Query("""
+			select distinct o
+			from Orders o
+			join o.orderItemList oi
+			join oi.menu m
+			join m.menuGroup mg
+			join mg.store s
+			where s.id = :storeId
+			and o.status = :status
+			order by o.orderDate asc
+		""")
+	List<Orders> findByStoreIdAndStatus(
+		@Param("storeId") Long storeId,
+		@Param("status") Status status
+	);
 
 }

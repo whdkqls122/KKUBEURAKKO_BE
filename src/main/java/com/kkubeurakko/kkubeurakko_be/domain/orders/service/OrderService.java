@@ -5,6 +5,8 @@ import java.util.List;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 public interface OrderService {
@@ -23,4 +25,5 @@ public interface OrderService {
 
 	void completeOrder(Long orderId);
 
+	List<OrderSocketResponse> getOrdersByStoreAndStatus(Long storeId, Status status);
 }

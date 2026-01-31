@@ -6,6 +6,9 @@ import java.util.List;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderAddressSnapshot;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 
+import lombok.Builder;
+
+@Builder
 public record OrderSocketResponse(
 	Long orderId,
 	LocalDateTime orderDate,
@@ -34,22 +37,32 @@ public record OrderSocketResponse(
 			}
 		}
 
-		return new OrderSocketResponse(
-			order.getId(),
-			order.getOrderDate(),
-			order.getPayments() != null ? order.getPayments().getPaymentsType().name() : null,
-			order.getStatus().name(),
-			order.getOrderType().name(),
-			address,
-			order.getUser().getPhone(),
-			order.getStoreRequest(),
-			snap != null ? snap.getRequestContent() : null,
-			order.getPayments() != null ? order.getPayments().getFinalAmount() : 0,
-			order.getOrderItemList()
-				.stream()
-				.map(OrderMenuResponse::from)
-				.toList()
-		);
+		return OrderSocketResponse.builder()
+			.orderId(order.getId())
+			.orderDate(order.getOrderDate())
+			.paymentType(
+				order.getPayments() != null
+					? order.getPayments().getPaymentsType().name()
+					: null
+			)
+			.status(order.getStatus().name())
+			.orderType(order.getOrderType().name())
+			.address(address)
+			.phone(order.getUser().getPhone())
+			.storeRequest(order.getStoreRequest())
+			.deliveryRequest(snap != null ? snap.getRequestContent() : null)
+			.finalAmount(
+				order.getPayments() != null
+					? order.getPayments().getFinalAmount()
+					: 0
+			)
+			.items(
+				order.getOrderItemList()
+					.stream()
+					.map(OrderMenuResponse::from)
+					.toList()
+			)
+			.build();
 	}
 
 }

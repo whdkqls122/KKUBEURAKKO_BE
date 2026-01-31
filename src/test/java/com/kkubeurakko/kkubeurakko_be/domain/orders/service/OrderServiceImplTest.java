@@ -2,7 +2,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.orders.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
@@ -24,16 +25,19 @@ import com.kkubeurakko.kkubeurakko_be.domain.cart.repository.CartRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.config.OrderSocketSender;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
@@ -45,6 +49,9 @@ class OrderServiceImplTest {
 
 	@Mock
 	private OrderRepository orderRepository;
+
+	@Mock
+	private OrderSocketSender orderSocketSender;
 
 	@Mock
 	private UserService userService;
@@ -247,4 +254,37 @@ class OrderServiceImplTest {
 		assertThat(captor.getValue().getOrderNumber())
 			.isEqualTo("A-1");
 	}
+
+	@DisplayName("PENDING → ACCEPTED로 주문이 접수된다.")
+	@Test
+	void acceptOrder() {
+		// given
+		Stores store = TestFixture.createStore();
+		Menus menu = TestFixture.createMenu(
+			1L,
+			TestFixture.createMenuGroup(1L, store)
+		);
+
+		Orders order = TestFixture.createOrderWithPayment(
+			1L,
+			TestFixture.createUser("user1", "010"),
+			List.of(menu),
+			List.of(List.of())
+		);
+		ReflectionTestUtils.setField(order, "status", Status.PENDING);
+
+		given(orderRepository.findById(1L))
+			.willReturn(Optional.of(order));
+
+		// when
+		orderService.acceptOrder(1L, 60);
+
+		// then
+		assertThat(order.getStatus()).isEqualTo(Status.ACCEPTED);
+		assertThat(order.getCompletionTime()).isEqualTo(60);
+
+		verify(orderSocketSender)
+			.sendOrder(store.getId(), order);
+	}
+
 }

@@ -23,10 +23,12 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderItemsOptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderMenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItems;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItemsOptions;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.exception.OrderCreateException;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
@@ -209,6 +211,18 @@ public class OrderServiceImpl implements OrderService {
 
 		Long storeId = extractStoreId(order);
 		orderSocketSender.sendOrder(storeId, order);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<OrderSocketResponse> getOrdersByStoreAndStatus(Long storeId, Status status) {
+
+		List<Orders> orders = orderRepository
+			.findByStoreIdAndStatus(storeId, status);
+
+		return orders.stream()
+			.map(OrderSocketResponse::from)
+			.toList();
 	}
 
 	private OrderDetailResponseDto toResponseDto(Orders order) {

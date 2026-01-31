@@ -9,11 +9,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.service.OrderService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
@@ -88,4 +91,22 @@ public class OrderController {
 			)
 		);
 	}
+
+	@Operation(
+		summary = "주문 상태별 조회",
+		description = "가게의 주문을 상태별로 조회합니다."
+	)
+	@GetMapping("/{storeId}/orders")
+	public ResponseEntity<ApiResponse<List<OrderSocketResponse>>> getOrdersByStatus(
+		@PathVariable Long storeId,
+		@RequestParam Status status
+	) {
+		return ResponseEntity.ok(
+			ApiResponse.success(
+				"주문 목록이 조회되었습니다.",
+				orderService.getOrdersByStoreAndStatus(storeId, status)
+			)
+		);
+	}
+
 }
