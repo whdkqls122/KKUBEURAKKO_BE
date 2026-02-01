@@ -1,14 +1,18 @@
 package com.kkubeurakko.kkubeurakko_be.domain.users.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.experimental.SuperBuilder;
+import lombok.NoArgsConstructor;
 
 @Getter
-@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class OAuthTempUserDto implements TempUser {
-	private final String userNumber;
-	private final String nickname;
-	private final String email;
+	private String userNumber;
+	private String nickname;
+	private String email;
 
 	@Override
 	public boolean isOAuth() {

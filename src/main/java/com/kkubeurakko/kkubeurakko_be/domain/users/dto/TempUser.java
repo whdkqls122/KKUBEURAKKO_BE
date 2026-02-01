@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.users.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(
@@ -13,5 +14,6 @@ public interface TempUser {
 
 	String getNickname();
 
+	@JsonIgnore
 	boolean isOAuth();
 }
