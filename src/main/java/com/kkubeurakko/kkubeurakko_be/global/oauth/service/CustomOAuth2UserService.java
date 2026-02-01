@@ -9,7 +9,8 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUserDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.OAuthTempUserDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUserBase;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -46,10 +47,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		UserDto userDto;
 		boolean firstLogin = (user == null);
 		if (firstLogin) {
-			TempUserDto tempUserDto = TempUserDto.builder()
+			TempUserBase tempUserBase = TempUserBase.builder()
 				.userNumber(userNumber)
-				.email(response.getEmail())
 				.nickname(response.getNickname())
+				.build();
+			
+			OAuthTempUserDto tempUserDto = OAuthTempUserDto.builder()
+				.tempUser(tempUserBase)
+				.email(response.getEmail())
 				.build();
 
 			redisTemplate.opsForValue().set(
