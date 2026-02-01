@@ -16,7 +16,8 @@ import com.kkubeurakko.kkubeurakko_be.domain.auth.service.LogoutService;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.TokenService;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
-import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUserDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.OAuthTempUserDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUser;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.UserVerifyException;
@@ -80,7 +81,7 @@ class UserVerifyFacadeServiceImplTest {
 		UserVerifyRequestDto requestDto = mock(UserVerifyRequestDto.class);
 		PortOneVerifyInfoResponseDto portOneDto = mock(PortOneVerifyInfoResponseDto.class);
 
-		TempUserDto tempUserDto = TempUserDto.builder()
+		TempUser tempUserDto = OAuthTempUserDto.builder()
 			.userNumber("123")
 			.build();
 
@@ -109,7 +110,7 @@ class UserVerifyFacadeServiceImplTest {
 		// given
 		UserVerifyRequestDto requestDto = mock(UserVerifyRequestDto.class);
 
-		TempUserDto tempUserDto = TempUserDto.builder()
+		TempUser tempUserDto = OAuthTempUserDto.builder()
 			.userNumber("123")
 			.build();
 
