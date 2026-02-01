@@ -95,7 +95,10 @@ public class SecurityConfig {
 					"/v1/reissue",
 					"/actuator/health",
 					"/v1/user/verify-phone",
-					"/v1/user/complete-signup"
+					"/v1/user/complete-signup",
+					"/v1/signup/duplicate",
+					"/v1/signup",
+					"/v1/user/login"
 				).permitAll()
 				.anyRequest().authenticated()
 			)
