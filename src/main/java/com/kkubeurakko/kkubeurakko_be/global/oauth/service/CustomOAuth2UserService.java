@@ -10,7 +10,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.OAuthTempUserDto;
-import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUserBase;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUser;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -47,19 +47,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		UserDto userDto;
 		boolean firstLogin = (user == null);
 		if (firstLogin) {
-			TempUserBase tempUserBase = TempUserBase.builder()
+			TempUser tempUser = OAuthTempUserDto.builder()
 				.userNumber(userNumber)
 				.nickname(response.getNickname())
-				.build();
-			
-			OAuthTempUserDto tempUserDto = OAuthTempUserDto.builder()
-				.tempUser(tempUserBase)
 				.email(response.getEmail())
 				.build();
 
 			redisTemplate.opsForValue().set(
 				TEMP_USER_KEY_PREFIX + userNumber,
-				tempUserDto,
+				tempUser,
 				Duration.ofMinutes(10)
 			);
 
