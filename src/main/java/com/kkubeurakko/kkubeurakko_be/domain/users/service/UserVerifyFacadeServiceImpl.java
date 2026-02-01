@@ -7,7 +7,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.auth.service.LogoutService;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.TokenService;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
-import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUserDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUser;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.UserVerifyException;
@@ -41,18 +41,21 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 		HttpServletResponse response
 	) {
 		String tempToken = tokenService.getTempToken(request);
-		TempUserDto tempUserDto = (TempUserDto)redisTemplate.opsForValue()
-			.get(TEMP_USER_PREFIX_KEY + jwtUtil.getUserNumber(tempToken));
+		String userNumber = jwtUtil.getUserNumber(tempToken);
+		TempUser tempUser = (TempUser)redisTemplate.opsForValue()
+			.get(TEMP_USER_PREFIX_KEY + userNumber);
 		try {
 			PortOneVerifyInfoResponseDto responseDto =
 				portOneService.getPortOneVerifyInfo(userVerifyRequestDto.identityVerificationId());
 
-			userService.createUser(tempUserDto, responseDto);
+			userService.createUser(tempUser, responseDto);
 
 		} catch (Exception e) {
 			try {
 				tokenService.removeTempToken(response);
-				oAuthUnlinkService.revokeOAuthAccount(tempUserDto.userNumber());
+				if (tempUser.isOAuth()) {
+					oAuthUnlinkService.revokeOAuthAccount(tempUser.getUserNumber());
+				}
 			} catch (Exception ex) {
 				log.error("OAuth unlink 실패", ex);
 			}
@@ -70,9 +73,10 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 		HttpServletResponse response
 	) {
 		Users user = userService.getUser(customOAuth2User.getName());
-
 		try {
-			oAuthUnlinkService.revokeOAuthAccount(user.getUserNumber());
+			if (!user.getUserNumber().startsWith("local")) {
+				oAuthUnlinkService.revokeOAuthAccount(user.getUserNumber());
+			}
 			logoutService.forceLogout(customOAuth2User, request, response);
 		} catch (Exception e) {
 			log.error("OAuth unlink 실패");
