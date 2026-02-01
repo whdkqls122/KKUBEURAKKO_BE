@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
 				log.error("중복된 사용자 전화 번호");
 				throw new IllegalStateException();
 			}
-			
+
 			Users.UsersBuilder builder = Users.builder()
 				.userNumber(tempUser.getUserNumber())
 				.nickname(tempUser.getNickname())
@@ -56,6 +56,7 @@ public class UserServiceImpl implements UserService {
 			if (tempUser instanceof OAuthTempUserDto oauthUser) {
 				builder.email(oauthUser.getEmail());
 			} else if (tempUser instanceof LocalTempUserDto localUser) {
+				builder.id(localUser.getId());
 				builder.password(localUser.getPasswordHash());
 			}
 
