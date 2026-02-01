@@ -12,6 +12,6 @@ public class LocalTempUserDto implements TempUser {
 
 	@Override
 	public boolean isOAuth() {
-		return true;
+		return false;
 	}
 }
