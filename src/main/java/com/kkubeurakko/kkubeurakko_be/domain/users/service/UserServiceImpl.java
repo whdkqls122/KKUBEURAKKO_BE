@@ -10,7 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
-import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUserDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.LocalTempUserDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.OAuthTempUserDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUser;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -32,7 +34,7 @@ public class UserServiceImpl implements UserService {
 	private final UserRepository userRepository;
 
 	@Override
-	public void createUser(TempUserDto tempUserDto, PortOneVerifyInfoResponseDto responseDto) {
+	public void createUser(TempUser tempUser, PortOneVerifyInfoResponseDto responseDto) {
 		if (!"VERIFIED".equals(responseDto.status())) {
 			throw new IllegalStateException("본인인증 실패");
 		}
@@ -43,17 +45,22 @@ public class UserServiceImpl implements UserService {
 				log.error("중복된 사용자 전화 번호");
 				throw new IllegalStateException();
 			}
-			Users user = Users.builder()
-				.userNumber(tempUserDto.userNumber())
-				.email(tempUserDto.email())
-				.nickname(tempUserDto.nickname())
+			
+			Users.UsersBuilder builder = Users.builder()
+				.userNumber(tempUser.getUserNumber())
+				.nickname(tempUser.getNickname())
 				.role(UserRole.CUSTOMER)
 				.phone(aesUtil.encryptToBase64(phone))
-				.phoneHash(phoneHash)
-				.build();
+				.phoneHash(phoneHash);
 
-			userRepository.save(user);
-			
+			if (tempUser instanceof OAuthTempUserDto oauthUser) {
+				builder.email(oauthUser.getEmail());
+			} else if (tempUser instanceof LocalTempUserDto localUser) {
+				builder.password(localUser.getPasswordHash());
+			}
+
+			userRepository.save(builder.build());
+
 		} catch (IllegalStateException e) {
 			throw new DuplicatePhoneException("이미 가입된 계정이 존재합니다.", e);
 		}
