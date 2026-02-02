@@ -50,22 +50,8 @@ public class SignupController {
 	)
 	@PostMapping("/duplicate")
 	public ResponseEntity<ApiResponse<Void>> checkDuplicatedId(@RequestBody CheckDuplicateDto checkDuplicateDto) {
-
-		if (signupService.checkDuplicatedId(checkDuplicateDto)) {
-			return ResponseEntity.ok().body(
-				ApiResponse.success(
-					"사용 가능한 아이디입니다."
-					, null
-				)
-			);
-		} else {
-			return ResponseEntity.ok().body(
-				ApiResponse.fail(
-					"이미 존재하는 아이디 입니다."
-					, null
-				)
-			);
-		}
-
+		return ResponseEntity.ok().body(
+			signupService.checkDuplicatedId(checkDuplicateDto)
+		);
 	}
 }
