@@ -22,6 +22,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.SignupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUser;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
+import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -100,10 +101,10 @@ class SignupServiceImplTest {
 			.thenReturn(false);
 
 		// when
-		boolean result = signupService.checkDuplicatedId(dto);
+		ApiResponse<Void> apiResponse = signupService.checkDuplicatedId(dto);
 
 		// then
-		assertTrue(result);
+		assertTrue(apiResponse.isSuccess());
 	}
 
 	@Test
@@ -116,10 +117,10 @@ class SignupServiceImplTest {
 			.thenReturn(true);
 
 		// when
-		boolean result = signupService.checkDuplicatedId(dto);
+		ApiResponse<Void> apiResponse = signupService.checkDuplicatedId(dto);
 
 		// then
-		assertFalse(result);
+		assertFalse(apiResponse.isSuccess());
 	}
 
 }
