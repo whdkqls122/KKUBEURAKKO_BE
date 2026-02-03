@@ -19,7 +19,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUser;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.UserVerifyException;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
-import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -68,17 +67,10 @@ public class SignupServiceImpl implements SignupService {
 	}
 
 	@Override
-	public ApiResponse<Void> checkDuplicatedId(CheckDuplicateDto checkDuplicateDto) {
+	public void checkDuplicatedId(CheckDuplicateDto checkDuplicateDto) {
 		if (userRepository.existsById(checkDuplicateDto.id())) {
-			return ApiResponse.fail(
-				"이미 사용 중인 아이디입니다.",
-				null
-			);
+			throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
 		}
-		return ApiResponse.success(
-			"사용 가능한 아이디입니다.",
-			null
-		);
 	}
 
 	//userNumber 생성
