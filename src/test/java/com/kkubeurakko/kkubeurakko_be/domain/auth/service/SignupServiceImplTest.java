@@ -22,7 +22,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.SignupRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUser;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
-import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -92,7 +91,7 @@ class SignupServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("중복이 없으면 true를 반환하는지 검증한다.")
+	@DisplayName("아이디가 중복되지 않으면 예외가 발생하지 않는다.")
 	void checkDuplicatedId() {
 		// given
 		CheckDuplicateDto dto = new CheckDuplicateDto("newUser");
@@ -100,15 +99,12 @@ class SignupServiceImplTest {
 		when(userRepository.existsById("newUser"))
 			.thenReturn(false);
 
-		// when
-		ApiResponse<Void> apiResponse = signupService.checkDuplicatedId(dto);
-
-		// then
-		assertTrue(apiResponse.isSuccess());
+		// when & then
+		assertDoesNotThrow(() -> signupService.checkDuplicatedId(dto));
 	}
 
 	@Test
-	@DisplayName("중복이 있으면 false를 반환하는지 검증한다.")
+	@DisplayName("아이디가 중복되면 예외가 발생한다.")
 	void checkDuplicatedId_fail() {
 		// given
 		CheckDuplicateDto dto = new CheckDuplicateDto("existUser");
@@ -116,11 +112,8 @@ class SignupServiceImplTest {
 		when(userRepository.existsById("existUser"))
 			.thenReturn(true);
 
-		// when
-		ApiResponse<Void> apiResponse = signupService.checkDuplicatedId(dto);
-
-		// then
-		assertFalse(apiResponse.isSuccess());
+		// when & then
+		assertThrows(IllegalArgumentException.class,
+			() -> signupService.checkDuplicatedId(dto));
 	}
-
 }
