@@ -12,8 +12,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ExistUserRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ResetPasswordMeRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ResetPasswordRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.UserIdResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
@@ -22,6 +24,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.Cookie;
@@ -45,7 +48,8 @@ class AccountServiceImplTest {
 
 	@Mock
 	private HttpServletResponse response;
-
+	@Mock
+	private PasswordEncoder passwordEncoder;
 	@Mock
 	private org.springframework.data.redis.core.ValueOperations<String, Object> valueOperations;
 
@@ -166,6 +170,7 @@ class AccountServiceImplTest {
 		// given
 		String resetToken = "reset123";
 		String userId = "userId";
+		String encodedPw = "encodedPw";
 
 		when(request.getCookies())
 			.thenReturn(new Cookie[] {new Cookie("rp_t", resetToken)});
@@ -175,6 +180,7 @@ class AccountServiceImplTest {
 
 		Users user = mock(Users.class);
 		when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+		when(passwordEncoder.encode("newPassword")).thenReturn(encodedPw);
 
 		ResetPasswordRequestDto dto = new ResetPasswordRequestDto("newPassword");
 
@@ -182,8 +188,35 @@ class AccountServiceImplTest {
 		accountService.resetPassword(request, response, dto);
 
 		// then
-		verify(user).updatePassword("newPassword");
+		verify(user).updatePassword(encodedPw);
 		verify(redisTemplate).delete("RESET_PASSWORD:" + resetToken);
 		verify(response).addHeader(eq("Set-Cookie"), anyString());
+	}
+
+	@Test
+	@DisplayName("로그인 상태에서 비밀번호 변경이 정상적으로 수행된다.")
+	void resetPasswordMe_success() {
+		// given
+		String userNumber = "kakao_1234";
+		String rawCurrentPw = "currentPw";
+		String newPw = "newPw";
+		String encodedNewPw = "encodedNewPw";
+
+		CustomOAuth2User oauthUser = mock(CustomOAuth2User.class);
+		Users user = mock(Users.class);
+
+		when(oauthUser.getName()).thenReturn(userNumber);
+		when(userRepository.findByUserNumber(userNumber)).thenReturn(Optional.of(user));
+		when(passwordEncoder.matches(rawCurrentPw, user.getPassword())).thenReturn(true);
+		when(passwordEncoder.encode(newPw)).thenReturn(encodedNewPw);
+
+		ResetPasswordMeRequestDto dto =
+			new ResetPasswordMeRequestDto(rawCurrentPw, newPw);
+
+		// when
+		accountService.resetPasswordMe(oauthUser, dto);
+
+		// then
+		verify(user).updatePassword(encodedNewPw);
 	}
 }
