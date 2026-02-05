@@ -79,4 +79,8 @@ public class Users extends BaseEntity {
 	public void updateCart(Cart cart) {
 		this.cart = cart;
 	}
+
+	public void updatePassword(String password) {
+		this.password = password;
+	}
 }
