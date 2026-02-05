@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public record ResetPasswordRequestDto(
-	String resetToken,
 	@NotBlank(message = "비밀번호는 공백일 수 없습니다.")
 	@Pattern(
 		regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{8,16}$",
