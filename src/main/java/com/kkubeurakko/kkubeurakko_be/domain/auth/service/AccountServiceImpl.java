@@ -11,11 +11,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ExistUserRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.NextStepDto;
+import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ResetPasswordMeRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ResetPasswordRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.UserIdResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.util.UserIdMaskingUtil;
@@ -25,6 +27,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.PhoneHashingException;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.Cookie;
@@ -40,6 +43,7 @@ public class AccountServiceImpl implements AccountService {
 	private final PortOneService portOneService;
 	private final UserRepository userRepository;
 	private final RedisTemplate<String, Object> redisTemplate;
+	private final PasswordEncoder passwordEncoder;
 
 	private static final String VERIFY_SESSION_PREFIX = "VERIFY_SESSION:";
 	private static final String RESET_PASSWORD_PREFIX = "RESET_PASSWORD:";
@@ -153,10 +157,24 @@ public class AccountServiceImpl implements AccountService {
 		Users user = userRepository.findById(userId)
 			.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 사용자 입니다."));
 
-		user.updatePassword(resetPasswordRequestDto.newPassword());
+		user.updatePassword(passwordEncoder.encode(resetPasswordRequestDto.newPassword()));
 
 		redisTemplate.delete(key);
 		removeCookie(response, "rp_t");
+	}
+
+	@Override
+	@Transactional
+	public void resetPasswordMe(CustomOAuth2User customOAuth2User, ResetPasswordMeRequestDto resetPasswordRequestDto) {
+		String userNumber = customOAuth2User.getName();
+		Users user = userRepository.findByUserNumber(userNumber)
+			.orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+
+		if (!passwordEncoder.matches(resetPasswordRequestDto.currentPassword(), user.getPassword())) {
+			throw new IllegalStateException("올바른 비밀번호를 입력해주세요.");
+		}
+
+		user.updatePassword(passwordEncoder.encode(resetPasswordRequestDto.newPassword()));
 	}
 
 	private String hashPhone(String phone) {

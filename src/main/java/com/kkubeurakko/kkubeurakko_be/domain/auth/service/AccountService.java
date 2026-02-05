@@ -2,9 +2,11 @@ package com.kkubeurakko.kkubeurakko_be.domain.auth.service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ExistUserRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.NextStepDto;
+import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ResetPasswordMeRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ResetPasswordRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.UserIdResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,4 +34,7 @@ public interface AccountService {
 		HttpServletResponse response,
 		ResetPasswordRequestDto resetPasswordRequestDto
 	);
+
+	void resetPasswordMe(CustomOAuth2User customOAuth2User, ResetPasswordMeRequestDto resetPasswordRequestDto);
+
 }
