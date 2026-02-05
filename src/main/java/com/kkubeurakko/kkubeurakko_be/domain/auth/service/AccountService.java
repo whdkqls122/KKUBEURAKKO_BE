@@ -1,6 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.domain.auth.service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ExistUserRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.NextStepDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ResetPasswordRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.UserIdResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
@@ -15,6 +16,9 @@ public interface AccountService {
 	//비밀번호 재설정을 위한 사용자 유무 확인
 	void existUser(HttpServletResponse response, ExistUserRequestDto existUserRequestDto);
 
+	// 모바일 본인인증 이후 다음단계 조회
+	NextStepDto getNextStep(HttpServletRequest request);
+
 	//비밀번호 재설정 전 본인인증
 	void verifyForResetPassword(
 		HttpServletRequest request,
@@ -23,5 +27,9 @@ public interface AccountService {
 	);
 
 	//비밀번호 재설정
-	void resetPassword(ResetPasswordRequestDto resetPasswordRequestDto);
+	void resetPassword(
+		HttpServletRequest request,
+		HttpServletResponse response,
+		ResetPasswordRequestDto resetPasswordRequestDto
+	);
 }
