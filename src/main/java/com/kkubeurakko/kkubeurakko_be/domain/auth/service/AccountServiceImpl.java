@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ExistUserRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.NextStepDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ResetPasswordRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.UserIdResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.util.UserIdMaskingUtil;
@@ -64,7 +65,7 @@ public class AccountServiceImpl implements AccountService {
 	@Override
 	public void existUser(HttpServletResponse response, ExistUserRequestDto existUserRequestDto) {
 		if (!userRepository.existsById(existUserRequestDto.id())) {
-			throw new EntityNotFoundException("가입된 이력이 없습니다.");
+			throw new IllegalArgumentException("가입된 이력이 없습니다.");
 		}
 		String sessionId = UUID.randomUUID().toString();
 
@@ -75,6 +76,24 @@ public class AccountServiceImpl implements AccountService {
 		);
 
 		response.addHeader(HttpHeaders.SET_COOKIE, createCookie("ex_u", sessionId).toString());
+	}
+
+	@Override
+	public NextStepDto getNextStep(HttpServletRequest request) {
+		String verifyToken = getOptionalCookie(request, "ex_u");
+		if (verifyToken != null &&
+			redisTemplate.hasKey(VERIFY_SESSION_PREFIX + verifyToken)) {
+
+			return NextStepDto.builder()
+				.activeTab("findPw")
+				.pwStep("RESET")
+				.build();
+		}
+
+		return NextStepDto.builder()
+			.activeTab("findId")
+			.pwStep("ENTER_ID")
+			.build();
 	}
 
 	@Override
@@ -120,9 +139,10 @@ public class AccountServiceImpl implements AccountService {
 
 	@Override
 	@Transactional
-	public void resetPassword(ResetPasswordRequestDto resetPasswordRequestDto) {
-
-		String key = RESET_PASSWORD_PREFIX + resetPasswordRequestDto.resetToken();
+	public void resetPassword(HttpServletRequest request, HttpServletResponse response,
+		ResetPasswordRequestDto resetPasswordRequestDto) {
+		String resetToken = getTokenFromCookies(request, "rp_t");
+		String key = RESET_PASSWORD_PREFIX + resetToken;
 
 		String userId = (String)redisTemplate.opsForValue().get(key);
 
@@ -136,6 +156,7 @@ public class AccountServiceImpl implements AccountService {
 		user.updatePassword(resetPasswordRequestDto.newPassword());
 
 		redisTemplate.delete(key);
+		removeCookie(response, "rp_t");
 	}
 
 	private String hashPhone(String phone) {
@@ -151,7 +172,7 @@ public class AccountServiceImpl implements AccountService {
 
 	private ResponseCookie createCookie(String name, String value) {
 		return ResponseCookie.from(name, value)
-			.maxAge(VERIFY_SESSION_TTL.getSeconds())
+			.maxAge(Duration.ofMinutes(5))
 			.secure(true)
 			// .httpOnly(true)
 			.sameSite("None")
@@ -173,6 +194,18 @@ public class AccountServiceImpl implements AccountService {
 		throw new BadCredentialsException(name + " 인증 세션이 만료되었습니다.");
 	}
 
+	private String getOptionalCookie(HttpServletRequest request, String name) {
+		if (request.getCookies() == null)
+			return null;
+
+		for (Cookie cookie : request.getCookies()) {
+			if (name.equals(cookie.getName())) {
+				return cookie.getValue();
+			}
+		}
+		return null;
+	}
+
 	private void removeCookie(HttpServletResponse response, String name) {
 		ResponseCookie responseCookie = ResponseCookie.from(name, null)
 			.maxAge(0)
@@ -183,6 +216,6 @@ public class AccountServiceImpl implements AccountService {
 			// .domain(".kkubeurakko-anyang.shop")
 			.build();
 
-		response.setHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
+		response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
 	}
 }
