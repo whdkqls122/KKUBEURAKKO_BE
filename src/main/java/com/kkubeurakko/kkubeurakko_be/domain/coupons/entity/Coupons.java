@@ -43,7 +43,7 @@ public class Coupons extends BaseEntity {
 	@Column(name = "name", nullable = false, length = 50)
 	private String name;
 
-	@Column(name = "discount_amount", nullable = false, length = 10)
+	@Column(name = "discount_amount", length = 10)
 	private Integer discountAmount;
 
 	@Column(name = "discount_rate")

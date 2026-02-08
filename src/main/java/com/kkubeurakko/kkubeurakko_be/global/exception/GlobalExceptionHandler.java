@@ -49,4 +49,5 @@ public class GlobalExceptionHandler {
 			.status(HttpStatus.INTERNAL_SERVER_ERROR)
 			.body(new ErrorResponse(500, "서버 오류가 발생했습니다."));
 	}
+
 }
