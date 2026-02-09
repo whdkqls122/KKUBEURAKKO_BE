@@ -42,6 +42,7 @@ public class SignupServiceImpl implements SignupService {
 			TempUser tempUser = LocalTempUserDto.builder()
 				.userNumber(userNumber)
 				.id(signupRequestDto.id())
+				.email(signupRequestDto.email())
 				.nickname(signupRequestDto.nickname())
 				.passwordHash(passwordEncoder.encode(signupRequestDto.password()))
 				.build();

@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class LocalTempUserDto implements TempUser {
 	private String userNumber;
 	private String id;
+	private String email;
 	private String nickname;
 	private String passwordHash;
 
