@@ -1,6 +1,5 @@
 package com.kkubeurakko.kkubeurakko_be.domain.payments.dto;
 
-import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 
 import lombok.Builder;
@@ -9,7 +8,7 @@ import lombok.Builder;
 public record PaymentResponseDto(
 	int totalAmount,
 	int finalAmount,
-	PaymentType paymentType,
+	String paymentType,
 	int disCountAmount
 ) {
 	public static PaymentResponseDto from(Payments payment) {
@@ -17,7 +16,7 @@ public record PaymentResponseDto(
 			.totalAmount(payment.getTotalAmount())
 			.disCountAmount(payment.getDiscountAmount())
 			.finalAmount(payment.getFinalAmount())
-			.paymentType(payment.getPaymentsType())
+			.paymentType(payment.getPaymentsType().getType())
 			.build();
 	}
 }
