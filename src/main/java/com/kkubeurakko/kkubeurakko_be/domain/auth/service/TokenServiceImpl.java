@@ -173,6 +173,6 @@ public class TokenServiceImpl implements TokenService {
 			// .domain(".kkubeurakko-anyang.shop")
 			.build();
 
-		response.setHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
+		response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
 	}
 }
