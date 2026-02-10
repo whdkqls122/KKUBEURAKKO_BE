@@ -125,6 +125,7 @@ class OrderServiceImplTest {
 		// then
 		assertEquals(order.getId(), result.id());
 		//assertEquals(order.getAddress(), result.address());
+		assertEquals("카드결제", result.payment().paymentType());
 		assertEquals("010-8337-6023", result.phoneNum());
 		assertEquals(1, result.orderMenuList().size());
 		assertEquals(menu.getName(), result.orderMenuList().get(0).name());
