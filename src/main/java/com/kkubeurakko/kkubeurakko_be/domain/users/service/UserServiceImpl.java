@@ -14,6 +14,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.dto.LocalTempUserDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.OAuthTempUserDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUser;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserInfoResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserPhoneResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.DuplicatePhoneException;
@@ -72,6 +73,16 @@ public class UserServiceImpl implements UserService {
 	public UserInfoResponseDto getUserInfo(CustomOAuth2User customOAuth2User) {
 		Users user = getUser(customOAuth2User.getName());
 		return toResponseDto(user);
+	}
+
+	@Override
+	public UserPhoneResponseDto getUserPhone(CustomOAuth2User customOAuth2User) {
+		Users user = getUser(customOAuth2User.getName());
+		String phone = aesUtil.decryptFromBase64(user.getPhone());
+
+		return UserPhoneResponseDto.builder()
+			.phone(phone)
+			.build();
 	}
 
 	@Override
