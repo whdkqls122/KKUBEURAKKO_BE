@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -74,7 +76,7 @@ public class LogoutServiceImpl implements LogoutService {
 			if (refreshToken != null && refreshTokenRepository.existsById(user.getUserNumber())) {
 				refreshTokenRepository.deleteById(user.getUserNumber());
 			}
-
+			removeSavedIdCookie(response);
 			tokenService.removeRefreshToken(response);
 			log.info("회원 탈퇴로 인한 강제 로그아웃 완료");
 		} catch (Exception e) {
@@ -117,5 +119,18 @@ public class LogoutServiceImpl implements LogoutService {
 			.filter(cookie -> "refresh".equals(cookie.getName()))
 			.map(Cookie::getValue)
 			.findFirst();
+	}
+
+	private void removeSavedIdCookie(HttpServletResponse response) {
+		ResponseCookie deleteSavedIdCookie = ResponseCookie.from("SAVED_ID", "")
+			.maxAge(0)
+			.path("/")
+			// .domain(".kkubeurakko-anyang.shop")
+			.secure(true)
+			.httpOnly(false)
+			.sameSite("None")
+			.build();
+
+		response.addHeader(HttpHeaders.SET_COOKIE, deleteSavedIdCookie.toString());
 	}
 }
