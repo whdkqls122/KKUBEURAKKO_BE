@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.TokenService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserInfoResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserPhoneResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserVerifyFacadeService;
@@ -48,6 +49,25 @@ public class UserController {
 			ApiResponse.success(
 				"사용자 정보 조회가 완료되었습니다.",
 				userInfoResponseDto
+			)
+		);
+	}
+
+	@Operation(
+		summary = "사용자 휴대전화번호 조회 API",
+		description = "사용자 휴대전화번호를 조회합니다."
+	)
+	@GetMapping("/info")
+	public ResponseEntity<ApiResponse<UserPhoneResponseDto>> getUserPhone(
+		@AuthenticationPrincipal
+		CustomOAuth2User customOAuth2User
+	) {
+		UserPhoneResponseDto userPhoneResponseDto = userService.getUserPhone(customOAuth2User);
+
+		return ResponseEntity.ok().body(
+			ApiResponse.success(
+				"사용자 정보 조회가 완료되었습니다.",
+				userPhoneResponseDto
 			)
 		);
 	}
