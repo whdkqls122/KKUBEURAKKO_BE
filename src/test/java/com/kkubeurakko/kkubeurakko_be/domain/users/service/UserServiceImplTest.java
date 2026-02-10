@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserInfoResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserPhoneResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
@@ -58,5 +59,32 @@ class UserServiceImplTest {
 		assertThat(result.nickname()).isEqualTo("조아빈");
 		assertThat(result.provider()).isEqualTo("kakao");
 		assertThat(result.phone()).isEqualTo("010-12**-56**");
+	}
+
+	@Test
+	@DisplayName("유저 휴대폰 번호를 정상적으로 가져오는지 검증한다.")
+	void getUserPhone() {
+		// given
+		String userNumber = "kakao_12345";
+		String decryptedPhone = "010-1234-5678";
+		CustomOAuth2User customOAuth2User =
+			new CustomOAuth2User(
+				com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserDto.builder()
+					.userNumber(userNumber)
+					.build()
+			);
+
+		Users user = TestFixture.createUser(userNumber, "암호화된 휴대전화번호");
+
+		when(userRepository.findByUserNumber(userNumber))
+			.thenReturn(Optional.of(user));
+
+		when(aesUtil.decryptFromBase64("암호화된 휴대전화번호"))
+			.thenReturn(decryptedPhone);
+		// when
+		UserPhoneResponseDto result = userService.getUserPhone(customOAuth2User);
+
+		// then
+		assertThat(result.phone()).isEqualTo("010-1234-5678");
 	}
 }
