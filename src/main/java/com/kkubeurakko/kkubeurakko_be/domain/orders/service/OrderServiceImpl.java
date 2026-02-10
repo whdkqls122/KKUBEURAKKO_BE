@@ -42,6 +42,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
+import com.kkubeurakko.kkubeurakko_be.domain.users.util.PhoneMaskingUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
 
@@ -257,6 +258,8 @@ public class OrderServiceImpl implements OrderService {
 			requestContent = order.getAddressSnapshot().getRequestContent();
 		}
 
+		String maskingPhone = PhoneMaskingUtil.mask(aesUtil.decryptFromBase64(order.getUser().getPhone()));
+
 		return OrderDetailResponseDto.builder()
 			.id(order.getId())
 			.orderNumber(order.getOrderNumber())
@@ -271,7 +274,7 @@ public class OrderServiceImpl implements OrderService {
 				.requestContent(requestContent)
 				.build())
 			.storeRequest(order.getStoreRequest())
-			.phoneNum(aesUtil.decryptFromBase64(order.getUser().getPhone()))
+			.phoneNum(maskingPhone)
 			.orderMenuList(orderMenuList)
 			.payment(PaymentResponseDto.from(order.getPayments()))
 			.build();
