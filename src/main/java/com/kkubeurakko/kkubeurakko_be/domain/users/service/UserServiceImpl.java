@@ -20,6 +20,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.DuplicatePhoneException;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.PhoneHashingException;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.users.util.PhoneMaskingUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
 
@@ -113,13 +114,13 @@ public class UserServiceImpl implements UserService {
 
 	private UserInfoResponseDto toResponseDto(Users user) {
 		String phone = aesUtil.decryptFromBase64(user.getPhone());
-		// String maskingPhone = PhoneMaskingUtil.mask(phone);
+		String maskingPhone = PhoneMaskingUtil.mask(phone);
 
 		return UserInfoResponseDto.builder()
 			.provider(getProvider(user.getUserNumber()))
 			.email(user.getEmail())
 			.nickname(user.getNickname())
-			.phone(phone)
+			.phone(maskingPhone)
 			.build();
 	}
 
