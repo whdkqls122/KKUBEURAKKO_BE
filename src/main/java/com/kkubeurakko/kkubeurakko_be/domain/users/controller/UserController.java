@@ -57,7 +57,7 @@ public class UserController {
 		summary = "사용자 휴대전화번호 조회 API",
 		description = "사용자 휴대전화번호를 조회합니다."
 	)
-	@GetMapping("/info")
+	@GetMapping("/info/phone")
 	public ResponseEntity<ApiResponse<UserPhoneResponseDto>> getUserPhone(
 		@AuthenticationPrincipal
 		CustomOAuth2User customOAuth2User
