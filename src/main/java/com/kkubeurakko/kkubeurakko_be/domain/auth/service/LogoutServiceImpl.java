@@ -37,26 +37,27 @@ public class LogoutServiceImpl implements LogoutService {
 		HttpServletRequest request,
 		HttpServletResponse response
 	) {
-		String accessToken = extractAccessToken(request);
-		String refreshToken = extractRefreshToken(request)
-			.orElse(null);
-		String userNumber = jwtUtil.getUserNumber(accessToken);
-		Users user = userService.getUser(userNumber);
+		Optional<String> accessTokenOpt = extractAccessTokenOptional(request);
+		Optional<String> refreshTokenOpt = extractRefreshToken(request);
 
-		blacklistAccessToken(accessToken);
-
-		if (refreshToken != null) {
-			try {
-				validateRefreshToken(user.getUserNumber(), refreshToken);
-				refreshTokenRepository.deleteById(user.getUserNumber());
-				log.info("RefreshToken 삭제 완료: user={}", user.getUserNumber());
-			} catch (IllegalArgumentException e) {
-				log.warn("RefreshToken 처리 중 문제 발생, 무시하고 진행: {}", e.getMessage());
-			} catch (Exception e) {
-				log.error("RefreshToken 삭제 중 예상치 못한 오류 발생, 무시하고 진행", e);
-			}
+		// refreshToken 없으면 → 이미 로그아웃 상태로 간주
+		if (refreshTokenOpt.isEmpty()) {
+			tokenService.removeRefreshToken(response);
+			return;
 		}
+
+		String refreshToken = refreshTokenOpt.get();
+		String userNumber = jwtUtil.getUserNumber(refreshToken);
+
+		// AccessToken 있으면 블랙리스트
+		accessTokenOpt.ifPresent(this::blacklistAccessToken);
+
+		// RefreshToken 삭제
+		refreshTokenRepository.deleteById(userNumber);
 		tokenService.removeRefreshToken(response);
+
+		log.info("로그아웃 완료 user={}", userNumber);
+
 	}
 
 	@Override
@@ -67,11 +68,11 @@ public class LogoutServiceImpl implements LogoutService {
 	) {
 		try {
 			Users user = userService.getUser(customOAuth2User.getName());
-			String accessToken = extractAccessToken(request);
+			Optional<String> accessTokenOpt = extractAccessTokenOptional(request);
 			String refreshToken = extractRefreshToken(request)
 				.orElse(null);
 
-			blacklistAccessToken(accessToken);
+			accessTokenOpt.ifPresent(this::blacklistAccessToken);
 
 			if (refreshToken != null && refreshTokenRepository.existsById(user.getUserNumber())) {
 				refreshTokenRepository.deleteById(user.getUserNumber());
@@ -90,24 +91,12 @@ public class LogoutServiceImpl implements LogoutService {
 			.set("blacklist:" + accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
 	}
 
-	private void validateRefreshToken(String userNumber, String refreshToken) {
-		if (jwtUtil.isExpired(refreshToken)) { // 만료 여부 확인
-			throw new IllegalArgumentException("refreshToken 만료");
-		}
-		if (!"refresh".equals(jwtUtil.getCategory(refreshToken))) {
-			throw new IllegalArgumentException("잘못된 유형의 토큰");
-		}
-		if (!refreshTokenRepository.existsById(userNumber)) {
-			throw new IllegalArgumentException("저장된 refreshToken이 아닙니다.");
-		}
-	}
-
-	private String extractAccessToken(HttpServletRequest request) {
+	private Optional<String> extractAccessTokenOptional(HttpServletRequest request) {
 		String accessToken = request.getHeader("Authorization");
 		if (accessToken == null || !accessToken.startsWith("Bearer ")) {
-			throw new IllegalArgumentException("Access 토큰이 없습니다.");
+			return Optional.empty();
 		}
-		return accessToken.substring(7);
+		return Optional.of(accessToken.substring(7));
 	}
 
 	private Optional<String> extractRefreshToken(HttpServletRequest request) {
