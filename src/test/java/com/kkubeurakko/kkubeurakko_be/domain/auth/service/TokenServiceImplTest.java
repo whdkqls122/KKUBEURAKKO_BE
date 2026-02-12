@@ -12,9 +12,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.AccessDeniedException;
 
+import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.entity.RefreshToken;
@@ -79,7 +79,7 @@ class TokenServiceImplTest {
 	void testExceptionNotFoundRefreshCookie() {
 		when(request.getCookies()).thenReturn(null);
 
-		assertThrows(AuthenticationCredentialsNotFoundException.class, () ->
+		assertThrows(AccessDeniedException.class, () ->
 			reissueService.reissue(request)
 		);
 	}
@@ -90,7 +90,7 @@ class TokenServiceImplTest {
 		Cookie[] cookies = {new Cookie("other", "token")};
 		when(request.getCookies()).thenReturn(cookies);
 
-		assertThrows(BadCredentialsException.class, () ->
+		assertThrows(AccessDeniedException.class, () ->
 			reissueService.reissue(request)
 		);
 	}
@@ -107,7 +107,7 @@ class TokenServiceImplTest {
 		when(refreshTokenRepository.findByUserNumber("123"))
 			.thenReturn(new RefreshToken("123", "different_refresh_token"));
 
-		assertThrows(RuntimeException.class, () ->
+		assertThrows(org.springframework.security.access.AccessDeniedException.class, () ->
 			reissueService.reissue(request)
 		);
 	}
@@ -119,10 +119,8 @@ class TokenServiceImplTest {
 		Cookie tempCookie = new Cookie("temp", "tempToken");
 		when(request.getCookies()).thenReturn(new Cookie[] {tempCookie});
 
-		// when
 		String result = reissueService.getTempToken(request);
 
-		// then
 		assertEquals("tempToken", result);
 	}
 
@@ -134,7 +132,7 @@ class TokenServiceImplTest {
 		when(request.getCookies()).thenReturn(new Cookie[] {otherCookie});
 
 		// then
-		assertThrows(BadCredentialsException.class, () ->
+		assertThrows(AccessDeniedException.class, () ->
 			reissueService.getTempToken(request)
 		);
 	}
@@ -144,7 +142,7 @@ class TokenServiceImplTest {
 	void getTempToken_cookieNull() {
 		when(request.getCookies()).thenReturn(null);
 
-		assertThrows(AuthenticationCredentialsNotFoundException.class, () ->
+		assertThrows(AccessDeniedException.class, () ->
 			reissueService.getTempToken(request)
 		);
 	}
@@ -153,16 +151,18 @@ class TokenServiceImplTest {
 	@DisplayName("temp 토큰으로 access / refresh 토큰 생성 성공")
 	void createToken_success() {
 		// given
+		HttpServletRequest request = mock(HttpServletRequest.class);
 		HttpServletResponse response = mock(HttpServletResponse.class);
 
 		Cookie tempCookie = new Cookie("temp", "tempToken");
 		when(request.getCookies()).thenReturn(new Cookie[] {tempCookie});
 
-		when(jwtUtil.getUserNumber("tempToken")).thenReturn("123");
+		when(jwtUtil.getUserNumber(anyString()))
+			.thenReturn("123");
 
 		Users user = mock(Users.class);
 		when(user.getUserNumber()).thenReturn("123");
-		when(user.getRole()).thenReturn(com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole.CUSTOMER);
+		when(user.getRole()).thenReturn(UserRole.CUSTOMER);
 
 		when(userService.getUser("123")).thenReturn(user);
 
@@ -178,6 +178,7 @@ class TokenServiceImplTest {
 		assertEquals("accessToken", access);
 
 		verify(refreshTokenRepository).save(any(RefreshToken.class));
-		verify(response).addHeader(eq(HttpHeaders.SET_COOKIE), anyString());
+		verify(response, times(2))
+			.addHeader(eq(HttpHeaders.SET_COOKIE), anyString());
 	}
 }

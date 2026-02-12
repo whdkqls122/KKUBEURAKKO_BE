@@ -54,10 +54,10 @@ class SignupServiceImplTest {
 		// given
 		SignupRequestDto dto = new SignupRequestDto(
 			"testId",
-			"password123!",
-			"닉네임"
+			"test@email.com",
+			"닉네임",
+			"password123!"
 		);
-
 		when(passwordEncoder.encode(any()))
 			.thenReturn("encodedPassword");
 
@@ -83,11 +83,12 @@ class SignupServiceImplTest {
 			SecurityContextHolder.getContext().getAuthentication();
 
 		assertNotNull(authentication);
-		assertTrue(
-			authentication.getAuthorities()
-				.stream()
-				.anyMatch(a -> a.getAuthority().equals(UserRole.TEMP.getRole()))
+		assertEquals(
+			UserRole.TEMP.getRole(),
+			authentication.getAuthorities().iterator().next().getAuthority()
 		);
+
+		SecurityContextHolder.clearContext();
 	}
 
 	@Test
