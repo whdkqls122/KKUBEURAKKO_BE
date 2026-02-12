@@ -99,7 +99,8 @@ public class SecurityConfig {
 					"/v1/signup/duplicate",
 					"/v1/signup/init",
 					"/v1/user/login",
-					"/v1/account/**"
+					"/v1/account/**",
+					"/v1/logout"
 				).permitAll()
 				.anyRequest().authenticated()
 			)
