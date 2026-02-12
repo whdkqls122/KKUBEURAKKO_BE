@@ -3,8 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.auth.service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
@@ -39,6 +38,9 @@ public class TokenServiceImpl implements TokenService {
 	public String reissue(HttpServletRequest request) {
 		log.info("Accesstoken 재발급 시작");
 		String refreshToken = getTokenFromCookies(request, "refresh");
+		if (refreshToken == null || refreshToken.isBlank()) {
+			throw new AccessDeniedException("Refresh Token 없음");
+		}
 		//토큰 유효성 검사
 		jwtUtil.validateToken(refreshToken);
 
@@ -111,21 +113,21 @@ public class TokenServiceImpl implements TokenService {
 	private String getTokenFromCookies(HttpServletRequest request, String name) {
 		Cookie[] cookies = request.getCookies();
 		if (cookies == null) {
-			throw new AuthenticationCredentialsNotFoundException("쿠키가 없습니다.");
+			throw new AccessDeniedException("쿠키가 없습니다.");
 		}
 		for (Cookie cookie : cookies) {
 			if (name.equals(cookie.getName())) {
 				return cookie.getValue();
 			}
 		}
-		throw new BadCredentialsException(name + " 토큰이 없습니다.");
+		throw new AccessDeniedException(name + " Token이 유효하지 않습니다.");
 	}
 
 	private void isExistRefreshToken(String refreshToken, String userNumber) {
 		RefreshToken findRefreshToken = refreshTokenRepository.findByUserNumber(userNumber);
 		if (findRefreshToken == null || !refreshToken.equals(findRefreshToken.getRefresh())) {
 			log.error("저장된 refreshToken과 불일치");
-			throw new BadCredentialsException(
+			throw new AccessDeniedException(
 				"저장된 refreshToken과 일치하지 않습니다."
 			);  // 로그아웃 요청을 보내도록 -> 재로그인 요청하도록(공통 예외처리 구현 이후 수정 예정)
 		}
