@@ -39,7 +39,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 	@Override
 	@Cacheable("menuGroups")
 	public List<MenuGroupResponseDto> getAllMenuGroupName() {
-		List<MenuGroups> menuGroupList = menuGroupRepository.findByMenuStatus(MenuStatus.ON_SALE);
+		List<MenuGroups> menuGroupList = menuGroupRepository.findByMenuStatusAndActiveTrue(MenuStatus.ON_SALE);
 		if (menuGroupList.isEmpty()) {
 			log.info("조회된 메뉴 그룹이 없음");
 			throw new EntityNotFoundException("메뉴 그룹이 조회되지 않았습니다.");
