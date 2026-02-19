@@ -117,6 +117,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 		@CacheEvict(value = "storeMenus", allEntries = true),
 		@CacheEvict(value = "menuGroupMenus", allEntries = true)
 	})
+	@Transactional
 	public void deleteMenuGroup(Long menuGroupId) {
 		MenuGroups menuGroup = menuGroupRepository.findById(menuGroupId)
 			.orElseThrow(() -> new EntityNotFoundException("메뉴 그룹이 존재하지 않습니다."));
