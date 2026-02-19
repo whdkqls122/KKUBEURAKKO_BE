@@ -43,6 +43,9 @@ public class Menus extends BaseEntity {
 	@Column(name = "description", length = 120)
 	private String description;
 
+	@Column(name = "active")
+	private boolean active;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)
 	private MenuStatus menuStatus;
