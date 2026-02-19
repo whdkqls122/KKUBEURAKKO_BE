@@ -61,6 +61,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 		MenuGroups menuGroup = MenuGroups.builder()
 			.name(dto.name())
 			.description(dto.description())
+			.active(true)
 			.menuStatus(MenuStatus.ON_SALE)
 			.store(store)
 			.build();
@@ -152,6 +153,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 			.menuStatus(group.getMenuStatus())
 			.menus(
 				menus.stream()
+					.filter(Menus::isActive)
 					.map(this::toMenuSummaryDto)
 					.collect(Collectors.toList())
 			)
