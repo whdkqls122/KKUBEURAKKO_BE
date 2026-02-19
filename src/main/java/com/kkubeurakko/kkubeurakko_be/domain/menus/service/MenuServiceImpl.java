@@ -100,6 +100,7 @@ public class MenuServiceImpl implements MenuService {
 		Menus menu = Menus.builder()
 			.name(request.name())
 			.description(request.description())
+			.active(true)
 			.price(request.price())
 			.menuStatus(request.status())
 			.img(responseDto != null ? responseDto.imageUrl() : null)
@@ -187,6 +188,14 @@ public class MenuServiceImpl implements MenuService {
 			.orElseThrow(() -> new IllegalArgumentException("메뉴가 존재하지 않습니다."));
 
 		menu.changeStatus(status);
+	}
+
+	@Override
+	@Transactional
+	public void deleteMenu(Long menuId) {
+		Menus menu = menuRepository.findById(menuId).orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+
+		menu.deleteMenu();
 	}
 
 	private List<MenuResponseDto> toResponseDto(List<Menus> menuList) {

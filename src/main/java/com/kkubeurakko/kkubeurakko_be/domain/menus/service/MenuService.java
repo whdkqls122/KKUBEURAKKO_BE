@@ -28,4 +28,7 @@ public interface MenuService {
 
 	//메뉴 상태 변경 (관리자)
 	void changeMenuStatus(Long menuId, MenuStatus status);
+
+	//메뉴 삭제
+	void deleteMenu(Long menuId);
 }
