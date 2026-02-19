@@ -129,6 +129,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 		}
 
 		menuGroup.deleteMenuGroup();
+		menuGroup.getMenus().forEach(Menus::deleteMenu);
 	}
 
 	private List<MenuGroupResponseDto> toResponseDto(List<MenuGroups> menuGroupList) {
