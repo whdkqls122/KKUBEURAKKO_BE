@@ -94,4 +94,7 @@ public class Menus extends BaseEntity {
 		this.menuStatus = status;
 	}
 
+	public void deleteMenu() {
+		this.active = false;
+	}
 }
