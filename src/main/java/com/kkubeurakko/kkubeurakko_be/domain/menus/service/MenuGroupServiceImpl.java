@@ -127,7 +127,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 			menuGroup.removeMenu(menu);
 		}
 
-		menuGroupRepository.delete(menuGroup);
+		menuGroup.deleteMenuGroup();
 	}
 
 	private List<MenuGroupResponseDto> toResponseDto(List<MenuGroups> menuGroupList) {
