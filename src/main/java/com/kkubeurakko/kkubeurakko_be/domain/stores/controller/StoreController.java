@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StorePauseRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
@@ -27,6 +28,22 @@ import lombok.RequiredArgsConstructor;
 public class StoreController {
 
 	private final StoreService storeService;
+
+	@Operation(
+		summary = "운영 정보 최초 저장",
+		description = "가게의 운영 정보를 최초 등록합니다."
+	)
+	@PostMapping("/{storeId}/operations")
+	public ResponseEntity<ApiResponse<Void>> createOperationInfo(
+		@PathVariable Long storeId,
+		@Valid @RequestBody StoreOperationCreateRequest request
+	) {
+		storeService.createOperationInfo(storeId, request);
+
+		return ResponseEntity.ok(
+			ApiResponse.success("운영 정보 저장이 완료되었습니다.", null)
+		);
+	}
 
 	@Operation(
 		summary = "운영 정보 수정",

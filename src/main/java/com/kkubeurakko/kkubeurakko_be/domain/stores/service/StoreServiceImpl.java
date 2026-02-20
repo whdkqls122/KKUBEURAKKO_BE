@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StorePauseRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
@@ -23,6 +24,20 @@ public class StoreServiceImpl implements StoreService {
 
 	private final StoreRepository storeRepository;
 	private final StoreBusinessHoursRepository businessHoursRepository;
+
+	@Override
+	@Transactional
+	public void createOperationInfo(Long storeId, StoreOperationCreateRequest request) {
+
+		Stores store = storeRepository.findById(storeId)
+			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
+
+		store.updateBasicInfo(
+			request.minOrderPrice(),
+			request.deliveryAvgTime(),
+			request.packagingAvgTime()
+		);
+	}
 
 	@Override
 	@Transactional
