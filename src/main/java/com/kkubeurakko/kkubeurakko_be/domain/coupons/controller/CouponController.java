@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -122,6 +123,22 @@ public class CouponController {
 				"쿠폰 목록을 성공적으로 조회했습니다.",
 				couponService.getCouponsByStore(storeId)
 			)
+		);
+	}
+
+	@Operation(
+		summary = "쿠폰 숨김 처리 API",
+		description = "가게측에서 쿠폰을 숨김 처리합니다."
+	)
+	@PatchMapping("/{storeId}/{couponId}/hide")
+	public ResponseEntity<ApiResponse<Void>> hideCoupon(
+		@PathVariable Long storeId,
+		@PathVariable Long couponId
+	) {
+		couponService.hideCoupon(couponId, storeId);
+
+		return ResponseEntity.ok(
+			ApiResponse.success("쿠폰이 숨김 처리되었습니다.", null)
 		);
 	}
 }
