@@ -26,4 +26,7 @@ public interface CouponService {
 
 	//가게측 쿠폰 전체 조회
 	List<AdminCouponResponseDto> getCouponsByStore(Long storeId);
+
+	//쿠폰 숨김 설정
+	void hideCoupon(Long couponId, Long storeId);
 }
