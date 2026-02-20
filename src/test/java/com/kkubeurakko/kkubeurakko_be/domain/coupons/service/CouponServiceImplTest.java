@@ -269,4 +269,31 @@ class CouponServiceImplTest {
 		assertThat(result.get(0).name()).isEqualTo("10% 할인 쿠폰");
 		verify(couponRepository).findByStoreId(1L);
 	}
+
+	@Test
+	@DisplayName("쿠폰 숨김 처리가 정상적으로 이루어진다.")
+	void hideCouponSuccessfully() {
+		// given
+		Stores store = TestFixture.createStore();
+
+		Coupons coupon = TestFixture.createCoupon(
+			1L,
+			"테스트 쿠폰",
+			10,
+			LocalDate.now().minusDays(1),
+			LocalDate.now().plusDays(10),
+			CouponType.DELIVERY,
+			Status.OFFER,
+			store
+		);
+
+		when(couponRepository.findById(1L))
+			.thenReturn(Optional.of(coupon));
+
+		// when
+		couponService.hideCoupon(1L, store.getId());
+
+		// then
+		assertThat(coupon.getStatus()).isEqualTo(Status.HIDE);
+	}
 }
