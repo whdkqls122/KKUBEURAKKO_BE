@@ -118,9 +118,10 @@ public class OrderServiceImpl implements OrderService {
 
 		try {
 			Users user = userService.getUser(customOAuth2User.getName());
-			Cart cart = cartRepository.findByUserNumber(user.getUserNumber())
-				.orElseThrow(() -> new IllegalStateException("장바구니가 비어있습니다."));
-
+			Cart cart = user.getCart();
+			if (cart == null) {
+				throw new IllegalStateException("장바구니가 비어있습니다.");
+			}
 			if (cart.getCartItemList().isEmpty()) {
 				throw new IllegalStateException("장바구니에 담긴 메뉴가 없습니다.");
 			}
@@ -148,15 +149,16 @@ public class OrderServiceImpl implements OrderService {
 
 			createOrderItems(order, cart);
 
-			Orders savedOrder = orderRepository.save(order);
-			orderRepository.flush();
-			user.updateCart(null);
-
 			PortOnePaymentResponseDto paymentResponse =
 				portOneService.getPortOnePayment(request.paymentId());
 
 			Payments payment = toPaymentEntity(order, discountAmount, paymentResponse);
 			paymentRepository.save(payment);
+
+			Orders savedOrder = orderRepository.save(order);
+			paymentRepository.save(payment);
+			orderRepository.flush();
+			user.updateCart(null);
 
 			sendOrderToStore(savedOrder, store.getId());
 
