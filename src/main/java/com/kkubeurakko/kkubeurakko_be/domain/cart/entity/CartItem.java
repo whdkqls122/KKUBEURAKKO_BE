@@ -69,6 +69,9 @@ public class CartItem {
 	}
 
 	private void clearOptions() {
-		this.optionList.clear();
+		for (CartItemOption option : optionList) {
+			option.setCartItem(null);
+		}
+		optionList.clear();
 	}
 }
