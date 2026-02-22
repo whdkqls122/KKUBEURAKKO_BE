@@ -145,17 +145,18 @@ public class OrderServiceImpl implements OrderService {
 
 			String orderNumber = orderNumberUtil.createOrderNumber(1L, request.orderType());
 			Orders order = request.toOrderEntity(user, address, totalAmount, orderNumber);
-			Orders savedOrder = orderRepository.save(order);
 
 			createOrderItems(order, cart);
+
+			Orders savedOrder = orderRepository.save(order);
+			orderRepository.flush();
+			user.updateCart(null);
 
 			PortOnePaymentResponseDto paymentResponse =
 				portOneService.getPortOnePayment(request.paymentId());
 
 			Payments payment = toPaymentEntity(order, discountAmount, paymentResponse);
 			paymentRepository.save(payment);
-
-			cart.clearItems();
 
 			sendOrderToStore(savedOrder, store.getId());
 
