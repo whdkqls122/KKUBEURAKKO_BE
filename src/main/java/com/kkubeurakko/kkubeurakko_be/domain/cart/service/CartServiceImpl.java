@@ -72,8 +72,13 @@ public class CartServiceImpl implements CartService {
 	public void createCartItem(CartRequestDto cartRequestDto, CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 
-		Cart cart = cartRepository.findByUserNumber(user.getUserNumber())
-			.orElseGet(() -> createCartForUser(user));
+		Cart cart = user.getCart();
+
+		if (cart == null) {
+			cart = Cart.builder().build();
+			user.updateCart(cart);
+		}
+
 		log.info("장바구니 생성 완료");
 
 		Menus menu = menuRepository.findById(cartRequestDto.menuId())
@@ -121,14 +126,6 @@ public class CartServiceImpl implements CartService {
 
 		cart.removeCartItem(cartItem);
 		log.info("장바구니 메뉴 삭제 완료");
-	}
-
-	private Cart createCartForUser(Users user) {
-		Cart cart = Cart.builder().build();
-
-		user.updateCart(cart);
-
-		return cartRepository.save(cart);
 	}
 
 	private boolean increaseQuantityIfExists(Cart cart, Menus menu, CartRequestDto cartRequestDto) {
