@@ -42,14 +42,11 @@ public class CartServiceImpl implements CartService {
 	public CartResponseDto getCartList(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 
-		Cart cart = cartRepository.findByUserNumber(user.getUserNumber())
-			.orElseGet(() -> cartRepository.save(
-					Cart.builder()
-						.user(user)
-						.build()
-				)
-			);
-		user.updateCart(cart);
+		Cart cart = user.getCart();
+		if (cart == null) {
+			cart = Cart.builder().build();
+			user.updateCart(cart);
+		}
 		log.info("장바구니 조회 완료");
 		return CartResponseDto.builder()
 			.cartId(cart.getId())
@@ -127,9 +124,7 @@ public class CartServiceImpl implements CartService {
 	}
 
 	private Cart createCartForUser(Users user) {
-		Cart cart = Cart.builder()
-			.user(user)
-			.build();
+		Cart cart = Cart.builder().build();
 
 		user.updateCart(cart);
 
@@ -162,11 +157,9 @@ public class CartServiceImpl implements CartService {
 	private void createNewCartItem(Cart cart, Menus menu, CartRequestDto cartRequestDto) {
 		CartItem cartItem = toEntity(cart, menu, cartRequestDto);
 		cart.addCartItem(cartItem);
-		cartItemRepository.save(cartItem);
 
 		List<CartItemOption> cartItemOptionList = toEntity(cartItem, cartRequestDto);
 		cartItemOptionList.forEach(cartItem::addOption);
-		cartItemOptionRepository.saveAll(cartItemOptionList);
 		log.info("장바구니 메뉴 등록 완료");
 	}
 
