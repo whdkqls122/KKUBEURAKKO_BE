@@ -149,6 +149,7 @@ class MenuServiceImplTest {
 			.id(1L)
 			.name("순한맛")
 			.price(1000)
+			.active(true)
 			.optionStatus(OptionStatus.ON_SALE)
 			.build();
 
@@ -156,6 +157,7 @@ class MenuServiceImplTest {
 			.id(2L)
 			.name("중간맛")
 			.price(500)
+			.active(true)
 			.optionStatus(OptionStatus.ON_SALE)
 			.build();
 
@@ -163,6 +165,7 @@ class MenuServiceImplTest {
 			.id(2L)
 			.name("매운맛")
 			.price(500)
+			.active(true)
 			.optionStatus(OptionStatus.ON_SALE)
 			.build();
 
@@ -172,20 +175,11 @@ class MenuServiceImplTest {
 			.name("맵기 선택")
 			.description("맵기 선택")
 			.required(true)
+			.active(true)
 			.selectedNum(1)
 			.optionGroupType(OptionGroupType.SINGLE)
 			.optionStatus(OptionStatus.ON_SALE)
 			.options(List.of(option1, option2, option3))
-			.build();
-
-		// Menu 엔티티
-		Menus menu = Menus.builder()
-			.id(1L)
-			.name("양념꾸브")
-			.description("양념꾸브입니다.")
-			.price(18000)
-			.img("example1.jpg")
-			.menuStatus(MenuStatus.ON_SALE)
 			.build();
 
 		List<OptionGroups> optionGroups = List.of(optionGroup);
@@ -484,4 +478,28 @@ class MenuServiceImplTest {
 		verify(menuRepository, times(1)).findById(menuId);
 	}
 
+	@Test
+	@DisplayName("메뉴 삭제가 정상적으로 수행되는지 검증한다.")
+	void deleteMenu_success() {
+		Long menuId = 1L;
+
+		Menus menu = Menus.builder()
+			.id(menuId)
+			.name("양념꾸브")
+			.description("설명")
+			.price(10000)
+			.menuStatus(MenuStatus.ON_SALE)
+			.active(true)
+			.build();
+
+		when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
+
+		// when
+		menuService.deleteMenu(menuId);
+
+		// then
+		assertThat(menu.isActive()).isFalse();
+		verify(menuRepository, times(1)).findById(menuId);
+		verify(menuRepository, never()).delete(any());
+	}
 }

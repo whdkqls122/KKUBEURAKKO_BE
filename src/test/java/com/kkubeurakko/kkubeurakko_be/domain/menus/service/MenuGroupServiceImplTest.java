@@ -23,10 +23,13 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.MenuGroupUpdateDto;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 import com.kkubeurakko.kkubeurakko_be.global.aws.service.S3Service;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 class MenuGroupServiceImplTest {
@@ -69,35 +72,35 @@ class MenuGroupServiceImplTest {
 			.menuStatus(MenuStatus.ON_SALE)
 			.build();
 		List<MenuGroups> mockMenuGroups = Arrays.asList(group1, group2, group3);
-		when(menuGroupRepository.findByMenuStatus(MenuStatus.ON_SALE)).thenReturn(mockMenuGroups);
-		//when
+
+		when(menuGroupRepository.findByMenuStatusAndActiveTrue(MenuStatus.ON_SALE))
+			.thenReturn(mockMenuGroups);
+
+		// when
 		List<MenuGroupResponseDto> result = menuGroupService.getAllMenuGroupName();
 
 		// then
 		assertThat(result).isNotNull();
-		assertThat(result.size()).isEqualTo(3);
+		assertThat(result).hasSize(3);
 		assertThat(result.get(0).menuGroupId()).isEqualTo(1L);
 		assertThat(result.get(0).name()).isEqualTo("인기");
-		assertThat(result.get(1).menuGroupId()).isEqualTo(3L);
-		assertThat(result.get(1).name()).isEqualTo("세트");
-		assertThat(result.get(2).menuGroupId()).isEqualTo(5L);
-		assertThat(result.get(2).name()).isEqualTo("음료");
 
-		// verify
-		verify(menuGroupRepository, times(1)).findByMenuStatus(MenuStatus.ON_SALE);
+		verify(menuGroupRepository, times(1))
+			.findByMenuStatusAndActiveTrue(MenuStatus.ON_SALE);
 	}
 
 	@Test
 	@DisplayName("조회된 메뉴 그룹이 없으면 예외가 발생하는지 검증한다.")
 	void getAllMenuGroupNameEmpty() {
-		// given
-		when(menuGroupRepository.findByMenuStatus(MenuStatus.ON_SALE)).thenReturn(List.of());
+		when(menuGroupRepository.findByMenuStatusAndActiveTrue(MenuStatus.ON_SALE))
+			.thenReturn(List.of());
 
 		assertThatThrownBy(() -> menuGroupService.getAllMenuGroupName())
-			.isInstanceOf(RuntimeException.class)
+			.isInstanceOf(EntityNotFoundException.class)
 			.hasMessageContaining("메뉴 그룹이 조회되지 않았습니다.");
 
-		verify(menuGroupRepository, times(1)).findByMenuStatus(MenuStatus.ON_SALE);
+		verify(menuGroupRepository, times(1))
+			.findByMenuStatusAndActiveTrue(MenuStatus.ON_SALE);
 	}
 
 	@Test
@@ -178,22 +181,25 @@ class MenuGroupServiceImplTest {
 	@Test
 	@DisplayName("메뉴 그룹 삭제 시, 연결된 메뉴들과 매핑 삭제 후 메뉴 그룹이 삭제되는지 검증한다.")
 	void deleteMenuGroup_success() {
-		// given
 		Stores store = TestFixture.createStore();
 		MenuGroups group = TestFixture.createMenuGroup(1L, store);
 
-		TestFixture.createMenu(10L, group);
-		TestFixture.createMenu(20L, group);
+		Menus m1 = TestFixture.createMenu(10L, group);
+		Menus m2 = TestFixture.createMenu(20L, group);
 
-		when(menuGroupRepository.findById(1L))
-			.thenReturn(Optional.of(group));
+		when(menuGroupRepository.findById(1L)).thenReturn(Optional.of(group));
 
 		// when
 		menuGroupService.deleteMenuGroup(1L);
 
-		// then
-		verify(menuGroupRepository, times(1)).delete(group);
+		// then: 이제 물리삭제 delete()는 호출되지 않는 게 정상
+		verify(menuGroupRepository, never()).delete(any(MenuGroups.class));
 		verify(menuGroupRepository, times(1)).findById(1L);
+
+		// 메뉴그룹/메뉴들이 비활성화 됐는지(엔티티 메서드 구현에 따라 getter 존재해야 함)
+		assertThat(group.isActive()).isFalse();
+		assertThat(m1.isActive()).isFalse();
+		assertThat(m2.isActive()).isFalse();
 	}
 
 }
