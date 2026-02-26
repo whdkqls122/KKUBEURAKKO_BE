@@ -1,6 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.domain.options.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
@@ -25,6 +26,7 @@ public class OptionServiceImpl implements OptionService {
 
 		Options option = Options.builder()
 			.name(requestDto.name())
+			.active(true)
 			.price(requestDto.price())
 			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(optionGroup)
@@ -50,9 +52,11 @@ public class OptionServiceImpl implements OptionService {
 	}
 
 	@Override
+	@Transactional
 	public void deleteOption(Long optionId) {
 		Options option = optionRepository.findById(optionId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 ID의 옵션이 존재하지 않습니다."));
-		optionRepository.delete(option);
+
+		option.deleteOption();
 	}
 }
