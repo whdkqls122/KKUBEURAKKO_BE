@@ -24,6 +24,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.global.aws.dto.S3UploadResponseDto;
 import com.kkubeurakko.kkubeurakko_be.global.aws.service.S3Service;
@@ -192,6 +193,11 @@ public class MenuServiceImpl implements MenuService {
 
 	@Override
 	@Transactional
+	@Caching(evict = {
+		@CacheEvict(value = "menuDetail", key = "#menuId"),
+		@CacheEvict(value = "menuGroupMenus", allEntries = true),
+		@CacheEvict(value = "storeMenus", allEntries = true)
+	})
 	public void deleteMenu(Long menuId) {
 		Menus menu = menuRepository.findById(menuId).orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
 
@@ -226,6 +232,7 @@ public class MenuServiceImpl implements MenuService {
 
 	private List<OptionGroupResponseDto> toOptionGroupDtoList(List<OptionGroups> optionGroups) {
 		return optionGroups.stream()
+			.filter(OptionGroups::isActive)
 			.map(og -> OptionGroupResponseDto.builder()
 				.id(og.getId())
 				.name(og.getName())
@@ -236,6 +243,7 @@ public class MenuServiceImpl implements MenuService {
 				.optionStatus(og.getOptionStatus())
 				.options(
 					og.getOptions().stream()
+						.filter(Options::isActive)
 						.map(o -> OptionResponseDto.builder()
 							.id(o.getId())
 							.name(o.getName())
