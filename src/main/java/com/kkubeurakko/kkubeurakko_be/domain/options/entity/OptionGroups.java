@@ -42,6 +42,9 @@ public class OptionGroups extends BaseEntity {
 	@Column(name = "description", length = 250)
 	private String description;
 
+	@Column(name = "active")
+	private boolean active;
+
 	@Column(name = "required", nullable = false)
 	private boolean required;
 
@@ -75,5 +78,9 @@ public class OptionGroups extends BaseEntity {
 
 	public void updateStatus(OptionStatus optionStatus) {
 		this.optionStatus = optionStatus;
+	}
+
+	public void deleteOptionGroup() {
+		this.active = false;
 	}
 }
