@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -125,5 +126,16 @@ public class MenuController {
 	) {
 		menuService.changeMenuStatus(menuId, status);
 		return ResponseEntity.ok(ApiResponse.success("메뉴 상태가 변경되었습니다.", null));
+	}
+
+	@Operation(
+		summary = "관리자 메뉴 삭제",
+		description = "관리자 측에서 메뉴를 삭제합니다."
+	)
+	@DeleteMapping("/admin/{menuId}")
+	public ResponseEntity<ApiResponse<Void>> deleteMenu(@PathVariable Long menuId) {
+		menuService.deleteMenu(menuId);
+
+		return ResponseEntity.ok(ApiResponse.success("메뉴가 삭제되었습니다.", null));
 	}
 }
