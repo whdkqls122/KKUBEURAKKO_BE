@@ -12,6 +12,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionRepository;
 
@@ -28,6 +29,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 	public void createOptionGroup(OptionGroupRequestDto requestDto) {
 		OptionGroups optionGroup = OptionGroups.builder()
 			.name(requestDto.name())
+			.active(true)
 			.description(requestDto.description())
 			.required(requestDto.required())
 			.optionGroupType(requestDto.optionGroupType())
@@ -47,6 +49,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 
 	public List<OptionGroupResponseDto> getAllOptionGroups() {
 		return optionGroupRepository.findAll().stream()
+			.filter(OptionGroups::isActive)
 			.map(this::toResponseDto)
 			.toList();
 	}
@@ -74,11 +77,13 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 	}
 
 	@Override
+	@Transactional
 	public void deleteOptionGroup(Long id) {
 		OptionGroups optionGroup = optionGroupRepository.findById(id)
 			.orElseThrow(() -> new IllegalArgumentException("해당 옵션 그룹이 없습니다. id=" + id));
 
-		optionGroupRepository.delete(optionGroup);
+		optionGroup.deleteOptionGroup();
+		optionGroup.getOptions().forEach(Options::deleteOption);
 	}
 
 	@Override
@@ -101,6 +106,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 			.selectedNum(optionGroup.getSelectedNum())
 			.options(
 				optionGroup.getOptions().stream()
+					.filter(Options::isActive)
 					.map(option -> OptionResponseDto.builder()
 						.id(option.getId())
 						.name(option.getName())
