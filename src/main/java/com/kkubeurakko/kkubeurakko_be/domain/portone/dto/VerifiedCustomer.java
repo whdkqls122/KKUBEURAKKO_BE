@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record VerifiedCustomer(
 	@JsonProperty("phoneNumber")
-	String phoneNumber
+	String phoneNumber,
+	@JsonProperty("name")
+	String name
 ) {
 }
