@@ -41,6 +41,7 @@ public class UserServiceImpl implements UserService {
 		}
 		String phone = responseDto.verifiedCustomer().phoneNumber();
 		String phoneHash = hashPhone(phone);
+		String name = responseDto.verifiedCustomer().name();
 		try {
 			if (userRepository.existsByPhoneHash(phoneHash)) {
 				log.error("중복된 사용자 전화 번호");
@@ -51,6 +52,7 @@ public class UserServiceImpl implements UserService {
 				.userNumber(tempUser.getUserNumber())
 				.nickname(tempUser.getNickname())
 				.role(UserRole.CUSTOMER)
+				.name(name)
 				.phone(aesUtil.encryptToBase64(phone))
 				.phoneHash(phoneHash);
 
