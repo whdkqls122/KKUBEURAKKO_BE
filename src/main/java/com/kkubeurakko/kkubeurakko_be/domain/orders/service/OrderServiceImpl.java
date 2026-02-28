@@ -152,6 +152,14 @@ public class OrderServiceImpl implements OrderService {
 			PortOnePaymentResponseDto paymentResponse =
 				portOneService.getPortOnePayment(request.paymentId());
 
+			if (request.isCashReceipt()) {
+				portOneService.issueCashReceipt(
+					user,
+					request.paymentId(),
+					request.cashReceiptRequest(),
+					request.totalAmount()
+				);
+			}
 			Payments payment = toPaymentEntity(order, discountAmount, paymentResponse);
 			paymentRepository.save(payment);
 
@@ -163,7 +171,6 @@ public class OrderServiceImpl implements OrderService {
 			sendOrderToStore(savedOrder, store.getId());
 
 			return savedOrder.getId();
-
 		} catch (Exception e) {
 			OrderCreateException exception =
 				new OrderCreateException(
