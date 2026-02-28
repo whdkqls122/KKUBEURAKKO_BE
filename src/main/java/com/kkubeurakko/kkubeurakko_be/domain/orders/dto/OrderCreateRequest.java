@@ -36,6 +36,12 @@ public record OrderCreateRequest(
 	@NotNull(message = "결제 아이디는 필수입니다.")
 	String paymentId,
 
+	@NotNull(message = "현금영수증 발급 여부는 필수입니다.")
+	boolean isCashReceipt,
+
+	@Nullable
+	CashReceiptRequestDto cashReceiptRequest,
+
 	@Positive(message = "총 금액은 0보다 커야 합니다.")
 	int totalAmount,
 
