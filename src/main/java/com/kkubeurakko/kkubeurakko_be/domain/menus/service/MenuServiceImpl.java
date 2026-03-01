@@ -24,7 +24,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionGroupResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.dto.OptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionGroups;
-import com.kkubeurakko.kkubeurakko_be.domain.options.entity.Options;
+import com.kkubeurakko.kkubeurakko_be.domain.options.entity.OptionStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.options.repository.OptionGroupRepository;
 import com.kkubeurakko.kkubeurakko_be.global.aws.dto.S3UploadResponseDto;
 import com.kkubeurakko.kkubeurakko_be.global.aws.service.S3Service;
@@ -101,7 +101,6 @@ public class MenuServiceImpl implements MenuService {
 		Menus menu = Menus.builder()
 			.name(request.name())
 			.description(request.description())
-			.active(true)
 			.price(request.price())
 			.menuStatus(request.status())
 			.img(responseDto != null ? responseDto.imageUrl() : null)
@@ -232,7 +231,7 @@ public class MenuServiceImpl implements MenuService {
 
 	private List<OptionGroupResponseDto> toOptionGroupDtoList(List<OptionGroups> optionGroups) {
 		return optionGroups.stream()
-			.filter(OptionGroups::isActive)
+			.filter(og -> og.getOptionStatus() != OptionStatus.DELETED)
 			.map(og -> OptionGroupResponseDto.builder()
 				.id(og.getId())
 				.name(og.getName())
@@ -243,7 +242,7 @@ public class MenuServiceImpl implements MenuService {
 				.optionStatus(og.getOptionStatus())
 				.options(
 					og.getOptions().stream()
-						.filter(Options::isActive)
+						.filter(o -> o.getOptionStatus() != OptionStatus.DELETED)
 						.map(o -> OptionResponseDto.builder()
 							.id(o.getId())
 							.name(o.getName())

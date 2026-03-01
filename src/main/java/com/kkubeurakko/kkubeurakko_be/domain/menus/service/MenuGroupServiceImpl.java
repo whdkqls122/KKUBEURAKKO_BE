@@ -39,7 +39,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 	@Override
 	@Cacheable("menuGroups")
 	public List<MenuGroupResponseDto> getAllMenuGroupName() {
-		List<MenuGroups> menuGroupList = menuGroupRepository.findByMenuStatusAndActiveTrue(MenuStatus.ON_SALE);
+		List<MenuGroups> menuGroupList = menuGroupRepository.findByMenuStatus(MenuStatus.ON_SALE);
 		if (menuGroupList.isEmpty()) {
 			log.info("조회된 메뉴 그룹이 없음");
 			throw new EntityNotFoundException("메뉴 그룹이 조회되지 않았습니다.");
@@ -61,7 +61,6 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 		MenuGroups menuGroup = MenuGroups.builder()
 			.name(dto.name())
 			.description(dto.description())
-			.active(true)
 			.menuStatus(MenuStatus.ON_SALE)
 			.store(store)
 			.build();
@@ -104,7 +103,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 		key = "#storeId"
 	)
 	public List<MenuGroupWithMenusDto> getAllMenuGroupsWithMenus(Long storeId) {
-		List<MenuGroups> groups = menuGroupRepository.findAllByStoreIdWithMenus(storeId);
+		List<MenuGroups> groups = menuGroupRepository.findAllByStoreIdWithMenus(storeId, MenuStatus.DELETED);
 
 		return groups.stream()
 			.map(this::toMenuGroupWithMenusDto)
@@ -155,7 +154,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 			.menuStatus(group.getMenuStatus())
 			.menus(
 				menus.stream()
-					.filter(Menus::isActive)
+					.filter(m -> m.getMenuStatus() != MenuStatus.DELETED)
 					.map(this::toMenuSummaryDto)
 					.collect(Collectors.toList())
 			)

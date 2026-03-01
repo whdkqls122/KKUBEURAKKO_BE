@@ -26,7 +26,6 @@ public class OptionServiceImpl implements OptionService {
 
 		Options option = Options.builder()
 			.name(requestDto.name())
-			.active(true)
 			.price(requestDto.price())
 			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(optionGroup)

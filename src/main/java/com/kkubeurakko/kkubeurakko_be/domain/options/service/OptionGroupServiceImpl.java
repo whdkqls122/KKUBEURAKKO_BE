@@ -29,7 +29,6 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 	public void createOptionGroup(OptionGroupRequestDto requestDto) {
 		OptionGroups optionGroup = OptionGroups.builder()
 			.name(requestDto.name())
-			.active(true)
 			.description(requestDto.description())
 			.required(requestDto.required())
 			.optionGroupType(requestDto.optionGroupType())
@@ -49,7 +48,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 
 	public List<OptionGroupResponseDto> getAllOptionGroups() {
 		return optionGroupRepository.findAll().stream()
-			.filter(OptionGroups::isActive)
+			.filter(og -> og.getOptionStatus() != OptionStatus.DELETED)
 			.map(this::toResponseDto)
 			.toList();
 	}
@@ -106,7 +105,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 			.selectedNum(optionGroup.getSelectedNum())
 			.options(
 				optionGroup.getOptions().stream()
-					.filter(Options::isActive)
+					.filter(o -> o.getOptionStatus() != OptionStatus.DELETED)
 					.map(option -> OptionResponseDto.builder()
 						.id(option.getId())
 						.name(option.getName())
