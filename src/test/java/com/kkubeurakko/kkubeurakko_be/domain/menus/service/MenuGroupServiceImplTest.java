@@ -73,7 +73,7 @@ class MenuGroupServiceImplTest {
 			.build();
 		List<MenuGroups> mockMenuGroups = Arrays.asList(group1, group2, group3);
 
-		when(menuGroupRepository.findByMenuStatusAndActiveTrue(MenuStatus.ON_SALE))
+		when(menuGroupRepository.findByMenuStatus(MenuStatus.ON_SALE))
 			.thenReturn(mockMenuGroups);
 
 		// when
@@ -86,13 +86,13 @@ class MenuGroupServiceImplTest {
 		assertThat(result.get(0).name()).isEqualTo("인기");
 
 		verify(menuGroupRepository, times(1))
-			.findByMenuStatusAndActiveTrue(MenuStatus.ON_SALE);
+			.findByMenuStatus(MenuStatus.ON_SALE);
 	}
 
 	@Test
 	@DisplayName("조회된 메뉴 그룹이 없으면 예외가 발생하는지 검증한다.")
 	void getAllMenuGroupNameEmpty() {
-		when(menuGroupRepository.findByMenuStatusAndActiveTrue(MenuStatus.ON_SALE))
+		when(menuGroupRepository.findByMenuStatus(MenuStatus.ON_SALE))
 			.thenReturn(List.of());
 
 		assertThatThrownBy(() -> menuGroupService.getAllMenuGroupName())
@@ -100,7 +100,7 @@ class MenuGroupServiceImplTest {
 			.hasMessageContaining("메뉴 그룹이 조회되지 않았습니다.");
 
 		verify(menuGroupRepository, times(1))
-			.findByMenuStatusAndActiveTrue(MenuStatus.ON_SALE);
+			.findByMenuStatus(MenuStatus.ON_SALE);
 	}
 
 	@Test
@@ -197,9 +197,9 @@ class MenuGroupServiceImplTest {
 		verify(menuGroupRepository, times(1)).findById(1L);
 
 		// 메뉴그룹/메뉴들이 비활성화 됐는지(엔티티 메서드 구현에 따라 getter 존재해야 함)
-		assertThat(group.isActive()).isFalse();
-		assertThat(m1.isActive()).isFalse();
-		assertThat(m2.isActive()).isFalse();
+		assertEquals(group.getMenuStatus(), MenuStatus.DELETED);
+		assertEquals(m1.getMenuStatus(), MenuStatus.DELETED);
+		assertEquals(m2.getMenuStatus(), MenuStatus.DELETED);
 	}
 
 }

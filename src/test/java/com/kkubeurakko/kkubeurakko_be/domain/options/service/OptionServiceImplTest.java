@@ -141,20 +141,19 @@ class OptionServiceImplTest {
 
 	@Test
 	void deleteOption() {
-		OptionGroups optionGroup = OptionGroups.builder().id(1L).active(true).build();
+		OptionGroups optionGroup = OptionGroups.builder().id(1L).build();
 
 		Options option = Options.builder()
 			.id(1L)
 			.name("순한맛")
 			.price(2000)
 			.optionStatus(OptionStatus.ON_SALE)
-			.active(true)
 			.optionGroup(optionGroup)
 			.build();
 		when(optionsRepository.findById(1L)).thenReturn(Optional.of(option));
 		optionService.deleteOption(1L);
 
-		assertFalse(option.isActive());
+		assertEquals(option.getOptionStatus(), OptionStatus.DELETED);
 	}
 
 }

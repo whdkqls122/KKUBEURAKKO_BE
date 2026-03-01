@@ -1,6 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.domain.menus.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
@@ -149,7 +150,6 @@ class MenuServiceImplTest {
 			.id(1L)
 			.name("순한맛")
 			.price(1000)
-			.active(true)
 			.optionStatus(OptionStatus.ON_SALE)
 			.build();
 
@@ -157,7 +157,6 @@ class MenuServiceImplTest {
 			.id(2L)
 			.name("중간맛")
 			.price(500)
-			.active(true)
 			.optionStatus(OptionStatus.ON_SALE)
 			.build();
 
@@ -165,7 +164,6 @@ class MenuServiceImplTest {
 			.id(2L)
 			.name("매운맛")
 			.price(500)
-			.active(true)
 			.optionStatus(OptionStatus.ON_SALE)
 			.build();
 
@@ -175,7 +173,6 @@ class MenuServiceImplTest {
 			.name("맵기 선택")
 			.description("맵기 선택")
 			.required(true)
-			.active(true)
 			.selectedNum(1)
 			.optionGroupType(OptionGroupType.SINGLE)
 			.optionStatus(OptionStatus.ON_SALE)
@@ -489,7 +486,6 @@ class MenuServiceImplTest {
 			.description("설명")
 			.price(10000)
 			.menuStatus(MenuStatus.ON_SALE)
-			.active(true)
 			.build();
 
 		when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
@@ -498,7 +494,7 @@ class MenuServiceImplTest {
 		menuService.deleteMenu(menuId);
 
 		// then
-		assertThat(menu.isActive()).isFalse();
+		assertEquals(menu.getMenuStatus(), MenuStatus.DELETED);
 		verify(menuRepository, times(1)).findById(menuId);
 		verify(menuRepository, never()).delete(any());
 	}

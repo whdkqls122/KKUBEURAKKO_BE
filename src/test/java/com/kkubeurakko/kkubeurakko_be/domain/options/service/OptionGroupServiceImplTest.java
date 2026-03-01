@@ -74,7 +74,6 @@ class OptionGroupServiceImplTest {
 			.name("맵기 선택")
 			.description("맵기 단계를 선택")
 			.required(true)
-			.active(true)
 			.optionGroupType(OptionGroupType.SINGLE)
 			.optionStatus(OptionStatus.ON_SALE)
 			.build();
@@ -83,7 +82,6 @@ class OptionGroupServiceImplTest {
 			.id(1L)
 			.name("순한맛")
 			.price(0)
-			.active(true)
 			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(group)
 			.build();
@@ -91,7 +89,6 @@ class OptionGroupServiceImplTest {
 			.id(2L)
 			.name("보통")
 			.price(500)
-			.active(true)
 			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(group)
 			.build();
@@ -134,7 +131,6 @@ class OptionGroupServiceImplTest {
 			.name("맵기 선택")
 			.description("맵기 단계를 선택")
 			.required(true)
-			.active(true)
 			.optionGroupType(OptionGroupType.SINGLE)
 			.optionStatus(OptionStatus.ON_SALE)
 			.options(new ArrayList<>())
@@ -144,7 +140,6 @@ class OptionGroupServiceImplTest {
 			.id(1L)
 			.name("순한맛")
 			.price(0)
-			.active(true)
 			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(group1)
 			.build();
@@ -153,7 +148,6 @@ class OptionGroupServiceImplTest {
 			.id(2L)
 			.name("보통맛")
 			.price(500)
-			.active(true)
 			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(group1)
 			.build();
@@ -166,7 +160,6 @@ class OptionGroupServiceImplTest {
 			.name("부위")
 			.description("부위를 선택하세요")
 			.required(true)
-			.active(true)
 			.optionGroupType(OptionGroupType.SINGLE)
 			.optionStatus(OptionStatus.ON_SALE)
 			.options(new ArrayList<>())
@@ -176,7 +169,6 @@ class OptionGroupServiceImplTest {
 			.id(3L)
 			.name("뼈")
 			.price(0)
-			.active(true)
 			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(group2)
 			.build();
@@ -185,7 +177,6 @@ class OptionGroupServiceImplTest {
 			.id(4L)
 			.name("콤보")
 			.price(2000)
-			.active(true)
 			.optionStatus(OptionStatus.ON_SALE)
 			.optionGroup(group2)
 			.build();
@@ -307,13 +298,12 @@ class OptionGroupServiceImplTest {
 			.required(true)
 			.optionGroupType(OptionGroupType.SINGLE)
 			.optionStatus(OptionStatus.ON_SALE)
-			.active(true)
 			.options(new ArrayList<>())
 			.build();
 
 		Options option1 = Options.builder()
 			.id(1L).name("순한맛").price(0).optionStatus(OptionStatus.ON_SALE)
-			.active(true).optionGroup(group).build();
+			.optionGroup(group).build();
 		group.getOptions().add(option1);
 
 		when(optionGroupRepository.findById(1L)).thenReturn(Optional.of(group));
@@ -322,8 +312,8 @@ class OptionGroupServiceImplTest {
 
 		verify(optionGroupRepository, never()).delete(any());
 
-		assertFalse(group.isActive());
-		assertFalse(option1.isActive());
+		assertEquals(group.getOptionStatus(), OptionStatus.DELETED);
+		assertEquals(option1.getOptionStatus(), OptionStatus.DELETED);
 	}
 
 	//옵션 그룹 상태 변경
