@@ -55,6 +55,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 
 	public List<OptionGroupNameResponseDto> getAllOptionGroupName() {
 		return optionGroupRepository.findAll().stream()
+			.filter(og -> og.getOptionStatus() != OptionStatus.DELETED)
 			.map(this::toGroupNameResponseDto)
 			.collect(Collectors.toList());
 	}
