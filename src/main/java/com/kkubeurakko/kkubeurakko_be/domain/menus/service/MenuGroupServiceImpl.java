@@ -125,11 +125,10 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 			if (menu.getS3Key() != null) {
 				s3Service.deleteImage(menu.getS3Key());
 			}
-			menuGroup.removeMenu(menu);
+			menu.deleteMenu();
 		}
 
 		menuGroup.deleteMenuGroup();
-		menuGroup.getMenus().forEach(Menus::deleteMenu);
 	}
 
 	private List<MenuGroupResponseDto> toResponseDto(List<MenuGroups> menuGroupList) {
