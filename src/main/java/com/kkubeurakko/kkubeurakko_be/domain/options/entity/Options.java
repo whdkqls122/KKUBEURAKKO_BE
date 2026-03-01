@@ -36,9 +36,6 @@ public class Options extends BaseEntity {
 	@Column(name = "name", nullable = false, length = 50)
 	private String name;
 
-	@Column(name = "active")
-	private boolean active;
-
 	@Column(name = "price", nullable = false)
 	private int price;
 
@@ -60,6 +57,6 @@ public class Options extends BaseEntity {
 	}
 
 	public void deleteOption() {
-		this.active = false;
+		this.optionStatus = OptionStatus.DELETED;
 	}
 }

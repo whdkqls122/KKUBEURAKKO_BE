@@ -43,9 +43,6 @@ public class MenuGroups extends BaseEntity {
 	@Column(name = "description", length = 250)
 	private String description;
 
-	@Column(name = "active")
-	private boolean active;
-
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)
 	private MenuStatus menuStatus;
@@ -75,6 +72,6 @@ public class MenuGroups extends BaseEntity {
 	}
 
 	public void deleteMenuGroup() {
-		this.active = false;
+		this.menuStatus = MenuStatus.DELETED;
 	}
 }
