@@ -56,7 +56,7 @@ public class OptionGroups extends BaseEntity {
 	@Column(name = "selected_num", nullable = false)
 	private int selectedNum;
 
-	@OneToMany(mappedBy = "optionGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "optionGroup", cascade = CascadeType.ALL)
 	@Builder.Default //테스트 코드시 초기화하기 위함
 	private List<Options> options = new ArrayList<>();
 

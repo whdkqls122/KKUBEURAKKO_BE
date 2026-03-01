@@ -53,8 +53,8 @@ public class MenuGroups extends BaseEntity {
 
 	@OneToMany(mappedBy = "menuGroup",
 		fetch = FetchType.LAZY,
-		cascade = CascadeType.ALL,
-		orphanRemoval = true)
+		cascade = CascadeType.ALL
+	)
 	@Builder.Default
 	private List<Menus> menus = new ArrayList<>();
 
@@ -65,10 +65,6 @@ public class MenuGroups extends BaseEntity {
 
 	public void updateStatus(MenuStatus status) {
 		this.menuStatus = status;
-	}
-
-	public void removeMenu(Menus menu) {
-		this.menus.remove(menu);
 	}
 
 	public void deleteMenuGroup() {
