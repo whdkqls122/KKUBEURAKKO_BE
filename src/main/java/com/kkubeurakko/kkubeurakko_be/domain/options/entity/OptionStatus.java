@@ -7,7 +7,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum OptionStatus {
 	ON_SALE("판매중"),
-	HIDE("숨김");
+	HIDE("숨김"),
+	DELETED("삭제");
 
 	private final String status;
 }
