@@ -13,6 +13,7 @@ public record CouponResponseDto(
 	Long id,
 	String name,
 	Integer discountAmount,
+	Integer discountRate,
 	int minOrderAmount,
 	CouponType couponType,
 	@JsonFormat(pattern = "yyyy-MM-dd")

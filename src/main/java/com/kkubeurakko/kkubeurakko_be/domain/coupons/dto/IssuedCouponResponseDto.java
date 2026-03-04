@@ -14,6 +14,7 @@ public record IssuedCouponResponseDto(
 	String name,
 	String couponNumber,
 	Integer discountAmount,
+	Integer discountRate,
 	int minOrderAmount,
 	CouponType couponType,
 	@JsonFormat(pattern = "yyyy-MM-dd")
