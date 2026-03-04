@@ -2,6 +2,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.coupons.service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -144,7 +145,7 @@ public class CouponServiceImpl implements CouponService {
 
 		coupon.hide();
 	}
-	
+
 	private void validateDiscount(CouponCreateRequest request) {
 		if (request.discountAmount() == null && request.discountRate() == null) {
 			throw new IllegalArgumentException("할인 금액 또는 할인율 중 하나는 필수입니다.");
@@ -160,6 +161,7 @@ public class CouponServiceImpl implements CouponService {
 				.id(c.getId())
 				.name(c.getName())
 				.discountAmount(c.getDiscountAmount())
+				.discountRate(c.getDiscountRate())
 				.minOrderAmount(c.getMinOrderAmount())
 				.couponType(c.getCouponType())
 				.validFrom(c.getValidFrom())
@@ -168,7 +170,7 @@ public class CouponServiceImpl implements CouponService {
 				.status(c.getStatus())
 				.build()
 			)
-			.toList();
+			.collect(Collectors.toList());
 	}
 
 	private AdminCouponResponseDto toResponseAdminDto(Coupons coupon) {
@@ -194,6 +196,7 @@ public class CouponServiceImpl implements CouponService {
 					.name(uc.getCoupon().getName())
 					.couponNumber(uc.getCouponsNumber())
 					.discountAmount(uc.getCoupon().getDiscountAmount())
+					.discountRate(uc.getCoupon().getDiscountRate())
 					.minOrderAmount(uc.getCoupon().getMinOrderAmount())
 					.couponType(uc.getCoupon().getCouponType())
 					.validFrom(uc.getCoupon().getValidFrom())
@@ -201,7 +204,7 @@ public class CouponServiceImpl implements CouponService {
 					.status(uc.getCoupon().getStatus())
 					.build()
 			)
-			.toList();
+			.collect(Collectors.toList());
 	}
 
 	private String generatedCouponNumber() {
