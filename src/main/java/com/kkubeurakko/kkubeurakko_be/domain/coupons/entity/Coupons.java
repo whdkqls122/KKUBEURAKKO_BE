@@ -75,7 +75,7 @@ public class Coupons extends BaseEntity {
 	private List<UsersCoupons> usersCouponsList = new ArrayList<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "stroes_id", nullable = false)
+	@JoinColumn(name = "stores_id", nullable = false)
 	private Stores store;
 
 	public void updateQuantity() {

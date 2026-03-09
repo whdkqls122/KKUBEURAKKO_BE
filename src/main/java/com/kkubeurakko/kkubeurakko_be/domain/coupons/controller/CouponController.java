@@ -141,4 +141,20 @@ public class CouponController {
 			ApiResponse.success("쿠폰이 숨김 처리되었습니다.", null)
 		);
 	}
+
+	@Operation(
+		summary = "쿠폰 활성화 API",
+		description = "숨김 상태의 쿠폰을 다시 활성화합니다."
+	)
+	@PatchMapping("/{storeId}/{couponId}/show")
+	public ResponseEntity<ApiResponse<Void>> showCoupon(
+		@PathVariable Long storeId,
+		@PathVariable Long couponId
+	) {
+		couponService.showCoupon(couponId, storeId);
+
+		return ResponseEntity.ok(
+			ApiResponse.success("쿠폰이 다시 활성화되었습니다.", null)
+		);
+	}
 }
