@@ -62,6 +62,8 @@ jobs:
           sudo docker run -d \
             -p 8080:8080 \
             --name kkubeurakko-app \
+            -e TZ=Asia/Seoul \
+            -e JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Seoul" \
             -e DB_URL="${{ secrets.DB_URL }}" \
             -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
             -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
