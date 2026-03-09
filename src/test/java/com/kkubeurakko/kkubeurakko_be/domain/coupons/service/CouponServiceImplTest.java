@@ -296,4 +296,31 @@ class CouponServiceImplTest {
 		// then
 		assertThat(coupon.getStatus()).isEqualTo(Status.HIDE);
 	}
+
+	@Test
+	@DisplayName("숨김 처리된 쿠폰이 다시 활성화 된다.")
+	void showCouponSuccessfully() {
+		// given
+		Stores store = TestFixture.createStore();
+
+		Coupons coupon = TestFixture.createCoupon(
+			1L,
+			"테스트 쿠폰",
+			10,
+			LocalDate.now().minusDays(1),
+			LocalDate.now().plusDays(10),
+			CouponType.DELIVERY,
+			Status.HIDE,
+			store
+		);
+
+		when(couponRepository.findById(1L))
+			.thenReturn(Optional.of(coupon));
+
+		// when
+		couponService.showCoupon(1L, store.getId());
+
+		// then
+		assertThat(coupon.getStatus()).isEqualTo(Status.OFFER);
+	}
 }
