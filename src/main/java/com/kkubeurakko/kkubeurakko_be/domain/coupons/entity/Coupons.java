@@ -88,4 +88,8 @@ public class Coupons extends BaseEntity {
 	public void hide() {
 		this.status = Status.HIDE;
 	}
+
+	public void show() {
+		this.status = Status.OFFER;
+	}
 }

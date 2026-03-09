@@ -47,6 +47,7 @@ public class SecurityConfig {
 
 				configuration.setAllowedOrigins(Arrays.asList(
 					"http://localhost:5173",
+					"http://localhost:5174",
 					"https://www.kkubeurakko-anyang.shop",
 					"https://admin.kkubeurakko-anyang.shop"
 				));
@@ -102,6 +103,8 @@ public class SecurityConfig {
 					"/v1/user/login",
 					"/v1/account/**",
 					"/v1/logout"
+					//	,"/v1/orders/**"
+
 				).permitAll()
 				.anyRequest().authenticated()
 			)

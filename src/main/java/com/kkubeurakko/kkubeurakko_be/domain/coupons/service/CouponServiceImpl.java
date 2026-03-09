@@ -146,6 +146,21 @@ public class CouponServiceImpl implements CouponService {
 		coupon.hide();
 	}
 
+	@Override
+	@Transactional
+	public void showCoupon(Long couponId, Long storeId) {
+
+		Coupons coupon = couponRepository.findById(couponId)
+			.orElseThrow(() -> new IllegalArgumentException("쿠폰이 존재하지 않습니다."));
+
+		if (!coupon.getStore().getId().equals(storeId)) {
+			throw new IllegalArgumentException("해당 매장의 쿠폰이 아닙니다.");
+		}
+
+		coupon.show();
+	}
+
+
 	private void validateDiscount(CouponCreateRequest request) {
 		if (request.discountAmount() == null && request.discountRate() == null) {
 			throw new IllegalArgumentException("할인 금액 또는 할인율 중 하나는 필수입니다.");

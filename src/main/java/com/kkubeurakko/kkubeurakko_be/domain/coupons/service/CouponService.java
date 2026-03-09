@@ -29,4 +29,7 @@ public interface CouponService {
 
 	//쿠폰 숨김 설정
 	void hideCoupon(Long couponId, Long storeId);
+
+	//쿠폰 활성화 설정
+	void showCoupon(Long couponId, Long storeId);
 }
