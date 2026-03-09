@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -109,4 +110,48 @@ public class OrderController {
 		);
 	}
 
+	@PatchMapping("/{orderId}/accept")
+	public ResponseEntity<ApiResponse<Void>> acceptOrder(
+		@PathVariable Long orderId,
+		@RequestParam int completionTime
+	) {
+		orderService.acceptOrder(orderId, completionTime);
+
+		return ResponseEntity.ok(
+			ApiResponse.success("주문 수락 완료", null)
+		);
+	}
+
+	@PatchMapping("/{orderId}/complete")
+	public ResponseEntity<ApiResponse<Void>> completeOrder(
+		@PathVariable Long orderId
+	) {
+		orderService.completeOrder(orderId);
+
+		return ResponseEntity.ok(
+			ApiResponse.success("주문 완료", null)
+		);
+	}
+	//
+	// @PatchMapping("/{orderId}/cancel")
+	// public ResponseEntity<ApiResponse<Void>> cancelOrder(
+	// 	@PathVariable Long orderId
+	// ) {
+	// 	orderService.cancelOrder(orderId);
+	//
+	// 	return ResponseEntity.ok(
+	// 		ApiResponse.success("주문 취소", null)
+	// 	);
+	// }
+	//
+	// @PatchMapping("/{orderId}/refund")
+	// public ResponseEntity<ApiResponse<Void>> refundOrder(
+	// 	@PathVariable Long orderId
+	// ) {
+	// 	orderService.refundOrder(orderId);
+	//
+	// 	return ResponseEntity.ok(
+	// 		ApiResponse.success("환불 완료", null)
+	// 	);
+	// }
 }

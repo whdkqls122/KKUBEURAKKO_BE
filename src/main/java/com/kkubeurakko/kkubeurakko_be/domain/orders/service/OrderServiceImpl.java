@@ -193,20 +193,22 @@ public class OrderServiceImpl implements OrderService {
 		order.accept(completionTime);
 
 		Long storeId = extractStoreId(order);
-		orderSocketSender.sendStatus(storeId, order);
+		OrderSocketResponse response = OrderSocketResponse.from(order);
+		orderSocketSender.sendStatus(storeId, response);
 	}
 
-	@Override
-	@Transactional
-	public void startCooking(Long orderId) {
-		Orders order = orderRepository.findById(orderId)
-			.orElseThrow(() -> new IllegalArgumentException("주문 없음"));
-
-		order.startCooking();
-
-		Long storeId = extractStoreId(order);
-		orderSocketSender.sendStatus(storeId, order);
-	}
+	// @Override
+	// @Transactional
+	// public void startCooking(Long orderId) {
+	// 	Orders order = orderRepository.findById(orderId)
+	// 		.orElseThrow(() -> new IllegalArgumentException("주문 없음"));
+	//
+	// 	order.startCooking();
+	//
+	// 	Long storeId = extractStoreId(order);
+	// 	OrderSocketResponse response = OrderSocketResponse.from(order);
+	// 	orderSocketSender.sendStatus(storeId, response);
+	// }
 
 	@Override
 	@Transactional
@@ -221,7 +223,8 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		Long storeId = extractStoreId(order);
-		orderSocketSender.sendStatus(storeId, order);
+		OrderSocketResponse response = OrderSocketResponse.from(order);
+		orderSocketSender.sendStatus(storeId, response);
 	}
 
 	@Override

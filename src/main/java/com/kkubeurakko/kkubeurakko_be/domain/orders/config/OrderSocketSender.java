@@ -4,7 +4,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderStatusSocketEvent;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 
 import lombok.RequiredArgsConstructor;
@@ -22,10 +21,10 @@ public class OrderSocketSender {
 		);
 	}
 
-	public void sendStatus(Long storeId, Orders order) {
+	public void sendStatus(Long storeId, OrderSocketResponse response) {
 		messagingTemplate.convertAndSend(
-			"/topic/store/" + storeId + "/status",
-			OrderStatusSocketEvent.from(order)
+			"/topic/store/" + storeId,
+			response
 		);
 	}
 }
