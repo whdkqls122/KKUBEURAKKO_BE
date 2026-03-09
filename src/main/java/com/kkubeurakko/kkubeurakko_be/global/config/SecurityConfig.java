@@ -103,8 +103,6 @@ public class SecurityConfig {
 					"/v1/user/login",
 					"/v1/account/**",
 					"/v1/logout"
-					, "/v1/orders/**"
-
 				).permitAll()
 				.anyRequest().authenticated()
 			)
