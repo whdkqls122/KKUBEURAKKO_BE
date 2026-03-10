@@ -227,6 +227,32 @@ public class OrderServiceImpl implements OrderService {
 		orderSocketSender.sendStatus(storeId, response);
 	}
 
+	@Transactional
+	@Override
+	public void cancelOrder(Long orderId) {
+
+		Orders order = orderRepository.findById(orderId)
+			.orElseThrow(() -> new IllegalArgumentException("주문 없음"));
+
+		order.cancel();
+
+		Long storeId = extractStoreId(order);
+		orderSocketSender.sendStatus(storeId, order);
+	}
+
+	@Transactional
+	@Override
+	public void refundOrder(Long orderId) {
+
+		Orders order = orderRepository.findById(orderId)
+			.orElseThrow(() -> new IllegalArgumentException("주문 없음"));
+
+		order.refund();
+
+		Long storeId = extractStoreId(order);
+		orderSocketSender.sendStatus(storeId, order);
+	}
+
 	@Override
 	@Transactional(readOnly = true)
 	public List<OrderSocketResponse> getOrdersByStoreAndStatus(Long storeId, Status status) {

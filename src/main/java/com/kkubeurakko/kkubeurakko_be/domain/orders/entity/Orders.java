@@ -105,4 +105,12 @@ public class Orders {
 		this.status = Status.COMPLETED;
 	}
 
+	public void cancel() {
+		this.status = Status.CANCELED;
+	}
+
+	public void refund() {
+		this.status = Status.REFUNDED;
+	}
+
 }

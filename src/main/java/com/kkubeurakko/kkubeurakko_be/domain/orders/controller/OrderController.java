@@ -132,26 +132,26 @@ public class OrderController {
 			ApiResponse.success("주문 완료", null)
 		);
 	}
-	//
-	// @PatchMapping("/{orderId}/cancel")
-	// public ResponseEntity<ApiResponse<Void>> cancelOrder(
-	// 	@PathVariable Long orderId
-	// ) {
-	// 	orderService.cancelOrder(orderId);
-	//
-	// 	return ResponseEntity.ok(
-	// 		ApiResponse.success("주문 취소", null)
-	// 	);
-	// }
-	//
-	// @PatchMapping("/{orderId}/refund")
-	// public ResponseEntity<ApiResponse<Void>> refundOrder(
-	// 	@PathVariable Long orderId
-	// ) {
-	// 	orderService.refundOrder(orderId);
-	//
-	// 	return ResponseEntity.ok(
-	// 		ApiResponse.success("환불 완료", null)
-	// 	);
-	// }
+
+	@PatchMapping("/{orderId}/cancel")
+	public ResponseEntity<ApiResponse<Void>> cancelOrder(
+		@PathVariable Long orderId
+	) {
+		orderService.cancelOrder(orderId);
+
+		return ResponseEntity.ok(
+			ApiResponse.success("주문 취소", null)
+		);
+	}
+
+	@PatchMapping("/{orderId}/refund")
+	public ResponseEntity<ApiResponse<Void>> refundOrder(
+		@PathVariable Long orderId
+	) {
+		orderService.refundOrder(orderId);
+
+		return ResponseEntity.ok(
+			ApiResponse.success("환불 완료", null)
+		);
+	}
 }
