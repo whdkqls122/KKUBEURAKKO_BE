@@ -21,6 +21,8 @@ public interface OrderService {
 
 	void acceptOrder(Long orderId, int completionTime);
 
+	void startDelivery(Long orderId);
+	
 	void completeOrder(Long orderId);
 
 	void cancelOrder(Long orderId);

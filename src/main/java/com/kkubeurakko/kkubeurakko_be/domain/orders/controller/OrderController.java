@@ -122,6 +122,14 @@ public class OrderController {
 		);
 	}
 
+	@PatchMapping("/{orderId}/delivery-start")
+	public ResponseEntity<Void> startDelivery(@PathVariable Long orderId) {
+
+		orderService.startDelivery(orderId);
+
+		return ResponseEntity.ok().build();
+	}
+
 	@PatchMapping("/{orderId}/complete")
 	public ResponseEntity<ApiResponse<Void>> completeOrder(
 		@PathVariable Long orderId

@@ -197,33 +197,31 @@ public class OrderServiceImpl implements OrderService {
 		orderSocketSender.sendStatus(storeId, response);
 	}
 
-	// @Override
-	// @Transactional
-	// public void startCooking(Long orderId) {
-	// 	Orders order = orderRepository.findById(orderId)
-	// 		.orElseThrow(() -> new IllegalArgumentException("주문 없음"));
-	//
-	// 	order.startCooking();
-	//
-	// 	Long storeId = extractStoreId(order);
-	// 	OrderSocketResponse response = OrderSocketResponse.from(order);
-	// 	orderSocketSender.sendStatus(storeId, response);
-	// }
-
 	@Override
 	@Transactional
 	public void completeOrder(Long orderId) {
 		Orders order = orderRepository.findById(orderId)
 			.orElseThrow(() -> new IllegalArgumentException("주문 없음"));
 
-		if (order.getOrderType() == OrderType.DELIVERY) {
-			order.startDelivery();
-		} else {
-			order.complete();
-		}
+		order.complete();
 
 		Long storeId = extractStoreId(order);
 		OrderSocketResponse response = OrderSocketResponse.from(order);
+		orderSocketSender.sendStatus(storeId, response);
+	}
+
+	@Override
+	@Transactional
+	public void startDelivery(Long orderId) {
+
+		Orders order = orderRepository.findById(orderId)
+			.orElseThrow(() -> new IllegalArgumentException("주문 없음"));
+
+		order.startDelivery();
+
+		Long storeId = extractStoreId(order);
+		OrderSocketResponse response = OrderSocketResponse.from(order);
+
 		orderSocketSender.sendStatus(storeId, response);
 	}
 
@@ -237,7 +235,8 @@ public class OrderServiceImpl implements OrderService {
 		order.cancel();
 
 		Long storeId = extractStoreId(order);
-		orderSocketSender.sendStatus(storeId, order);
+		OrderSocketResponse response = OrderSocketResponse.from(order);
+		orderSocketSender.sendStatus(storeId, response);
 	}
 
 	@Transactional
@@ -250,7 +249,8 @@ public class OrderServiceImpl implements OrderService {
 		order.refund();
 
 		Long storeId = extractStoreId(order);
-		orderSocketSender.sendStatus(storeId, order);
+		OrderSocketResponse response = OrderSocketResponse.from(order);
+		orderSocketSender.sendStatus(storeId, response);
 	}
 
 	@Override
