@@ -48,7 +48,10 @@ public class MenuServiceImpl implements MenuService {
 		key = "#menuGroupId"
 	)
 	public List<MenuResponseDto> getAllMenuByMenuGroup(Long menuGroupId) {
-		List<Menus> menuList = menuRepository.findByMenuGroupIdAndMenuStatus(menuGroupId, MenuStatus.ON_SALE);
+		List<Menus> menuList = menuRepository.findByMenuGroupIdAndMenuStatusNotIn(
+			menuGroupId,
+			List.of(MenuStatus.DELETED, MenuStatus.HIDE)
+		);
 		if (menuList.isEmpty()) {
 			log.info("조회된 메뉴가 없음");
 			throw new IllegalArgumentException("메뉴가 조회되지 않았습니다.");
@@ -211,6 +214,7 @@ public class MenuServiceImpl implements MenuService {
 				.description(menus.getDescription())
 				.name(menus.getName())
 				.img(menus.getImg())
+				.menuStatus(menus.getMenuStatus())
 				.price(menus.getPrice())
 				.build())
 			.collect(Collectors.toList());

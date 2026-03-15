@@ -11,5 +11,5 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
 @Repository
 public interface MenuRepository extends JpaRepository<Menus, Long> {
 
-	List<Menus> findByMenuGroupIdAndMenuStatus(Long menuGroupId, MenuStatus menuStatus);
+	List<Menus> findByMenuGroupIdAndMenuStatusNotIn(Long menuGroupId, List<MenuStatus> menuStatus);
 }
