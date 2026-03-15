@@ -73,7 +73,9 @@ class MenuGroupServiceImplTest {
 			.build();
 		List<MenuGroups> mockMenuGroups = Arrays.asList(group1, group2, group3);
 
-		when(menuGroupRepository.findByMenuStatus(MenuStatus.ON_SALE))
+		when(menuGroupRepository.findByMenuStatusNotIn(
+			List.of(MenuStatus.DELETED, MenuStatus.HIDE)
+		))
 			.thenReturn(mockMenuGroups);
 
 		// when
@@ -86,13 +88,13 @@ class MenuGroupServiceImplTest {
 		assertThat(result.get(0).name()).isEqualTo("인기");
 
 		verify(menuGroupRepository, times(1))
-			.findByMenuStatus(MenuStatus.ON_SALE);
+			.findByMenuStatusNotIn(List.of(MenuStatus.DELETED, MenuStatus.HIDE));
 	}
 
 	@Test
 	@DisplayName("조회된 메뉴 그룹이 없으면 예외가 발생하는지 검증한다.")
 	void getAllMenuGroupNameEmpty() {
-		when(menuGroupRepository.findByMenuStatus(MenuStatus.ON_SALE))
+		when(menuGroupRepository.findByMenuStatusNotIn(List.of(MenuStatus.DELETED, MenuStatus.HIDE)))
 			.thenReturn(List.of());
 
 		assertThatThrownBy(() -> menuGroupService.getAllMenuGroupName())
@@ -100,7 +102,7 @@ class MenuGroupServiceImplTest {
 			.hasMessageContaining("메뉴 그룹이 조회되지 않았습니다.");
 
 		verify(menuGroupRepository, times(1))
-			.findByMenuStatus(MenuStatus.ON_SALE);
+			.findByMenuStatusNotIn(List.of(MenuStatus.DELETED, MenuStatus.HIDE));
 	}
 
 	@Test
