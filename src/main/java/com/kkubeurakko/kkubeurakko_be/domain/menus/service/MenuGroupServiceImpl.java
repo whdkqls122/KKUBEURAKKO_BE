@@ -139,6 +139,7 @@ public class MenuGroupServiceImpl implements MenuGroupService {
 				.builder()
 				.menuGroupId(menuGroups.getId())
 				.name(menuGroups.getName())
+				.menuGroupStatus(menuGroups.getMenuStatus())
 				.build()
 			)
 			.collect(Collectors.toList());
