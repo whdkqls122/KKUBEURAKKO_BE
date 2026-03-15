@@ -229,13 +229,14 @@ public class MenuServiceImpl implements MenuService {
 			.description(menu.getDescription())
 			.price(menu.getPrice())
 			.img(menu.getImg())
+			.menuStatus(menu.getMenuStatus())
 			.optionGroupResponseDtoList(optionGroupResponseDtoList)
 			.build();
 	}
 
 	private List<OptionGroupResponseDto> toOptionGroupDtoList(List<OptionGroups> optionGroups) {
 		return optionGroups.stream()
-			.filter(og -> og.getOptionStatus() != OptionStatus.DELETED)
+			.filter(og -> og.getOptionStatus() != OptionStatus.DELETED && og.getOptionStatus() != OptionStatus.HIDE)
 			.map(og -> OptionGroupResponseDto.builder()
 				.id(og.getId())
 				.name(og.getName())
@@ -246,7 +247,8 @@ public class MenuServiceImpl implements MenuService {
 				.optionStatus(og.getOptionStatus())
 				.options(
 					og.getOptions().stream()
-						.filter(o -> o.getOptionStatus() != OptionStatus.DELETED)
+						.filter(o -> o.getOptionStatus() != OptionStatus.DELETED
+							&& o.getOptionStatus() != OptionStatus.HIDE)
 						.map(o -> OptionResponseDto.builder()
 							.id(o.getId())
 							.name(o.getName())
