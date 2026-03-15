@@ -17,6 +17,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderStatusSocketEvent;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
@@ -55,7 +56,7 @@ class OrderSocketSenderTest {
 		order.accept(30);
 
 		// when
-		orderSocketSender.sendStatus(store.getId(), order);
+		orderSocketSender.sendStatus(store.getId(), OrderSocketResponse.from(order));
 
 		// then
 		ArgumentCaptor<OrderStatusSocketEvent> captor =
