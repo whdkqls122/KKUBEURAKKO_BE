@@ -14,6 +14,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -29,6 +30,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.config.OrderSocketSender;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
@@ -73,6 +75,8 @@ class OrderServiceImplTest {
 
 	@Mock
 	private OrderNumberUtil orderNumberUtil;
+	@Mock
+	private ApplicationEventPublisher eventPublisher;
 	@Mock
 	private PortOneService portOneService;
 
@@ -159,6 +163,7 @@ class OrderServiceImplTest {
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 		Cart cart = TestFixture.createCartWithOneItem(user);
 		Addresses address = TestFixture.createAddress(1L, user);
+		ReflectionTestUtils.setField(user, "cart", cart);
 
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
 		when(customOAuth2User.getName()).thenReturn("kakao_1234");
@@ -170,12 +175,13 @@ class OrderServiceImplTest {
 			OrderType.DELIVERY,
 			null,
 			"paymentid",
+			false,
+			null,
 			20000,
 			3000
 		);
 
 		when(userService.getUser("kakao_1234")).thenReturn(user);
-		when(cartRepository.findByUserNumber(user.getUserNumber())).thenReturn(Optional.of(cart));
 		when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
 
 		Orders savedOrder = Orders.builder().id(10L).build();
@@ -207,6 +213,8 @@ class OrderServiceImplTest {
 		Cart cart = TestFixture.createCartWithOneItem(user);
 		Addresses address = TestFixture.createAddress(1L, user);
 
+		ReflectionTestUtils.setField(user, "cart", cart);
+
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
 		when(customOAuth2User.getName()).thenReturn("kakao_1234");
 
@@ -217,13 +225,14 @@ class OrderServiceImplTest {
 			OrderType.DELIVERY,
 			null,
 			"paymentid",
+			false,
+			null,
 			20000,
 			3000
 		);
 
 		when(userService.getUser("kakao_1234")).thenReturn(user);
-		when(cartRepository.findByUserNumber(user.getUserNumber()))
-			.thenReturn(Optional.of(cart));
+
 		when(addressRepository.findById(1L))
 			.thenReturn(Optional.of(address));
 
@@ -284,8 +293,7 @@ class OrderServiceImplTest {
 		assertThat(order.getStatus()).isEqualTo(Status.ACCEPTED);
 		assertThat(order.getCompletionTime()).isEqualTo(60);
 
-		verify(orderSocketSender)
-			.sendOrder(store.getId(), order);
+		verify(orderSocketSender).sendStatus(eq(store.getId()), any(OrderSocketResponse.class));
 	}
 
 }
