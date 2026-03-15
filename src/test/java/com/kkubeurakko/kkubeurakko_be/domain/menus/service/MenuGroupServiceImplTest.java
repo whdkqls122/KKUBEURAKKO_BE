@@ -63,7 +63,7 @@ class MenuGroupServiceImplTest {
 		MenuGroups group2 = MenuGroups.builder()
 			.id(3L)
 			.name("세트")
-			.menuStatus(MenuStatus.ON_SALE)
+			.menuStatus(MenuStatus.SOLD_OUT)
 			.build();
 
 		MenuGroups group3 = MenuGroups.builder()
