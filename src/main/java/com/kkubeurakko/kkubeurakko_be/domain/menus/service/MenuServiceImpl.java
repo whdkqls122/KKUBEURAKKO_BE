@@ -265,6 +265,7 @@ public class MenuServiceImpl implements MenuService {
 
 		List<AdminMenuDetailDto.OptionGroupSimpleDto> optionGroupDtos =
 			optionGroups.stream()
+				.filter(og -> og.getOptionStatus() != OptionStatus.DELETED)
 				.map(og -> AdminMenuDetailDto.OptionGroupSimpleDto.builder()
 					.id(og.getId())
 					.name(og.getName())
