@@ -12,7 +12,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 
 @Repository
 public interface MenuGroupRepository extends JpaRepository<MenuGroups, Long> {
-	List<MenuGroups> findByMenuStatus(MenuStatus menuStatus);
+	List<MenuGroups> findByMenuStatusNotIn(List<MenuStatus> statuses);
 
 	@Query("""
 		  SELECT DISTINCT mg
