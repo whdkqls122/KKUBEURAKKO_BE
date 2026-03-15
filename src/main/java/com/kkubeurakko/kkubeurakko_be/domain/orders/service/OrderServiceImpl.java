@@ -161,8 +161,6 @@ public class OrderServiceImpl implements OrderService {
 				);
 			}
 			Payments payment = toPaymentEntity(order, discountAmount, paymentResponse);
-			paymentRepository.save(payment);
-
 			Orders savedOrder = orderRepository.save(order);
 			paymentRepository.save(payment);
 			orderRepository.flush();
