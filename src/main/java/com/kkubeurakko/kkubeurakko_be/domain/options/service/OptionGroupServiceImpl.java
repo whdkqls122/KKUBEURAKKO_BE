@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.options.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 	private final OptionRepository optionRepository;
 
 	@Override
+	@CacheEvict(value = "menuDetail", allEntries = true)
 	public void createOptionGroup(OptionGroupRequestDto requestDto) {
 		OptionGroups optionGroup = OptionGroups.builder()
 			.name(requestDto.name())
@@ -61,6 +63,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 	}
 
 	@Override
+	@CacheEvict(value = "menuDetail", allEntries = true)
 	public void updateOptionGroup(Long id, OptionGroupRequestDto requestDto) {
 		OptionGroups optionGroup = optionGroupRepository.findById(id)
 			.orElseThrow(() -> new IllegalArgumentException("해당 옵션 그룹이 없습니다. id=" + id));
@@ -78,6 +81,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 
 	@Override
 	@Transactional
+	@CacheEvict(value = "menuDetail", allEntries = true)
 	public void deleteOptionGroup(Long id) {
 		OptionGroups optionGroup = optionGroupRepository.findById(id)
 			.orElseThrow(() -> new IllegalArgumentException("해당 옵션 그룹이 없습니다. id=" + id));
@@ -88,6 +92,7 @@ public class OptionGroupServiceImpl implements OptionGroupService {
 
 	@Override
 	@Transactional
+	@CacheEvict(value = "menuDetail", allEntries = true)
 	public void updateStatus(Long id, OptionStatus newOptionGroupStatus) {
 		OptionGroups optionGroup = optionGroupRepository.findById(id)
 			.orElseThrow(() -> new IllegalArgumentException("해당 옵션 그룹이 없습니다. id=" + id));

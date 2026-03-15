@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.options.service;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ public class OptionServiceImpl implements OptionService {
 	private final OptionGroupRepository optionGroupRepository;
 
 	@Override
+	@CacheEvict(value = "menuDetail", allEntries = true)
 	public void createOption(OptionRequestDto requestDto) {
 		OptionGroups optionGroup = optionGroupRepository.findById(requestDto.optionGroupId())
 			.orElseThrow(() -> new IllegalArgumentException("해당 ID의 옵션 그룹이 존재하지 않습니다."));
@@ -34,6 +36,7 @@ public class OptionServiceImpl implements OptionService {
 	}
 
 	@Override
+	@CacheEvict(value = "menuDetail", allEntries = true)
 	public void updateOption(Long optionId, OptionRequestDto requestDto) {
 		Options option = optionRepository.findById(optionId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 ID의 옵션이 존재하지 않습니다."));
@@ -42,6 +45,7 @@ public class OptionServiceImpl implements OptionService {
 		optionRepository.save(option);
 	}
 
+	@CacheEvict(value = "menuDetail", allEntries = true)
 	public void updateStatus(Long optionId, OptionStatus newOptionStatus) {
 		Options option = optionRepository.findById(optionId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 ID의 옵션이 존재하지 않습니다."));
@@ -52,6 +56,7 @@ public class OptionServiceImpl implements OptionService {
 
 	@Override
 	@Transactional
+	@CacheEvict(value = "menuDetail", allEntries = true)
 	public void deleteOption(Long optionId) {
 		Options option = optionRepository.findById(optionId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 ID의 옵션이 존재하지 않습니다."));
