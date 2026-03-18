@@ -83,6 +83,10 @@ public class Coupons extends BaseEntity {
 			throw new IllegalStateException("쿠폰 수량이 부족합니다.");
 		}
 		this.quantity -= 1;
+
+		if (this.quantity == 0) {
+			this.status = Status.HIDE;
+		}
 	}
 
 	public void hide() {
