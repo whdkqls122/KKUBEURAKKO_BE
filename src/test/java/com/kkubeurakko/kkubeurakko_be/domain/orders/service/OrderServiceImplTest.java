@@ -40,6 +40,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentReposito
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.service.DeliveryRegionService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
@@ -80,6 +81,8 @@ class OrderServiceImplTest {
 	@Mock
 	private PortOneService portOneService;
 
+	@Mock
+	private DeliveryRegionService deliveryRegionService;
 	@InjectMocks
 	private OrderServiceImpl orderService;
 
@@ -163,6 +166,7 @@ class OrderServiceImplTest {
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 		Cart cart = TestFixture.createCartWithOneItem(user);
 		Addresses address = TestFixture.createAddress(1L, user);
+		Stores stores = TestFixture.createStore();
 		ReflectionTestUtils.setField(user, "cart", cart);
 
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
@@ -177,13 +181,14 @@ class OrderServiceImplTest {
 			"paymentid",
 			false,
 			null,
-			20000,
-			3000
+			36000,
+			0
 		);
 
 		when(userService.getUser("kakao_1234")).thenReturn(user);
-		when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
-
+		when(addressRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(address));
+		when(deliveryRegionService.isDeliverable(stores.getId(), address.getRoadName()))
+			.thenReturn(true);
 		Orders savedOrder = Orders.builder().id(10L).build();
 		when(orderRepository.save(any())).thenReturn(savedOrder);
 
@@ -191,7 +196,7 @@ class OrderServiceImplTest {
 			TestFixture.createPortOnePaymentResponse(
 				"paymentid",
 				"tx-123",
-				20000
+				36000
 			);
 
 		when(portOneService.getPortOnePayment("paymentid"))
@@ -211,13 +216,15 @@ class OrderServiceImplTest {
 		// given
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 		Cart cart = TestFixture.createCartWithOneItem(user);
+		Stores stores = TestFixture.createStore();
 		Addresses address = TestFixture.createAddress(1L, user);
 
 		ReflectionTestUtils.setField(user, "cart", cart);
 
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
 		when(customOAuth2User.getName()).thenReturn("kakao_1234");
-
+		when(deliveryRegionService.isDeliverable(stores.getId(), address.getRoadName()))
+			.thenReturn(true);
 		OrderCreateRequest request = new OrderCreateRequest(
 			1L,
 			"요청사항",
@@ -228,12 +235,12 @@ class OrderServiceImplTest {
 			false,
 			null,
 			20000,
-			3000
+			0
 		);
 
 		when(userService.getUser("kakao_1234")).thenReturn(user);
 
-		when(addressRepository.findById(1L))
+		when(addressRepository.findByIdAndUser(1L, user))
 			.thenReturn(Optional.of(address));
 
 		when(orderNumberUtil.createOrderNumber(
@@ -252,7 +259,7 @@ class OrderServiceImplTest {
 		when(portOneService.getPortOnePayment("paymentid"))
 			.thenReturn(
 				TestFixture.createPortOnePaymentResponse(
-					"paymentid", "tx-123", 20000
+					"paymentid", "tx-123", 36000
 				)
 			);
 
