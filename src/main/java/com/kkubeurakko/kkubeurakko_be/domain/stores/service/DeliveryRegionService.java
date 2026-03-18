@@ -16,4 +16,7 @@ public interface DeliveryRegionService {
 
 	//배달 지역 조회
 	List<DeliveryRegionResponseDto> getDeliveryRegions(Long storeId);
+
+	//배달 가능 지역 여부 확인
+	boolean isDeliverable(Long storeId, String address);
 }

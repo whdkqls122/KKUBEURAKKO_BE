@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionResponseDto;
@@ -12,7 +13,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.DeliveryRegionRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -31,7 +31,7 @@ public class DeliveryRegionServiceImpl implements DeliveryRegionService {
 		DeliveryRegion deliveryRegion = DeliveryRegion.builder()
 			.store(store)
 			.addressName(request.addressName())
-			.isAvailable(true) //처음 저장시 기본 true로 저장
+			.available(true) //처음 저장시 기본 true로 저장
 			.build();
 
 		deliveryRegionRepository.save(deliveryRegion);
@@ -58,6 +58,17 @@ public class DeliveryRegionServiceImpl implements DeliveryRegionService {
 		return regions.stream()
 			.map(this::toResponse)
 			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public boolean isDeliverable(Long storeId, String address) {
+		if (address == null || address.isBlank()) {
+			return false;
+		}
+		List<DeliveryRegion> deliveryRegionList = deliveryRegionRepository.findByStoreIdAndAvailable(storeId, true);
+
+		return deliveryRegionList.stream()
+			.anyMatch(deliveryRegion -> address.contains(deliveryRegion.getAddressName()));
 	}
 
 	private DeliveryRegionResponseDto toResponse(DeliveryRegion region) {
