@@ -66,7 +66,7 @@ class DeliveryRegionServiceImplTest {
 		Long storeId = 1L;
 
 		DeliveryRegion deliveryRegion = DeliveryRegion.builder()
-			.isAvailable(true)
+			.available(true)
 			.build();
 
 		when(deliveryRegionRepository.findById(1L))
@@ -92,7 +92,7 @@ class DeliveryRegionServiceImplTest {
 		DeliveryRegion region = DeliveryRegion.builder()
 			.id(1L)
 			.addressName("경기 안양시 동안구 비산2동")
-			.isAvailable(true)
+			.available(true)
 			.store(store)
 			.build();
 
