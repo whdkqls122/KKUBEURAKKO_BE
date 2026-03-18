@@ -1,5 +1,8 @@
 package com.kkubeurakko.kkubeurakko_be.domain.orders.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -38,7 +41,10 @@ import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.BusinessDay;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreBusinessHoursRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
@@ -69,6 +75,7 @@ public class OrderServiceImpl implements OrderService {
 	private final OrderNumberUtil orderNumberUtil;
 	private final OrderSocketSender orderSocketSender;
 	private final OrderDecryptService orderDecryptService;
+	private final StoreBusinessHoursRepository storeBusinessHoursRepository;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -256,9 +263,31 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional(readOnly = true)
 	public List<OrderSocketResponse> getOrdersByStoreAndStatus(Long storeId, Status status) {
 
-		List<Orders> orders = orderRepository
-			.findByStoreIdAndStatus(storeId, status);
+		BusinessDay todayDay = BusinessDay.from(LocalDate.now().getDayOfWeek());
 
+		StoreBusinessHours hours = storeBusinessHoursRepository
+			.findByStoreIdAndDayOfWeek(storeId, todayDay)
+			.orElseThrow(() -> new IllegalArgumentException("영업시간 없음"));
+
+		LocalDate today = LocalDate.now();
+		LocalTime open = hours.getOpenTime();
+		LocalTime close = hours.getCloseTime();
+
+		LocalDateTime startDateTime;
+		LocalDateTime endDateTime;
+
+		if (close.isAfter(open)) {
+			startDateTime = LocalDateTime.of(today, open);
+			endDateTime = LocalDateTime.of(today, close);
+		} else {
+			startDateTime = LocalDateTime.of(today, open);
+			endDateTime = LocalDateTime.of(today.plusDays(1), close);
+		}
+
+		List<Orders> orders = orderRepository
+			.findByStoreIdAndStatusAndBusinessTime(
+				storeId, status, startDateTime, endDateTime
+			);
 		return orders.stream()
 			.map(order -> OrderSocketResponse.from(
 				order,
