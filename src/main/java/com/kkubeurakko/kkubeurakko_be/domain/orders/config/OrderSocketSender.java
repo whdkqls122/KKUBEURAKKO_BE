@@ -18,8 +18,15 @@ public class OrderSocketSender {
 
 	public void sendOrder(Long storeId, Orders order) {
 
-		String address = orderDecryptService
-			.decryptAddress(order.getAddressSnapshot());
+		String address = null;
+
+		if (order.getAddressSnapshot() != null) {
+			String road = order.getAddressSnapshot().getRoadName();
+			String detail = order.getAddressSnapshot().getDetailAddress();
+
+			address = (road != null ? road : "") +
+				(detail != null ? " " + detail : "");
+		}
 
 		String phone = orderDecryptService
 			.decryptPhone(order.getUser().getPhone());
