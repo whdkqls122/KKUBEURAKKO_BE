@@ -86,8 +86,8 @@ public class Stores extends BaseEntity {
 		}
 	}
 
-	public void setOpen(boolean isOpen) {
-		this.isOpen = isOpen;
+	public void close() {
+		this.isOpen = false;
 	}
 
 	public void pause(LocalDateTime start, LocalDateTime end) {

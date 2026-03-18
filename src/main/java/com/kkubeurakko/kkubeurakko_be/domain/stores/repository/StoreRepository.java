@@ -17,4 +17,12 @@ public interface StoreRepository extends JpaRepository<Stores, Long> {
 			and s.pauseEndAt <= :now
 		""")
 	List<Stores> findPausedStoresToReopen(LocalDateTime now);
+
+	@Query("""
+		    select s
+		    from Stores s
+		    join StoreBusinessHours h on h.store = s
+		    where s.isOpen = true
+		""")
+	List<Stores> findOpenStoresWithHours();
 }

@@ -174,4 +174,25 @@ public class StoreBusinessHoursServiceImpl implements StoreBusinessHoursService 
 		return LocalDateTime.of(baseDate, h.getCloseTime());
 	}
 
+	public StoreBusinessHours getHoursByDate(Long storeId, LocalDate date) {
+
+		BusinessDay day = BusinessDay.from(date.getDayOfWeek());
+
+		List<StoreBusinessHours> hours =
+			businessHoursRepository.findByStoreId(storeId);
+
+		if (hours.isEmpty()) {
+			throw new IllegalStateException("영업시간 없음");
+		}
+
+		if (hours.get(0).getOperationType() == OperationType.SAME) {
+			return hours.get(0);
+		}
+
+		return hours.stream()
+			.filter(h -> h.getDayOfWeek() == day)
+			.findFirst()
+			.orElseThrow(() -> new IllegalStateException("요일 없음"));
+	}
+
 }
