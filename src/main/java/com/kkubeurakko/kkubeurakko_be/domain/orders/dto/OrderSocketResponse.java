@@ -3,7 +3,6 @@ package com.kkubeurakko.kkubeurakko_be.domain.orders.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderAddressSnapshot;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 
 import lombok.Builder;
@@ -23,20 +22,11 @@ public record OrderSocketResponse(
 	List<OrderMenuResponse> items
 ) {
 
-	public static OrderSocketResponse from(Orders order) {
-		OrderAddressSnapshot snap = order.getAddressSnapshot();
-
-		String address = null;
-		if (snap != null) {
-			if (snap.getRoadName() != null && snap.getDetailAddress() != null) {
-				address = snap.getRoadName() + " " + snap.getDetailAddress();
-			} else if (snap.getRoadName() != null) {
-				address = snap.getRoadName();
-			} else if (snap.getDetailAddress() != null) {
-				address = snap.getDetailAddress();
-			}
-		}
-
+	public static OrderSocketResponse from(
+		Orders order,
+		String address,
+		String phone
+	) {
 		return OrderSocketResponse.builder()
 			.orderId(order.getId())
 			.orderDate(order.getOrderDate())
@@ -48,9 +38,13 @@ public record OrderSocketResponse(
 			.status(order.getStatus().name())
 			.orderType(order.getOrderType().name())
 			.address(address)
-			.phone(order.getUser().getPhone())
+			.phone(phone)
 			.storeRequest(order.getStoreRequest())
-			.deliveryRequest(snap != null ? snap.getRequestContent() : null)
+			.deliveryRequest(
+				order.getAddressSnapshot() != null
+					? order.getAddressSnapshot().getRequestContent()
+					: null
+			)
 			.finalAmount(
 				order.getPayments() != null
 					? order.getPayments().getFinalAmount()
@@ -64,5 +58,4 @@ public record OrderSocketResponse(
 			)
 			.build();
 	}
-
 }
