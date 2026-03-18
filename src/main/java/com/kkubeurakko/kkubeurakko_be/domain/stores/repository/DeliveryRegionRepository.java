@@ -8,4 +8,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.DeliveryRegion;
 
 public interface DeliveryRegionRepository extends JpaRepository<DeliveryRegion, Long> {
 	List<DeliveryRegion> findByStoreId(Long storeId);
+
+	boolean existsByStoreIdAndAddressName(Long storeId, String addressName);
 }

@@ -31,13 +31,13 @@ public class DeliveryRegion {
 	private String addressName;
 
 	@Column(name = "is_available", nullable = false)
-	private boolean isAvailable;
+	private boolean available;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "stores_id", nullable = false)
 	private Stores store;
 
 	public void changeAvailability(boolean isAvailable) {
-		this.isAvailable = isAvailable;
+		this.available = isAvailable;
 	}
 }
