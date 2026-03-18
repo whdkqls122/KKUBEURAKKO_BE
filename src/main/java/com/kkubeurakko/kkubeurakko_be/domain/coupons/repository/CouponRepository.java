@@ -1,10 +1,12 @@
 package com.kkubeurakko.kkubeurakko_be.domain.coupons.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -33,4 +35,8 @@ public interface CouponRepository extends JpaRepository<Coupons, Long> {
 	Optional<Coupons> findByIdForUpdate(@Param("couponId") Long couponId);
 
 	List<Coupons> findByStoreId(Long storeId);
+
+	@Modifying
+	@Query("UPDATE Coupons c SET c.status = 'HIDE' WHERE c.validUntil < :today AND c.status = 'OFFER'")
+	int hideExpiredCoupons(@Param("today") LocalDate today);
 }
