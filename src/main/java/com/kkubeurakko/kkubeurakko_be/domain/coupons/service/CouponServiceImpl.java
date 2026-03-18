@@ -62,6 +62,13 @@ public class CouponServiceImpl implements CouponService {
 		Coupons coupon = couponRepository.findByIdForUpdate(couponId)
 			.orElseThrow(() -> new IllegalArgumentException("조회된 쿠폰이 없습니다."));
 
+		if (coupon.getStatus() != Status.OFFER) {
+			throw new IllegalArgumentException("발급 가능한 쿠폰이 아닙니다.");
+		}
+
+		if (coupon.getQuantity() <= 0) {
+			throw new IllegalArgumentException("쿠폰이 모두 소진되었습니다.");
+		}
 		boolean alreadyIssued = userCouponRepository.existsByUserUserNumberAndCouponId(
 			user.getUserNumber(), coupon.getId()
 		);
@@ -159,7 +166,6 @@ public class CouponServiceImpl implements CouponService {
 
 		coupon.show();
 	}
-
 
 	private void validateDiscount(CouponCreateRequest request) {
 		if (request.discountAmount() == null && request.discountRate() == null) {
