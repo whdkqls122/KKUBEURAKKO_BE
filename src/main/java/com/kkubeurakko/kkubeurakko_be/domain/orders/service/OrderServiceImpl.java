@@ -68,6 +68,7 @@ public class OrderServiceImpl implements OrderService {
 	private final ApplicationEventPublisher eventPublisher;
 	private final OrderNumberUtil orderNumberUtil;
 	private final OrderSocketSender orderSocketSender;
+	private final OrderDecryptService orderDecryptService;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -259,7 +260,16 @@ public class OrderServiceImpl implements OrderService {
 			.findByStoreIdAndStatus(storeId, status);
 
 		return orders.stream()
-			.map(OrderSocketResponse::from)
+			.map(order -> {
+
+				String address = orderDecryptService
+					.decryptAddress(order.getAddressSnapshot());
+
+				String phone = orderDecryptService
+					.decryptPhone(order.getUser().getPhone());
+
+				return OrderSocketResponse.from(order, address, phone);
+			})
 			.toList();
 	}
 
