@@ -22,6 +22,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponReposi
 import com.kkubeurakko.kkubeurakko_be.domain.orders.config.OrderSocketSender;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderAddressResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreatedEvent;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderItemsOptionResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderMenuResponseDto;
@@ -125,56 +126,38 @@ public class OrderServiceImpl implements OrderService {
 	public Long createOrder(OrderCreateRequest request, CustomOAuth2User customOAuth2User) {
 
 		try {
-			Users user = userService.getUser(customOAuth2User.getName());
-			Cart cart = user.getCart();
-			if (cart == null) {
-				throw new IllegalStateException("장바구니가 비어있습니다.");
-			}
-			if (cart.getCartItemList().isEmpty()) {
-				throw new IllegalStateException("장바구니에 담긴 메뉴가 없습니다.");
-			}
-
-			Stores store = cart.getCartItemList().get(0)
-				.getMenu()
-				.getMenuGroup()
-				.getStore();
+			Users user = getUser(customOAuth2User);
+			Cart cart = validateCart(user);
+			Stores store = extractStore(cart);
 
 			// if (!store.isOpen()) {
 			// 	throw new IllegalStateException("현재 가게가 영업 중이 아닙니다.");
 			// }
 
-			Addresses address = null;
-			if (request.orderType() == OrderType.DELIVERY) {
-				address = addressRepository.findById(request.addressId())
-					.orElseThrow(() -> new EntityNotFoundException("주소를 찾을 수 없습니다."));
-			}
+			Addresses address = getAddress(request, user);
 
-			int discountAmount = applyCouponIfNecessary(user.getUserNumber(), cart, request);
 			int totalAmount = calculateCartTotal(cart);
+			int discountAmount = calculateDiscountAmount(user.getUserNumber(), cart, request);
+			int finalAmount = totalAmount - discountAmount;
 
-			String orderNumber = orderNumberUtil.createOrderNumber(1L, request.orderType());
-			Orders order = request.toOrderEntity(user, address, totalAmount, orderNumber);
-
-			createOrderItems(order, cart);
+			String orderNumber = orderNumberUtil.createOrderNumber(store.getId(), request.orderType());
 
 			PortOnePaymentResponseDto paymentResponse =
-				portOneService.getPortOnePayment(request.paymentId());
+				verifyPaymentAndIssueCashReceipt(user, request, finalAmount);
 
-			if (request.isCashReceipt()) {
-				portOneService.issueCashReceipt(
-					user,
-					request.paymentId(),
-					request.cashReceiptRequest(),
-					request.totalAmount()
-				);
-			}
+			Orders order = createOrderEntity(
+				request,
+				user,
+				address,
+				totalAmount,
+				orderNumber,
+				cart
+			);
+
 			Payments payment = toPaymentEntity(order, discountAmount, paymentResponse);
-			Orders savedOrder = orderRepository.save(order);
-			paymentRepository.save(payment);
-			orderRepository.flush();
-			user.updateCart(null);
+			Orders savedOrder = saveOrderAndPayment(order, payment);
 
-			sendOrderToStore(savedOrder, store.getId());
+			processAfterOrderSaved(user, request, savedOrder.getId(), store.getId());
 
 			return savedOrder.getId();
 		} catch (Exception e) {
@@ -450,31 +433,62 @@ public class OrderServiceImpl implements OrderService {
 			.sum();
 	}
 
-	private int applyCouponIfNecessary(String userNumber, Cart cart, OrderCreateRequest request) {
-
-		if (request.couponNumber() == null)
+	private int calculateDiscountAmount(String userNumber, Cart cart, OrderCreateRequest request) {
+		if (request.couponNumber() == null) {
 			return 0;
+		}
 
-		UsersCoupons usersCoupon = userCouponRepository.findByUser_UserNumberAndCouponsNumber(userNumber,
-				request.couponNumber())
+		UsersCoupons usersCoupon = userCouponRepository
+			.findByUser_UserNumberAndCouponsNumber(userNumber, request.couponNumber())
 			.orElseThrow(() -> new IllegalArgumentException("쿠폰이 존재하지 않습니다."));
 
 		Coupons coupon = usersCoupon.getCoupon();
 
-		if (usersCoupon.isUsed())
+		if (usersCoupon.isUsed()) {
 			throw new IllegalArgumentException("이미 사용된 쿠폰입니다.");
+		}
 
 		int orderAmount = calculateCartTotal(cart);
-		if (orderAmount < coupon.getMinOrderAmount())
+		if (orderAmount < coupon.getMinOrderAmount()) {
 			throw new IllegalStateException("최소 주문 금액에 미달합니다.");
+		}
 
-		usersCoupon.use();
-
-		return coupon.getDiscountAmount();
+		return calculateCouponDiscount(orderAmount, coupon);
 	}
 
-	private void sendOrderToStore(Orders order, Long storeId) {
-		orderSocketSender.sendOrder(storeId, order);
+	private int calculateCouponDiscount(int orderAmount, Coupons coupon) {
+		Integer discountAmount = coupon.getDiscountAmount();
+		Integer discountRate = coupon.getDiscountRate();
+
+		if (discountAmount != null && discountAmount > 0) {
+			return discountAmount;
+		}
+
+		if (discountRate != null && discountRate > 0) {
+			return orderAmount * discountRate / 100;
+		}
+
+		throw new IllegalStateException("쿠폰 할인 정보가 올바르지 않습니다.");
+	}
+
+	private void markCouponUsedIfNeeded(String userNumber, OrderCreateRequest request) {
+		if (request.couponNumber() == null) {
+			return;
+		}
+
+		UsersCoupons usersCoupon = userCouponRepository
+			.findByUser_UserNumberAndCouponsNumber(userNumber, request.couponNumber())
+			.orElseThrow(() -> new IllegalArgumentException("쿠폰이 존재하지 않습니다."));
+
+		if (usersCoupon.isUsed()) {
+			throw new IllegalArgumentException("이미 사용된 쿠폰입니다.");
+		}
+
+		usersCoupon.use();
+	}
+
+	private Users getUser(CustomOAuth2User customOAuth2User) {
+		return userService.getUser(customOAuth2User.getName());
 	}
 
 	private Long extractStoreId(Orders order) {
@@ -487,4 +501,86 @@ public class OrderServiceImpl implements OrderService {
 			.getId();
 	}
 
+	private Stores extractStore(Cart cart) {
+		return cart.getCartItemList().get(0)
+			.getMenu()
+			.getMenuGroup()
+			.getStore();
+	}
+
+	private Cart validateCart(Users user) {
+		Cart cart = user.getCart();
+
+		if (cart == null) {
+			throw new IllegalStateException("장바구니가 비어있습니다.");
+		}
+		if (cart.getCartItemList().isEmpty()) {
+			throw new IllegalStateException("장바구니에 담긴 메뉴가 없습니다.");
+		}
+
+		return cart;
+	}
+
+	private Addresses getAddress(OrderCreateRequest request, Users user) {
+		if (request.orderType() != OrderType.DELIVERY) {
+			return null;
+		}
+
+		return addressRepository.findByIdAndUser(request.addressId(), user)
+			.orElseThrow(() -> new EntityNotFoundException("사용자의 주소를 찾을 수 없습니다."));
+	}
+
+	private PortOnePaymentResponseDto verifyPaymentAndIssueCashReceipt(
+		Users user,
+		OrderCreateRequest request,
+		int expectedFinalAmount
+	) {
+		PortOnePaymentResponseDto paymentResponse =
+			portOneService.getPortOnePayment(request.paymentId());
+
+		if (paymentResponse.amount().total() != expectedFinalAmount) {
+			throw new IllegalStateException("결제 금액이 일치하지 않습니다.");
+		}
+
+		if (request.isCashReceipt()) {
+			portOneService.issueCashReceipt(
+				user,
+				request.paymentId(),
+				request.cashReceiptRequest(),
+				expectedFinalAmount
+			);
+		}
+
+		return paymentResponse;
+	}
+
+	private Orders createOrderEntity(
+		OrderCreateRequest request,
+		Users user,
+		Addresses address,
+		int totalAmount,
+		String orderNumber,
+		Cart cart
+	) {
+		Orders order = request.toOrderEntity(user, address, totalAmount, orderNumber);
+		createOrderItems(order, cart);
+		return order;
+	}
+
+	private Orders saveOrderAndPayment(Orders order, Payments payment) {
+		Orders savedOrder = orderRepository.save(order);
+		paymentRepository.save(payment);
+		return savedOrder;
+	}
+
+	private void processAfterOrderSaved(
+		Users user,
+		OrderCreateRequest request,
+		Long orderId,
+		Long storeId
+	) {
+		markCouponUsedIfNeeded(user.getUserNumber(), request);
+		user.updateCart(null);
+		eventPublisher.publishEvent(new OrderCreatedEvent(orderId, storeId));
+	}
 }
