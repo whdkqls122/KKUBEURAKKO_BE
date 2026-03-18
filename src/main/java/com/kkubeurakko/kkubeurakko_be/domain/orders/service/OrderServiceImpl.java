@@ -24,7 +24,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderItemsOptionResponse
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderMenuResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderAddressSnapshot;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItems;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItemsOptions;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
@@ -147,9 +146,7 @@ public class OrderServiceImpl implements OrderService {
 			int totalAmount = calculateCartTotal(cart);
 
 			String orderNumber = orderNumberUtil.createOrderNumber(1L, request.orderType());
-			OrderAddressSnapshot snapshot = orderDecryptService.createSnapshot(address);
-
-			Orders order = request.toOrderEntity(user, snapshot, totalAmount, orderNumber);
+			Orders order = request.toOrderEntity(user, address, totalAmount, orderNumber);
 
 			createOrderItems(order, cart);
 
@@ -263,23 +260,11 @@ public class OrderServiceImpl implements OrderService {
 			.findByStoreIdAndStatus(storeId, status);
 
 		return orders.stream()
-			.map(order -> {
-
-				String address = null;
-
-				if (order.getAddressSnapshot() != null) {
-					String road = order.getAddressSnapshot().getRoadName();
-					String detail = order.getAddressSnapshot().getDetailAddress();
-
-					address = (road != null ? road : "") +
-						(detail != null ? " " + detail : "");
-				}
-
-				String phone = orderDecryptService
-					.decryptPhone(order.getUser().getPhone());
-
-				return OrderSocketResponse.from(order, address, phone);
-			})
+			.map(order -> OrderSocketResponse.from(
+				order,
+				orderDecryptService.decryptAddress(order.getAddressSnapshot()),
+				orderDecryptService.decryptPhone(order.getUser().getPhone())
+			))
 			.toList();
 	}
 

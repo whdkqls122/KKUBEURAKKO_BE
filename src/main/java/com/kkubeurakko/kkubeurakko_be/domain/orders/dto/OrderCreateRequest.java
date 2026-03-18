@@ -2,6 +2,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.orders.dto;
 
 import java.time.LocalDateTime;
 
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderAddressSnapshot;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
@@ -47,7 +48,19 @@ public record OrderCreateRequest(
 	@PositiveOrZero(message = "할인 금액은 0 이상이어야 합니다.")
 	int discountAmount
 ) {
-	public Orders toOrderEntity(Users user, OrderAddressSnapshot snapshot, int totalAmount, String orderNumber) {
+	public Orders toOrderEntity(Users user, Addresses address, int totalAmount, String orderNumber) {
+
+		OrderAddressSnapshot snapshot = null;
+		if (address != null) {
+			snapshot = OrderAddressSnapshot.builder()
+				.addressName(address.getAddressName())
+				.roadName(address.getRoadName())
+				.detailAddress(address.getDetailAddress())
+				.requestContent(address.getRequestContent())
+				.entrancePassword(address.getEntrancePassword())
+				.directionsInfo(address.getDirectionsInfo())
+				.build();
+		}
 
 		return Orders.builder()
 			.user(user)

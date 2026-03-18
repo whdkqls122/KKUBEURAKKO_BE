@@ -2,7 +2,6 @@ package com.kkubeurakko.kkubeurakko_be.domain.orders.service;
 
 import org.springframework.stereotype.Component;
 
-import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderAddressSnapshot;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
 
@@ -20,17 +19,21 @@ public class OrderDecryptService {
 		return aesUtil.decryptFromBase64(encryptedPhone);
 	}
 
-	public OrderAddressSnapshot createSnapshot(Addresses address) {
-		if (address == null)
+	public String decryptAddress(OrderAddressSnapshot snap) {
+		if (snap == null)
 			return null;
 
-		return OrderAddressSnapshot.builder()
-			.addressName(address.getAddressName())
-			.roadName(address.getRoadName())
-			.detailAddress(aesUtil.decryptFromBase64(address.getDetailAddress()))
-			.requestContent(address.getRequestContent())
-			.entrancePassword(address.getEntrancePassword())
-			.directionsInfo(address.getDirectionsInfo())
-			.build();
+		String road = snap.getRoadName();
+		String detail = snap.getDetailAddress();
+
+		if (detail != null) {
+			try {
+				detail = aesUtil.decryptFromBase64(detail);
+			} catch (Exception e) {
+			}
+		}
+
+		return (road != null ? road : "") +
+			(detail != null ? " " + detail : "");
 	}
 }
