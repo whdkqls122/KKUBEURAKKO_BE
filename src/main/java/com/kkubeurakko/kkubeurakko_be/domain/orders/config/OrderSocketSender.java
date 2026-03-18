@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
-import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.service.OrderDecryptService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,24 +14,15 @@ import lombok.RequiredArgsConstructor;
 public class OrderSocketSender {
 
 	private final SimpMessagingTemplate messagingTemplate;
-	private final AesUtil aesUtil;
+	private final OrderDecryptService orderDecryptService;
 
 	public void sendOrder(Long storeId, Orders order) {
 
-		String address = null;
-		if (order.getAddressSnapshot() != null) {
-			String road = order.getAddressSnapshot().getRoadName();
-			String detail = order.getAddressSnapshot().getDetailAddress();
+		String address = orderDecryptService
+			.decryptAddress(order.getAddressSnapshot());
 
-			if (detail != null) {
-				detail = aesUtil.decryptFromBase64(detail);
-			}
-
-			address = (road != null ? road : "") +
-				(detail != null ? " " + detail : "");
-		}
-
-		String phone = aesUtil.decryptFromBase64(order.getUser().getPhone());
+		String phone = orderDecryptService
+			.decryptPhone(order.getUser().getPhone());
 
 		messagingTemplate.convertAndSend(
 			"/topic/store/" + storeId,

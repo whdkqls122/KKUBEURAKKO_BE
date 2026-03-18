@@ -260,16 +260,11 @@ public class OrderServiceImpl implements OrderService {
 			.findByStoreIdAndStatus(storeId, status);
 
 		return orders.stream()
-			.map(order -> {
-
-				String address = orderDecryptService
-					.decryptAddress(order.getAddressSnapshot());
-
-				String phone = orderDecryptService
-					.decryptPhone(order.getUser().getPhone());
-
-				return OrderSocketResponse.from(order, address, phone);
-			})
+			.map(order -> OrderSocketResponse.from(
+				order,
+				orderDecryptService.decryptAddress(order.getAddressSnapshot()),
+				orderDecryptService.decryptPhone(order.getUser().getPhone())
+			))
 			.toList();
 	}
 
