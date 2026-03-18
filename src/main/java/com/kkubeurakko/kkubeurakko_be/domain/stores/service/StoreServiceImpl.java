@@ -93,6 +93,7 @@ public class StoreServiceImpl implements StoreService {
 		StoreBusinessHours businessHours
 	) {
 		return StoreOperationInfoResponse.builder()
+			.isOpen(store.isOpen())
 			.openTime(businessHours.getOpenTime())
 			.closeTime(businessHours.getCloseTime())
 			.minOrderPrice(store.getMinOrderPrice())

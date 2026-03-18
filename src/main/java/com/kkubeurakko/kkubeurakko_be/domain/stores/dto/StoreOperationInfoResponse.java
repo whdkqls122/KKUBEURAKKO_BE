@@ -6,6 +6,7 @@ import lombok.Builder;
 
 @Builder
 public record StoreOperationInfoResponse(
+	boolean isOpen,
 	LocalTime openTime,
 	LocalTime closeTime,
 	int minOrderPrice,
