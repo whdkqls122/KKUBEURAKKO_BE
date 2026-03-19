@@ -7,6 +7,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
+import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 public interface OrderService {
@@ -22,7 +23,7 @@ public interface OrderService {
 	void acceptOrder(Long orderId, int completionTime);
 
 	void startDelivery(Long orderId);
-	
+
 	void completeOrder(Long orderId);
 
 	void cancelOrder(Long orderId);
@@ -30,4 +31,6 @@ public interface OrderService {
 	void refundOrder(Long orderId);
 
 	List<OrderSocketResponse> getOrdersByStoreAndStatus(Long storeId, Status status);
+
+	boolean isInProgressOrder(Users user);
 }

@@ -263,6 +263,19 @@ public class OrderServiceImpl implements OrderService {
 			.toList();
 	}
 
+	@Override
+	public boolean isInProgressOrder(Users user) {
+		return orderRepository.existsByUser_UserNumberAndStatusIn(
+			user.getUserNumber(),
+			List.of(
+				Status.PENDING,
+				Status.ACCEPTED,
+				Status.ON_DELIVERY,
+				Status.COOKING
+			)
+		);
+	}
+
 	private OrderDetailResponseDto toResponseDto(Orders order) {
 
 		List<OrderMenuResponseDto> orderMenuList = order.getOrderItemList().stream()
