@@ -40,4 +40,5 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
 		@Param("status") Status status
 	);
 
+	boolean existsByUser_UserNumberAndStatusIn(String userNumber, List<Status> status);
 }
