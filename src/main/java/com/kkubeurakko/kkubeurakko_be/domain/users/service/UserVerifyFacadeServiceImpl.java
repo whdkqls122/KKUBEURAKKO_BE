@@ -5,11 +5,13 @@ import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.LogoutService;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.TokenService;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.service.OrderService;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.TempUser;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
+import com.kkubeurakko.kkubeurakko_be.domain.users.exception.InProgressOrderException;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.UserVerifyException;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
@@ -32,6 +34,7 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 	private final LogoutService logoutService;
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final JwtUtil jwtUtil;
+	private final OrderService orderService;
 	private static final String TEMP_USER_PREFIX_KEY = "TEMP_USER:";
 
 	@Override
@@ -73,6 +76,9 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 		HttpServletResponse response
 	) {
 		Users user = userService.getUser(customOAuth2User.getName());
+		if (orderService.isInProgressOrder(user)) {
+			throw new InProgressOrderException("진행중인 주문이 있습니다.");
+		}
 		try {
 			if (!user.getUserNumber().startsWith("local")) {
 				oAuthUnlinkService.revokeOAuthAccount(user.getUserNumber());
