@@ -199,7 +199,8 @@ public class OrderServiceImpl implements OrderService {
 		order.accept(completionTime);
 
 		Long storeId = extractStoreId(order);
-		OrderSocketResponse response = OrderSocketResponse.from(order);
+		OrderSocketResponse response =
+			orderDecryptService.toResponse(order);
 		orderSocketSender.sendStatus(storeId, response);
 	}
 
@@ -212,7 +213,8 @@ public class OrderServiceImpl implements OrderService {
 		order.complete();
 
 		Long storeId = extractStoreId(order);
-		OrderSocketResponse response = OrderSocketResponse.from(order);
+		OrderSocketResponse response =
+			orderDecryptService.toResponse(order);
 		orderSocketSender.sendStatus(storeId, response);
 	}
 
@@ -226,7 +228,8 @@ public class OrderServiceImpl implements OrderService {
 		order.startDelivery();
 
 		Long storeId = extractStoreId(order);
-		OrderSocketResponse response = OrderSocketResponse.from(order);
+		OrderSocketResponse response =
+			orderDecryptService.toResponse(order);
 
 		orderSocketSender.sendStatus(storeId, response);
 	}
@@ -241,7 +244,8 @@ public class OrderServiceImpl implements OrderService {
 		order.cancel();
 
 		Long storeId = extractStoreId(order);
-		OrderSocketResponse response = OrderSocketResponse.from(order);
+		OrderSocketResponse response =
+			orderDecryptService.toResponse(order);
 		orderSocketSender.sendStatus(storeId, response);
 	}
 
@@ -255,7 +259,8 @@ public class OrderServiceImpl implements OrderService {
 		order.refund();
 
 		Long storeId = extractStoreId(order);
-		OrderSocketResponse response = OrderSocketResponse.from(order);
+		OrderSocketResponse response =
+			orderDecryptService.toResponse(order);
 		orderSocketSender.sendStatus(storeId, response);
 	}
 

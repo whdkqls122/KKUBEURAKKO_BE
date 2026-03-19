@@ -2,7 +2,9 @@ package com.kkubeurakko.kkubeurakko_be.domain.orders.service;
 
 import org.springframework.stereotype.Component;
 
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderAddressSnapshot;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -35,5 +37,17 @@ public class OrderDecryptService {
 
 		return (road != null ? road : "") +
 			(detail != null ? " " + detail : "");
+	}
+
+	public OrderSocketResponse toResponse(Orders order) {
+
+		String address = decryptAddress(order.getAddressSnapshot());
+
+		String phone =
+			order.getAddressSnapshot() != null
+				? decryptPhone(order.getUser().getPhone())
+				: null;
+
+		return OrderSocketResponse.from(order, address, phone);
 	}
 }
