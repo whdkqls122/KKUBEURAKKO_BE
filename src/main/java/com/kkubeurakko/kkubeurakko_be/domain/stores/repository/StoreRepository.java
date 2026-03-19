@@ -25,4 +25,10 @@ public interface StoreRepository extends JpaRepository<Stores, Long> {
 		    where s.isOpen = true
 		""")
 	List<Stores> findOpenStoresWithHours();
+
+	@Query("""
+		    select s from Stores s
+		    where s.isOpen = false
+		""")
+	List<Stores> findClosedStores();
 }
