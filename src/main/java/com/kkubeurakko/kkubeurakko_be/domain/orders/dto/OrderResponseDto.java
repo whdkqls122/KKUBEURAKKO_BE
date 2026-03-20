@@ -16,6 +16,7 @@ public record OrderResponseDto(
 	int orderQuantity,
 	OrderType orderType,
 	Status status,
+	int completionTime,
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
 	LocalDateTime orderDate
 ) {
