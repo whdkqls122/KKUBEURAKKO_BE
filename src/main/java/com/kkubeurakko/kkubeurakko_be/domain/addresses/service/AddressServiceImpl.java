@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.addresses.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -178,6 +179,7 @@ public class AddressServiceImpl implements AddressService {
 			.postalCode(addressRequestDto.postalCode())
 			.latitude(addressRequestDto.latitude())
 			.longitude(addressRequestDto.longitude())
+			.lastUsedAt(LocalDateTime.now())
 			.isPrimary(true)
 			.category(addressRequestDto.category())
 			.requestContent(addressRequestDto.requestContent())
