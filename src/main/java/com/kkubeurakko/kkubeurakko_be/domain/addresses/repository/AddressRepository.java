@@ -22,7 +22,7 @@ public interface AddressRepository extends JpaRepository<Addresses, Long> {
 
 	boolean existsByUser(Users user);
 
-	Optional<Addresses> findFirstByUserOrderByIdDesc(Users user);
+	Optional<Addresses> findFirstByUserOrderByLastUsedAtDesc(Users user);
 
-	Optional<Addresses> findFirstByUserOrderByUpdateAtAsc(Users user);
+	Optional<Addresses> findFirstByUserOrderByLastUsedAtAsc(Users user);
 }

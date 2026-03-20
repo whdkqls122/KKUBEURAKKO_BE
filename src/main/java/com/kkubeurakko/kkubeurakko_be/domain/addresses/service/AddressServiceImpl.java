@@ -138,7 +138,7 @@ public class AddressServiceImpl implements AddressService {
 
 		if (isPrimary) {
 			log.info("기본 주소 삭제");
-			addressRepository.findFirstByUserOrderByIdDesc(user)
+			addressRepository.findFirstByUserOrderByLastUsedAtDesc(user)
 				.ifPresentOrElse(
 					latest -> {
 						latest.updatePrimary(true);
@@ -154,7 +154,7 @@ public class AddressServiceImpl implements AddressService {
 	public void deleteOldAddress(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
 
-		Addresses address = addressRepository.findFirstByUserOrderByUpdateAtAsc(user)
+		Addresses address = addressRepository.findFirstByUserOrderByLastUsedAtAsc(user)
 			.orElseThrow(() -> new EntityNotFoundException("조회된 주소가 없습니다."));
 
 		addressRepository.delete(address);
