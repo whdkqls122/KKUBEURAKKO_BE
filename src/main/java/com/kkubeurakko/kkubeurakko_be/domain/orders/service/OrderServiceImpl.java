@@ -111,6 +111,7 @@ public class OrderServiceImpl implements OrderService {
 					.orderQuantity(ol.getOrderItemList().stream().mapToInt(OrderItems::getQuantity).sum())
 					.orderType(ol.getOrderType())
 					.status(ol.getStatus())
+					.completionTime(ol.getCompletionTime())
 					.build();
 			})
 			.toList();
