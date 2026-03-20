@@ -6,7 +6,6 @@ import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +14,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.addresses.repository.AddressReposit
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItem;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItemOption;
-import com.kkubeurakko.kkubeurakko_be.domain.cart.repository.CartRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
@@ -46,8 +44,8 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.BusinessDay;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreBusinessHoursRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.service.DeliveryRegionService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
-import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.util.PhoneMaskingUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
@@ -61,13 +59,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class OrderServiceImpl implements OrderService {
-
-	private final UserRepository userRepository;
-	private final CartRepository cartRepository;
 	private final UserCouponRepository userCouponRepository;
 	private final PaymentRepository paymentRepository;
 	private final AddressRepository addressRepository;
-	private final SimpMessagingTemplate messagingTemplate;
 	private final OrderRepository orderRepository;
 	private final UserService userService;
 	private final AesUtil aesUtil;
@@ -77,6 +71,7 @@ public class OrderServiceImpl implements OrderService {
 	private final OrderSocketSender orderSocketSender;
 	private final OrderDecryptService orderDecryptService;
 	private final StoreBusinessHoursRepository storeBusinessHoursRepository;
+	private final DeliveryRegionService deliveryRegionService;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -134,7 +129,7 @@ public class OrderServiceImpl implements OrderService {
 			// 	throw new IllegalStateException("현재 가게가 영업 중이 아닙니다.");
 			// }
 
-			Addresses address = getAddress(request, user);
+			Addresses address = getAddress(store, request, user);
 
 			int totalAmount = calculateCartTotal(cart);
 			int discountAmount = calculateDiscountAmount(user.getUserNumber(), cart, request);
@@ -163,7 +158,8 @@ public class OrderServiceImpl implements OrderService {
 		} catch (Exception e) {
 			OrderCreateException exception =
 				new OrderCreateException(
-					"결제는 자동으로 취소 됩니다.\n" +
+					e.getMessage() + "\n\n" +
+						"결제는 자동으로 취소 됩니다.\n" +
 						"환불이 지연되거나 같은 문제가 지속될 경우 가게로 문의 부탁드립니다.",
 					request.paymentId(),
 					e
@@ -521,13 +517,17 @@ public class OrderServiceImpl implements OrderService {
 		return cart;
 	}
 
-	private Addresses getAddress(OrderCreateRequest request, Users user) {
+	private Addresses getAddress(Stores store, OrderCreateRequest request, Users user) {
 		if (request.orderType() != OrderType.DELIVERY) {
 			return null;
 		}
 
-		return addressRepository.findByIdAndUser(request.addressId(), user)
+		Addresses addresses = addressRepository.findByIdAndUser(request.addressId(), user)
 			.orElseThrow(() -> new EntityNotFoundException("사용자의 주소를 찾을 수 없습니다."));
+
+		validateDeliveryRegion(store, addresses.getRoadName());
+
+		return addresses;
 	}
 
 	private PortOnePaymentResponseDto verifyPaymentAndIssueCashReceipt(
@@ -582,5 +582,13 @@ public class OrderServiceImpl implements OrderService {
 		markCouponUsedIfNeeded(user.getUserNumber(), request);
 		user.updateCart(null);
 		eventPublisher.publishEvent(new OrderCreatedEvent(orderId, storeId));
+	}
+
+	private void validateDeliveryRegion(Stores store, String address) {
+		boolean isDeliverable = deliveryRegionService.isDeliverable(store.getId(), address);
+
+		if (!isDeliverable) {
+			throw new IllegalStateException("배달 불가능한 지역입니다.");
+		}
 	}
 }
