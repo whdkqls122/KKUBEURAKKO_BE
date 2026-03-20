@@ -1,5 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.domain.addresses.entity;
 
+import java.time.LocalDateTime;
+
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
 
@@ -50,6 +52,9 @@ public class Addresses extends BaseEntity {
 	@Column(name = "longitude", nullable = false)
 	private double longitude;
 
+	@Column(name = "last_used_at")
+	private LocalDateTime lastUsedAt;
+
 	@Column(name = "is_primary", nullable = false)
 	private Boolean isPrimary;
 
@@ -90,5 +95,9 @@ public class Addresses extends BaseEntity {
 
 	public void updatePrimary(boolean isPrimary) {
 		this.isPrimary = isPrimary;
+	}
+
+	public void useAddress() {
+		this.lastUsedAt = LocalDateTime.now();
 	}
 }
