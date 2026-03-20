@@ -83,6 +83,8 @@ class OrderServiceImplTest {
 
 	@Mock
 	private DeliveryRegionService deliveryRegionService;
+	@Mock
+	private OrderDecryptService orderDecryptService;
 	@InjectMocks
 	private OrderServiceImpl orderService;
 

@@ -538,13 +538,13 @@ class AddressServiceImplTest {
 
 		when(customOAuth2User.getName()).thenReturn("123123");
 		when(userService.getUser("123123")).thenReturn(user);
-		when(addressRepository.findFirstByUserOrderByUpdateAtAsc(user)).thenReturn(Optional.of(oldAddress));
+		when(addressRepository.findFirstByUserOrderByLastUsedAtAsc(user)).thenReturn(Optional.of(oldAddress));
 
 		// when
 		addressService.deleteOldAddress(customOAuth2User);
 
 		// then
-		verify(addressRepository, times(1)).findFirstByUserOrderByUpdateAtAsc(user);
+		verify(addressRepository, times(1)).findFirstByUserOrderByLastUsedAtAsc(user);
 		verify(addressRepository, times(1)).delete(oldAddress);
 	}
 }
