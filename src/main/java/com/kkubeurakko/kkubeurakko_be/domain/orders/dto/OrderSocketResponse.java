@@ -9,7 +9,8 @@ import lombok.Builder;
 
 @Builder
 public record OrderSocketResponse(
-	String orderId,
+	Long orderId,
+	String orderNumber,
 	LocalDateTime orderDate,
 	String paymentType,
 	String status,
@@ -28,7 +29,8 @@ public record OrderSocketResponse(
 		String phone
 	) {
 		return OrderSocketResponse.builder()
-			.orderId(order.getOrderNumber())
+			.orderId(order.getId())
+			.orderNumber(order.getOrderNumber())
 			.orderDate(order.getOrderDate())
 			.paymentType(
 				order.getPayments() != null
