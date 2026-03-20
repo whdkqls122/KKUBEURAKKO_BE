@@ -126,9 +126,9 @@ public class OrderServiceImpl implements OrderService {
 			Cart cart = validateCart(user);
 			Stores store = extractStore(cart);
 
-			// if (!store.isOpen()) {
-			// 	throw new IllegalStateException("현재 가게가 영업 중이 아닙니다.");
-			// }
+			if (!store.isOpen()) {
+				throw new IllegalStateException("현재 가게가 영업 중이 아닙니다.");
+			}
 
 			Addresses address = getAddress(store, request, user);
 
@@ -153,7 +153,7 @@ public class OrderServiceImpl implements OrderService {
 			Payments payment = toPaymentEntity(order, discountAmount, paymentResponse);
 			Orders savedOrder = saveOrderAndPayment(order, payment);
 
-			processAfterOrderSaved(user, request, savedOrder.getId(), store.getId());
+			processAfterOrderSaved(user, request, savedOrder.getId(), store.getId(), address);
 
 			return savedOrder.getId();
 		} catch (Exception e) {
@@ -578,9 +578,13 @@ public class OrderServiceImpl implements OrderService {
 		Users user,
 		OrderCreateRequest request,
 		Long orderId,
-		Long storeId
+		Long storeId,
+		Addresses addresses
 	) {
 		markCouponUsedIfNeeded(user.getUserNumber(), request);
+		if (addresses != null) {
+			addresses.useAddress();
+		}
 		user.updateCart(null);
 		eventPublisher.publishEvent(new OrderCreatedEvent(orderId, storeId));
 	}
