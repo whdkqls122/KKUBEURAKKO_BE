@@ -1,7 +1,5 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.controller;
 
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -9,11 +7,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionCreateRequest;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionResponseDto;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionStatusUpdateRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionAbleResponse;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.DeliveryRegionService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 
@@ -32,12 +31,12 @@ public class DeliveryRegionController {
 
 	@Operation(
 		summary = "배달 가능 지역 저장",
-		description = "배달 가능한 지역을 저장합니다."
+		description = "배달 가능한 지역 반경 거리를 저장합니다."
 	)
 	@PostMapping("/{storeId}")
 	public ResponseEntity<ApiResponse<Void>> saveDeliveryRegion(
 		@PathVariable Long storeId,
-		@RequestBody @Valid DeliveryRegionCreateRequest request
+		@RequestBody @Valid DeliveryRegionRequest request
 	) {
 		deliveryRegionService.saveDeliveryRegion(storeId, request);
 
@@ -47,15 +46,15 @@ public class DeliveryRegionController {
 	}
 
 	@Operation(
-		summary = "배달 지역 상태 변경",
-		description = "배달 지역의 배달 가능 여부 상태를 변경합니다."
+		summary = "배달 지역 반경 거리 수정",
+		description = "배달 가능한 지역 반경 거리를 수정합니다."
 	)
 	@PatchMapping("/{storeId}")
-	public ResponseEntity<ApiResponse<Void>> updateDeliveryRegionStatus(
+	public ResponseEntity<ApiResponse<Void>> updateDeliveryRegion(
 		@PathVariable Long storeId,
-		@RequestBody @Valid DeliveryRegionStatusUpdateRequest request
+		@RequestBody @Valid DeliveryRegionRequest request
 	) {
-		deliveryRegionService.updateDeliveryRegionStatus(
+		deliveryRegionService.updateDeliveryRegion(
 			storeId,
 			request
 		);
@@ -66,18 +65,40 @@ public class DeliveryRegionController {
 	}
 
 	@Operation(
-		summary = "배달 지역 조회",
-		description = "배달 지역 전체 리스트를 조회합니다."
+		summary = "배달 가능 지역 정보 조회",
+		description = "지도 출력을 위해 설정 반경 및 가게 좌표를 조회합니다."
 	)
 	@GetMapping("/{storeId}")
-	public ResponseEntity<ApiResponse<List<DeliveryRegionResponseDto>>> getDeliveryRegions(
+	public ResponseEntity<ApiResponse<DeliveryRegionResponse>> getDeliveryRegion(
 		@PathVariable Long storeId
 	) {
-		List<DeliveryRegionResponseDto> responseDto = deliveryRegionService.getDeliveryRegions(storeId);
+
+		DeliveryRegionResponse deliveryRegionResponse = deliveryRegionService.getDeliveryRegion(storeId);
 		return ResponseEntity.ok(
 			ApiResponse.success(
 				"배달 지역 리스트를 성공적으로 조회했습니다.",
-				responseDto
+				deliveryRegionResponse
+			)
+		);
+	}
+
+	@Operation(
+		summary = "배달 가능 여부 판단",
+		description = "좌표 기반으로 배달 가능 여부를 판단합니다."
+	)
+	@GetMapping("/stores/{storeId}/delivery-availability")
+	public ResponseEntity<ApiResponse<DeliveryRegionAbleResponse>> checkDeliveryAvailability(
+		@PathVariable Long storeId,
+		@RequestParam double latitude,
+		@RequestParam double longitude
+	) {
+
+		DeliveryRegionAbleResponse deliverable = deliveryRegionService.isDeliverable(storeId, latitude, longitude);
+
+		return ResponseEntity.ok(
+			ApiResponse.success(
+				"배달 가능 여부 조회 성공",
+				deliverable
 			)
 		);
 	}
