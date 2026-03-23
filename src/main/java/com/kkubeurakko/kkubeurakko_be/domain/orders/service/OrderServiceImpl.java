@@ -40,6 +40,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionAbleResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.BusinessDay;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
@@ -526,7 +527,7 @@ public class OrderServiceImpl implements OrderService {
 		Addresses addresses = addressRepository.findByIdAndUser(request.addressId(), user)
 			.orElseThrow(() -> new EntityNotFoundException("사용자의 주소를 찾을 수 없습니다."));
 
-		validateDeliveryRegion(store, addresses.getRoadName());
+		validateDeliveryRegion(store, addresses);
 
 		return addresses;
 	}
@@ -589,10 +590,14 @@ public class OrderServiceImpl implements OrderService {
 		eventPublisher.publishEvent(new OrderCreatedEvent(orderId, storeId));
 	}
 
-	private void validateDeliveryRegion(Stores store, String address) {
-		boolean isDeliverable = deliveryRegionService.isDeliverable(store.getId(), address);
+	private void validateDeliveryRegion(Stores store, Addresses address) {
+		DeliveryRegionAbleResponse isDeliverable = deliveryRegionService.isDeliverable(
+			store.getId(),
+			address.getLatitude(),
+			address.getLongitude()
+		);
 
-		if (!isDeliverable) {
+		if (!isDeliverable.able()) {
 			throw new IllegalStateException("배달 불가능한 지역입니다.");
 		}
 	}
