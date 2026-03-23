@@ -26,18 +26,15 @@ public class DeliveryRegion {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "delivery_region_id")
 	private Long id;
-
-	@Column(name = "address_name", nullable = false, length = 60)
-	private String addressName;
-
-	@Column(name = "is_available", nullable = false)
-	private boolean available;
+	
+	@Column(name = "distance", nullable = false)
+	private double distance;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "stores_id", nullable = false)
 	private Stores store;
 
-	public void changeAvailability(boolean isAvailable) {
-		this.available = isAvailable;
+	public void updateDistance(double distance) {
+		this.distance = distance;
 	}
 }
