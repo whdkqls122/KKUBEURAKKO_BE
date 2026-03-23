@@ -39,6 +39,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionAbleResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.DeliveryRegionService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -187,10 +188,13 @@ class OrderServiceImplTest {
 			0
 		);
 
+		DeliveryRegionAbleResponse deliveryRegionAbleResponse = DeliveryRegionAbleResponse.builder()
+			.able(true)
+			.build();
 		when(userService.getUser("kakao_1234")).thenReturn(user);
 		when(addressRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(address));
-		when(deliveryRegionService.isDeliverable(stores.getId(), address.getRoadName()))
-			.thenReturn(true);
+		when(deliveryRegionService.isDeliverable(stores.getId(), address.getLatitude(), address.getLongitude()))
+			.thenReturn(deliveryRegionAbleResponse);
 		Orders savedOrder = Orders.builder().id(10L).build();
 		when(orderRepository.save(any())).thenReturn(savedOrder);
 
@@ -223,10 +227,14 @@ class OrderServiceImplTest {
 
 		ReflectionTestUtils.setField(user, "cart", cart);
 
+		DeliveryRegionAbleResponse deliveryRegionAbleResponse = DeliveryRegionAbleResponse.builder()
+			.able(true)
+			.build();
+
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
 		when(customOAuth2User.getName()).thenReturn("kakao_1234");
-		when(deliveryRegionService.isDeliverable(stores.getId(), address.getRoadName()))
-			.thenReturn(true);
+		when(deliveryRegionService.isDeliverable(stores.getId(), address.getLatitude(), address.getLongitude()))
+			.thenReturn(deliveryRegionAbleResponse);
 		OrderCreateRequest request = new OrderCreateRequest(
 			1L,
 			"요청사항",
