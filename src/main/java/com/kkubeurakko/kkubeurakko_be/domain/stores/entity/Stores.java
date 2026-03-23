@@ -52,6 +52,12 @@ public class Stores extends BaseEntity {
 	@Column(name = "pause_end_at")
 	private LocalDateTime pauseEndAt;
 
+	@Column(name = "latitude", nullable = false)
+	private double latitude;
+
+	@Column(name = "longitude", nullable = false)
+	private double longitude;
+
 	@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Coupons> couponsList = new ArrayList<>();
 
