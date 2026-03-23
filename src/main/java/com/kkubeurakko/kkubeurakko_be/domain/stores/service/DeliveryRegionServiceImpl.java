@@ -1,13 +1,11 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionCreateRequest;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionResponseDto;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionStatusUpdateRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionAbleResponse;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.DeliveryRegion;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.DeliveryRegionRepository;
@@ -21,17 +19,17 @@ public class DeliveryRegionServiceImpl implements DeliveryRegionService {
 
 	private final DeliveryRegionRepository deliveryRegionRepository;
 	private final StoreRepository storeRepository;
+	private static final double EARTH_RADIUS = 6371000;
 
 	@Override
-	public void saveDeliveryRegion(Long storeId, DeliveryRegionCreateRequest request) {
+	public void saveDeliveryRegion(Long storeId, DeliveryRegionRequest request) {
 
 		Stores store = storeRepository.findById(storeId)
 			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
 
 		DeliveryRegion deliveryRegion = DeliveryRegion.builder()
 			.store(store)
-			.addressName(request.addressName())
-			.available(true) //처음 저장시 기본 true로 저장
+			.distance(request.distance())
 			.build();
 
 		deliveryRegionRepository.save(deliveryRegion);
@@ -39,43 +37,72 @@ public class DeliveryRegionServiceImpl implements DeliveryRegionService {
 
 	@Transactional
 	@Override
-	public void updateDeliveryRegionStatus(
+	public void updateDeliveryRegion(
 		Long storeId,
-		DeliveryRegionStatusUpdateRequest request
+		DeliveryRegionRequest request
 	) {
-		DeliveryRegion deliveryRegion = deliveryRegionRepository.findById(request.deliveryRegionId())
-			.orElseThrow(() -> new IllegalArgumentException("배달 지역을 찾을 수 없습니다"
-				+ "."));
+		DeliveryRegion deliveryRegion = deliveryRegionRepository.findByStoreId(storeId)
+			.orElseThrow(() -> new IllegalArgumentException("배달 지역을 찾을 수 없습니다."));
 
-		deliveryRegion.changeAvailability(request.isAvailable());
+		deliveryRegion.updateDistance(request.distance());
 	}
 
 	@Override
-	public List<DeliveryRegionResponseDto> getDeliveryRegions(Long storeId) {
+	public DeliveryRegionResponse getDeliveryRegion(Long storeId) {
+		Stores store = storeRepository.findById(storeId).orElseThrow(
+			() -> new IllegalArgumentException("가게 정보를 찾을 수 없습니다.")
+		);
+		DeliveryRegion deliveryRegion = deliveryRegionRepository.findByStoreId(storeId).orElseThrow(
+			() -> new IllegalArgumentException("배달 가능 지역 정보를 찾을 수 없습니다.")
+		);
 
-		List<DeliveryRegion> regions = deliveryRegionRepository.findByStoreId(storeId);
-
-		return regions.stream()
-			.map(this::toResponse)
-			.toList();
+		return DeliveryRegionResponse.builder()
+			.storeLat(store.getLatitude())
+			.storeLng(store.getLongitude())
+			.distance(deliveryRegion.getDistance())
+			.build();
 	}
 
 	@Transactional(readOnly = true)
-	public boolean isDeliverable(Long storeId, String address) {
-		if (address == null || address.isBlank()) {
-			return false;
-		}
-		List<DeliveryRegion> deliveryRegionList = deliveryRegionRepository.findByStoreIdAndAvailable(storeId, true);
+	public DeliveryRegionAbleResponse isDeliverable(Long storeId, double latitude, double longitude) {
+		Stores store = storeRepository.findById(storeId).orElseThrow(
+			() -> new IllegalArgumentException("가게 정보를 찾을 수 없습니다.")
+		);
+		DeliveryRegion deliveryRegion = deliveryRegionRepository.findByStoreId(storeId).orElseThrow(
+			() -> new IllegalArgumentException("배달 가능 지역 정보를 찾을 수 없습니다.")
+		);
 
-		return deliveryRegionList.stream()
-			.anyMatch(deliveryRegion -> address.contains(deliveryRegion.getAddressName()));
+		double distance = calculateDistanceInMeters(
+			store.getLatitude(),
+			store.getLongitude(),
+			latitude,
+			longitude
+		);
+		double maxDistance = deliveryRegion.getDistance() * 1000;
+
+		boolean able = distance <= maxDistance;
+
+		return DeliveryRegionAbleResponse.builder()
+			.able(able)
+			.build();
 	}
 
-	private DeliveryRegionResponseDto toResponse(DeliveryRegion region) {
-		return DeliveryRegionResponseDto.builder()
-			.deliveryRegionId(region.getId())
-			.addressName(region.getAddressName())
-			.isAvailable(region.isAvailable())
-			.build();
+	private double calculateDistanceInMeters(
+		double lat1, double lng1,
+		double lat2, double lng2
+	) {
+		double dLat = Math.toRadians(lat2 - lat1);
+		double dLng = Math.toRadians(lng2 - lng1);
+
+		double radLat1 = Math.toRadians(lat1);
+		double radLat2 = Math.toRadians(lat2);
+
+		double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+			Math.cos(radLat1) * Math.cos(radLat2) *
+				Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+		return EARTH_RADIUS * c;
 	}
 }
