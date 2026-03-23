@@ -1,22 +1,21 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionCreateRequest;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionResponseDto;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionStatusUpdateRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionAbleResponse;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.DeliveryRegion;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.DeliveryRegionRepository;
@@ -39,24 +38,25 @@ class DeliveryRegionServiceImplTest {
 	void saveDeliveryRegion() {
 		// given
 		Long storeId = 1L;
-		Stores store = Stores.builder().build();
+		Stores store = Stores.builder()
+			.id(storeId)
+			.build();
+
+		DeliveryRegionRequest request = new DeliveryRegionRequest(3.0);
 
 		when(storeRepository.findById(storeId))
 			.thenReturn(Optional.of(store));
-
-		DeliveryRegionCreateRequest request =
-			new DeliveryRegionCreateRequest("경기 안양시 동안구 비산2동");
 
 		// when
 		deliveryRegionService.saveDeliveryRegion(storeId, request);
 
 		// then
-		verify(deliveryRegionRepository, times(1))
-			.save(argThat(deliveryRegion ->
-				deliveryRegion.getStore() == store &&
-					deliveryRegion.getAddressName().equals("경기 안양시 동안구 비산2동") &&
-					deliveryRegion.isAvailable()
-			));
+		ArgumentCaptor<DeliveryRegion> captor = ArgumentCaptor.forClass(DeliveryRegion.class);
+		verify(deliveryRegionRepository).save(captor.capture());
+
+		DeliveryRegion savedRegion = captor.getValue();
+		assertThat(savedRegion.getStore()).isEqualTo(store);
+		assertThat(savedRegion.getDistance()).isEqualTo(3.0);
 	}
 
 	@Test
@@ -66,47 +66,117 @@ class DeliveryRegionServiceImplTest {
 		Long storeId = 1L;
 
 		DeliveryRegion deliveryRegion = DeliveryRegion.builder()
-			.available(true)
+			.distance(2.0)
 			.build();
 
-		when(deliveryRegionRepository.findById(1L))
+		DeliveryRegionRequest request = new DeliveryRegionRequest(5.0);
+
+		when(deliveryRegionRepository.findByStoreId(storeId))
 			.thenReturn(Optional.of(deliveryRegion));
 
-		DeliveryRegionStatusUpdateRequest request =
-			new DeliveryRegionStatusUpdateRequest(1L, false);
-
 		// when
-		deliveryRegionService.updateDeliveryRegionStatus(storeId, request);
+		deliveryRegionService.updateDeliveryRegion(storeId, request);
 
 		// then
-		assertFalse(deliveryRegion.isAvailable());
-		verify(deliveryRegionRepository, times(1)).findById(1L);
+		assertThat(deliveryRegion.getDistance()).isEqualTo(5.0);
+		verify(deliveryRegionRepository, times(1)).findByStoreId(storeId);
 		verify(deliveryRegionRepository, never()).save(any());
 	}
 
 	@Test
-	@DisplayName("배달 가능 지역 리스트가 정상적으로 조회된다")
-	void getDeliveryRegions() {
-		Stores store = Stores.builder().id(1L).build();
+	@DisplayName("배달 반경과 가게 좌표가 정상 조회된다.")
+	void getDeliveryRegion() {
+		// given
+		Long storeId = 1L;
 
-		DeliveryRegion region = DeliveryRegion.builder()
-			.id(1L)
-			.addressName("경기 안양시 동안구 비산2동")
-			.available(true)
+		Stores store = Stores.builder()
+			.id(storeId)
+			.latitude(37.3940742)
+			.longitude(126.9236632)
+			.build();
+
+		DeliveryRegion deliveryRegion = DeliveryRegion.builder()
+			.distance(3.5)
 			.store(store)
 			.build();
 
-		when(deliveryRegionRepository.findByStoreId(1L))
-			.thenReturn(List.of(region));
+		when(storeRepository.findById(storeId))
+			.thenReturn(Optional.of(store));
+		when(deliveryRegionRepository.findByStoreId(storeId))
+			.thenReturn(Optional.of(deliveryRegion));
 
-		List<DeliveryRegionResponseDto> result =
-			deliveryRegionService.getDeliveryRegions(1L);
+		// when
+		DeliveryRegionResponse result = deliveryRegionService.getDeliveryRegion(storeId);
 
-		assertThat(result).hasSize(1);
-		assertThat(result.get(0).deliveryRegionId()).isEqualTo(1L);
-		assertThat(result.get(0).addressName()).isEqualTo("경기 안양시 동안구 비산2동");
-		assertThat(result.get(0).isAvailable()).isTrue();
+		// then
+		assertThat(result.storeLat()).isEqualTo(37.3940742);
+		assertThat(result.storeLng()).isEqualTo(126.9236632);
+		assertThat(result.distance()).isEqualTo(3.5);
+	}
 
-		verify(deliveryRegionRepository, times(1)).findByStoreId(1L);
+	@Test
+	@DisplayName("가게 반경 이내 좌표면 배달 가능하다.")
+	void isDeliverable_true() {
+		// given
+		Long storeId = 1L;
+
+		Stores store = Stores.builder()
+			.id(storeId)
+			.latitude(37.3940742)
+			.longitude(126.9236632)
+			.build();
+
+		DeliveryRegion deliveryRegion = DeliveryRegion.builder()
+			.distance(2.0) // 2km
+			.build();
+
+		when(storeRepository.findById(storeId))
+			.thenReturn(Optional.of(store));
+		when(deliveryRegionRepository.findByStoreId(storeId))
+			.thenReturn(Optional.of(deliveryRegion));
+
+		// 가게에서 매우 가까운 좌표
+		double targetLat = 37.3950000;
+		double targetLng = 126.9240000;
+
+		// when
+		DeliveryRegionAbleResponse result =
+			deliveryRegionService.isDeliverable(storeId, targetLat, targetLng);
+
+		// then
+		assertThat(result.able()).isTrue();
+	}
+
+	@Test
+	@DisplayName("가게 반경 밖 좌표면 배달 불가능하다.")
+	void isDeliverable_false() {
+		// given
+		Long storeId = 1L;
+
+		Stores store = Stores.builder()
+			.id(storeId)
+			.latitude(37.3940742)
+			.longitude(126.9236632)
+			.build();
+
+		DeliveryRegion deliveryRegion = DeliveryRegion.builder()
+			.distance(1.0) // 1km
+			.build();
+
+		when(storeRepository.findById(storeId))
+			.thenReturn(Optional.of(store));
+		when(deliveryRegionRepository.findByStoreId(storeId))
+			.thenReturn(Optional.of(deliveryRegion));
+
+		// 1km보다 충분히 먼 좌표
+		double targetLat = 37.4100000;
+		double targetLng = 126.9400000;
+
+		// when
+		DeliveryRegionAbleResponse result =
+			deliveryRegionService.isDeliverable(storeId, targetLat, targetLng);
+
+		// then
+		assertThat(result.able()).isFalse();
 	}
 }
