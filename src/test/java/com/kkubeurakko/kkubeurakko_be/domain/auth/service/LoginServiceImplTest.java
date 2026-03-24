@@ -3,18 +3,16 @@ package com.kkubeurakko.kkubeurakko_be.domain.auth.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -25,40 +23,34 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.AdminRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
-import com.kkubeurakko.kkubeurakko_be.global.jwt.entity.RefreshToken;
-import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenRepository;
-import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 
 import jakarta.servlet.http.HttpServletResponse;
 
 @ExtendWith(MockitoExtension.class)
 class LoginServiceImplTest {
 
+	private static final String SAVED_ID_COOKIE_NAME = "SAVED_ID";
+
 	@Mock
 	private AdminRepository adminRepository;
-	@Mock
-	private JwtUtil jwtUtil;
-	@Mock
-	private RefreshTokenRepository refreshTokenRepository;
+
 	@Mock
 	private PasswordEncoder passwordEncoder;
 
 	@Mock
 	private UserRepository userRepository;
+
+	@Mock
+	private TokenService tokenService;
+
+	@Mock
+	private CookieService cookieService;
+
 	@Mock
 	private HttpServletResponse response;
 
 	@InjectMocks
 	private LoginServiceImpl loginService;
-
-	@BeforeEach
-	void setUp() {
-		MockitoAnnotations.openMocks(this);
-		loginService = new LoginServiceImpl(adminRepository, jwtUtil, refreshTokenRepository, passwordEncoder,
-			userRepository);
-		org.springframework.test.util.ReflectionTestUtils.setField(loginService, "accessTokenExpiry", 1000L);
-		org.springframework.test.util.ReflectionTestUtils.setField(loginService, "refreshTokenExpiry", 2000L);
-	}
 
 	@AfterEach
 	void clearContext() {
@@ -78,27 +70,20 @@ class LoginServiceImplTest {
 
 		when(adminRepository.findById("admin1")).thenReturn(Optional.of(admin));
 		when(passwordEncoder.matches("1234", "encodedPassword")).thenReturn(true);
-		when(jwtUtil.createAccessToken(any(), any(), anyLong())).thenReturn("accessToken");
-		when(jwtUtil.createRefreshToken(any(), any(), anyLong())).thenReturn("refreshToken");
+		when(tokenService.createLoginToken(response, "admin1", UserRole.ADMIN.toString()))
+			.thenReturn("accessToken");
 
 		// when
 		String result = loginService.adminLogin(dto, response);
 
 		// then
 		assertThat(result).isEqualTo("accessToken");
+		assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
 		assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal())
 			.isEqualTo("admin1");
 
-		verify(refreshTokenRepository, times(1)).save(any(RefreshToken.class));
-
-		verify(response, times(1)).addHeader(
-			eq(HttpHeaders.SET_COOKIE),
-			argThat(cookie ->
-				cookie.contains("refresh=refreshToken") &&
-					cookie.contains("SameSite=None") &&
-					cookie.contains("Secure")
-			)
-		);
+		verify(tokenService).createLoginToken(response, "admin1", UserRole.ADMIN.toString());
+		verifyNoInteractions(cookieService);
 	}
 
 	@Test
@@ -119,6 +104,9 @@ class LoginServiceImplTest {
 		assertThatThrownBy(() -> loginService.adminLogin(dto, response))
 			.isInstanceOf(RuntimeException.class)
 			.hasMessageContaining("비밀번호가 일치하지 않습니다.");
+
+		verify(tokenService, never()).createLoginToken(any(), anyString(), anyString());
+		verifyNoInteractions(cookieService);
 	}
 
 	@Test
@@ -131,6 +119,9 @@ class LoginServiceImplTest {
 		// then
 		assertThatThrownBy(() -> loginService.adminLogin(dto, response))
 			.isInstanceOf(NullPointerException.class);
+
+		verify(tokenService, never()).createLoginToken(any(), anyString(), anyString());
+		verifyNoInteractions(cookieService);
 	}
 
 	@Test
@@ -151,26 +142,27 @@ class LoginServiceImplTest {
 
 		when(userRepository.findById("user1")).thenReturn(Optional.of(user));
 		when(passwordEncoder.matches("1234", "encodedPassword")).thenReturn(true);
-		when(jwtUtil.createAccessToken(any(), any(), anyLong())).thenReturn("accessToken");
-		when(jwtUtil.createRefreshToken(any(), any(), anyLong())).thenReturn("refreshToken");
+		when(tokenService.createLoginToken(response, "user1", UserRole.CUSTOMER.toString()))
+			.thenReturn("accessToken");
 
 		// when
 		String result = loginService.login(dto, response);
 
 		// then
 		assertThat(result).isEqualTo("accessToken");
+		assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
+		assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+			.isEqualTo("user1");
 
-		verify(refreshTokenRepository).save(any(RefreshToken.class));
-
-		verify(response, times(2)).addHeader(
-			eq(HttpHeaders.SET_COOKIE),
-			anyString()
+		verify(cookieService).addCookie(
+			eq(response),
+			eq(SAVED_ID_COOKIE_NAME),
+			eq("user1"),
+			eq(Duration.ofDays(30)),
+			eq(false)
 		);
-
-		verify(response).addHeader(
-			eq(HttpHeaders.SET_COOKIE),
-			argThat(cookie -> cookie.contains("SAVED_ID=user1"))
-		);
+		verify(cookieService, never()).removeCookie(eq(response), eq(SAVED_ID_COOKIE_NAME), eq(false));
+		verify(tokenService).createLoginToken(response, "user1", UserRole.CUSTOMER.toString());
 	}
 
 	@Test
@@ -191,20 +183,67 @@ class LoginServiceImplTest {
 
 		when(userRepository.findById("user1")).thenReturn(Optional.of(user));
 		when(passwordEncoder.matches("1234", "encodedPassword")).thenReturn(true);
-		when(jwtUtil.createAccessToken(any(), any(), anyLong())).thenReturn("accessToken");
-		when(jwtUtil.createRefreshToken(any(), any(), anyLong())).thenReturn("refreshToken");
+		when(tokenService.createLoginToken(response, "user1", UserRole.CUSTOMER.toString()))
+			.thenReturn("accessToken");
 
 		// when
-		loginService.login(dto, response);
+		String result = loginService.login(dto, response);
 
 		// then
-		verify(response).addHeader(
-			eq(HttpHeaders.SET_COOKIE),
-			argThat(cookie ->
-				cookie.contains("SAVED_ID=") &&
-					cookie.contains("Max-Age=0")
-			)
+		assertThat(result).isEqualTo("accessToken");
+
+		verify(cookieService).removeCookie(response, SAVED_ID_COOKIE_NAME, false);
+		verify(cookieService, never()).addCookie(
+			eq(response),
+			eq(SAVED_ID_COOKIE_NAME),
+			anyString(),
+			any(Duration.class),
+			eq(false)
 		);
+		verify(tokenService).createLoginToken(response, "user1", UserRole.CUSTOMER.toString());
 	}
 
+	@Test
+	@DisplayName("유저 비밀번호 불일치 시 예외가 발생한다.")
+	void userLoginWrongPassword() {
+		UserLoginRequestDto dto = UserLoginRequestDto.builder()
+			.id("user1")
+			.password("wrong")
+			.isSaveId(true)
+			.build();
+
+		Users user = Users.builder()
+			.userNumber("user1")
+			.password("encodedPassword")
+			.role(UserRole.CUSTOMER)
+			.build();
+
+		when(userRepository.findById("user1")).thenReturn(Optional.of(user));
+		when(passwordEncoder.matches("wrong", "encodedPassword")).thenReturn(false);
+
+		assertThatThrownBy(() -> loginService.login(dto, response))
+			.isInstanceOf(RuntimeException.class)
+			.hasMessageContaining("비밀번호가 일치하지 않습니다.");
+
+		verify(tokenService, never()).createLoginToken(any(), anyString(), anyString());
+		verifyNoInteractions(cookieService);
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 유저 로그인 시 NullPointerException 발생")
+	void userLoginUserNotFound() {
+		UserLoginRequestDto dto = UserLoginRequestDto.builder()
+			.id("unknown")
+			.password("pw")
+			.isSaveId(false)
+			.build();
+
+		when(userRepository.findById("unknown")).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> loginService.login(dto, response))
+			.isInstanceOf(NullPointerException.class);
+
+		verify(tokenService, never()).createLoginToken(any(), anyString(), anyString());
+		verifyNoInteractions(cookieService);
+	}
 }
