@@ -62,7 +62,7 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
-	public String createToken(
+	public String createTokenAfterSignup(
 		HttpServletRequest request,
 		HttpServletResponse response
 	) {
@@ -91,6 +91,24 @@ public class TokenServiceImpl implements TokenService {
 			true
 		);
 		return access;
+	}
+
+	@Override
+	public String createLoginToken(HttpServletResponse response, String key, String role) {
+		String accessToken = jwtUtil.createAccessToken(key, role, accessTokenExpiry);
+		String refreshToken = jwtUtil.createRefreshToken(key, role, refreshTokenExpiry);
+
+		saveRefreshToken(key, refreshToken);
+
+		cookieService.addCookie(
+			response,
+			REFRESH_COOKIE_NAME,
+			refreshToken,
+			Duration.ofMillis(refreshTokenExpiry),
+			true
+		);
+
+		return accessToken;
 	}
 
 	@Override

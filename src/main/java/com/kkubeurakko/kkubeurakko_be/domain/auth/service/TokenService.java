@@ -7,8 +7,11 @@ public interface TokenService {
 	//accessToken 재발급
 	String reissue(HttpServletRequest request);
 
+	//회원가입 이후 토큰 생성 (access, refresh)
+	String createTokenAfterSignup(HttpServletRequest request, HttpServletResponse response);
+
 	//로그인 이후 토큰 생성 (access, refresh)
-	String createToken(HttpServletRequest request, HttpServletResponse response);
+	String createLoginToken(HttpServletResponse response, String key, String role);
 
 	// 임시 사용자 토큰 생성 (유효기간 10분 쿠키 생성)
 	void createTempToken(HttpServletResponse response, String userNumber);
