@@ -1,8 +1,10 @@
 package com.kkubeurakko.kkubeurakko_be.domain.auth.service;
 
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +15,6 @@ import com.kkubeurakko.kkubeurakko_be.global.jwt.entity.RefreshToken;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenRepository;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,8 @@ public class TokenServiceImpl implements TokenService {
 	private final JwtUtil jwtUtil;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final UserService userService;
+	private final CookieService cookieService;
+	private final RedisTemplate<String, String> redisTemplate;
 
 	@Value("${spring.jwt.access-token-expiry}")
 	private long accessTokenExpiry;
@@ -34,10 +37,14 @@ public class TokenServiceImpl implements TokenService {
 	@Value("${spring.jwt.temp-token-expiry}")
 	private long tempTokenExpiry;
 
+	private static final String REFRESH_COOKIE_NAME = "refresh";
+	private static final String TEMP_COOKIE_NAME = "temp";
+	private static final String BLACKLIST_PREFIX = "blacklist:";
+
 	@Override
 	public String reissue(HttpServletRequest request) {
 		log.info("Accesstoken 재발급 시작");
-		String refreshToken = getTokenFromCookies(request, "refresh");
+		String refreshToken = cookieService.getCookieValue(request, REFRESH_COOKIE_NAME);
 		if (refreshToken == null || refreshToken.isBlank()) {
 			throw new AccessDeniedException("Refresh Token 없음");
 		}
@@ -60,7 +67,7 @@ public class TokenServiceImpl implements TokenService {
 		HttpServletResponse response
 	) {
 		String tempToken = getTempToken(request);
-		removeCookie(response, "temp");
+		removeCookie(response, TEMP_COOKIE_NAME);
 
 		String userNumber = jwtUtil.getUserNumber(tempToken);
 		Users user = userService.getUser(userNumber);
@@ -76,7 +83,13 @@ public class TokenServiceImpl implements TokenService {
 			refreshTokenExpiry
 		);
 		saveRefreshToken(userNumber, refresh);
-		response.addHeader(HttpHeaders.SET_COOKIE, createCookie(refresh).toString());
+		cookieService.addCookie(
+			response,
+			REFRESH_COOKIE_NAME,
+			refresh,
+			Duration.ofMillis(refreshTokenExpiry),
+			true
+		);
 		return access;
 	}
 
@@ -85,42 +98,47 @@ public class TokenServiceImpl implements TokenService {
 		String refresh = jwtUtil.createRefreshToken(userNumber, UserRole.CUSTOMER.toString(), refreshTokenExpiry);
 
 		saveRefreshToken(userNumber, refresh);
-		response.addHeader(HttpHeaders.SET_COOKIE, createCookie(refresh).toString());
+
+		cookieService.addCookie(
+			response,
+			REFRESH_COOKIE_NAME,
+			refresh,
+			Duration.ofMillis(refreshTokenExpiry),
+			true
+		);
 	}
 
 	@Override
 	public String getTempToken(HttpServletRequest request) {
-		return getTokenFromCookies(request, "temp");
+		return cookieService.getCookieValue(request, TEMP_COOKIE_NAME);
 	}
 
 	@Override
 	public void removeTempToken(HttpServletResponse response) {
-		removeCookie(response, "temp");
+		removeCookie(response, TEMP_COOKIE_NAME);
+	}
+
+	@Override
+	public String getRefreshToken(HttpServletRequest request) {
+		return cookieService.getCookieValue(request, REFRESH_COOKIE_NAME);
 	}
 
 	@Override
 	public void removeRefreshToken(HttpServletResponse response) {
-		removeCookie(response, "refresh");
+		removeCookie(response, REFRESH_COOKIE_NAME);
 	}
 
 	@Override
 	public void createTempToken(HttpServletResponse response, String userNumber) {
 		String tempToken = jwtUtil.createAccessToken(userNumber, UserRole.TEMP.toString(), tempTokenExpiry);
 
-		response.addHeader(HttpHeaders.SET_COOKIE, createTempCookie(tempToken).toString());
-	}
-
-	private String getTokenFromCookies(HttpServletRequest request, String name) {
-		Cookie[] cookies = request.getCookies();
-		if (cookies == null) {
-			throw new AccessDeniedException("쿠키가 없습니다.");
-		}
-		for (Cookie cookie : cookies) {
-			if (name.equals(cookie.getName())) {
-				return cookie.getValue();
-			}
-		}
-		throw new AccessDeniedException(name + " Token이 유효하지 않습니다.");
+		cookieService.addCookie(
+			response,
+			TEMP_COOKIE_NAME,
+			tempToken,
+			Duration.ofMillis(tempTokenExpiry),
+			true
+		);
 	}
 
 	private void isExistRefreshToken(String refreshToken, String userNumber) {
@@ -131,28 +149,6 @@ public class TokenServiceImpl implements TokenService {
 				"저장된 refreshToken과 일치하지 않습니다."
 			);  // 로그아웃 요청을 보내도록 -> 재로그인 요청하도록(공통 예외처리 구현 이후 수정 예정)
 		}
-	}
-
-	private ResponseCookie createCookie(String value) {
-		return ResponseCookie.from("refresh", value)
-			.maxAge(refreshTokenExpiry / 1000)
-			.secure(true)
-			// .httpOnly(true)
-			.sameSite("None")
-			.path("/")
-			// .domain(".kkubeurakko-anyang.shop")
-			.build();
-	}
-
-	private ResponseCookie createTempCookie(String value) {
-		return ResponseCookie.from("temp", value)
-			.maxAge(tempTokenExpiry / 1000)
-			.secure(true)
-			// .httpOnly(true)
-			.sameSite("None")
-			.path("/")
-			// .domain(".kkubeurakko-anyang.shop")
-			.build();
 	}
 
 	//redis에 저장
@@ -166,15 +162,15 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	private void removeCookie(HttpServletResponse response, String name) {
-		ResponseCookie responseCookie = ResponseCookie.from(name, null)
-			.maxAge(0)
-			.secure(true)
-			// .httpOnly(true)
-			.sameSite("None")
-			.path("/")
-			// .domain(".kkubeurakko-anyang.shop")
-			.build();
+		cookieService.removeCookie(response, name, true);
+	}
 
-		response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
+	public void blacklistAccessToken(String accessToken) {
+		long expiration = jwtUtil.getRemainingExpiration(accessToken);
+		if (expiration <= 0) {
+			return;
+		}
+		redisTemplate.opsForValue()
+			.set(BLACKLIST_PREFIX + accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
 	}
 }

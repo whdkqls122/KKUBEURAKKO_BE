@@ -22,6 +22,10 @@ public interface TokenService {
 	// 인증 완료 및 사용자 정보 저장 이후 임시 사용자 토큰 삭제
 	void removeTempToken(HttpServletResponse response);
 
+	String getRefreshToken(HttpServletRequest request);
+
 	// 로그아웃 또는 탈퇴 시 refresh 토큰 쿠키 삭제
 	void removeRefreshToken(HttpServletResponse response);
+
+	void blacklistAccessToken(String accessToken);
 }
