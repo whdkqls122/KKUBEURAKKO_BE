@@ -7,10 +7,6 @@ import java.util.Base64;
 import java.util.UUID;
 
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +26,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -44,12 +39,15 @@ public class AccountServiceImpl implements AccountService {
 	private final UserRepository userRepository;
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final PasswordEncoder passwordEncoder;
-
+	private final CookieService cookieService;
 	private static final String VERIFY_SESSION_PREFIX = "VERIFY_SESSION:";
 	private static final String RESET_PASSWORD_PREFIX = "RESET_PASSWORD:";
 
 	private static final Duration VERIFY_SESSION_TTL = Duration.ofMinutes(5);
 	private static final Duration RESET_PASSWORD_TTL = Duration.ofMinutes(5);
+
+	private static final String VERIFY_COOKIE_PREFIX = "ex_u";
+	private static final String RESET_COOKIE_PREFIX = "rp_t";
 
 	@Override
 	public UserIdResponseDto findUserId(UserVerifyRequestDto userVerifyRequestDto) {
@@ -79,12 +77,12 @@ public class AccountServiceImpl implements AccountService {
 			VERIFY_SESSION_TTL
 		);
 
-		response.addHeader(HttpHeaders.SET_COOKIE, createCookie("ex_u", sessionId).toString());
+		cookieService.addCookie(response, VERIFY_COOKIE_PREFIX, sessionId, VERIFY_SESSION_TTL, true);
 	}
 
 	@Override
 	public NextStepDto getNextStep(HttpServletRequest request) {
-		String verifyToken = getOptionalCookie(request, "ex_u");
+		String verifyToken = cookieService.getCookieValue(request, VERIFY_COOKIE_PREFIX);
 		if (verifyToken != null &&
 			redisTemplate.hasKey(VERIFY_SESSION_PREFIX + verifyToken)) {
 
@@ -107,7 +105,12 @@ public class AccountServiceImpl implements AccountService {
 		UserVerifyRequestDto verifyRequestDto
 	) {
 
-		String sessionKey = VERIFY_SESSION_PREFIX + getTokenFromCookies(request, "ex_u");
+		String verifyToken = cookieService.getCookieValue(request, VERIFY_COOKIE_PREFIX);
+		if (verifyToken == null || verifyToken.isBlank()) {
+			throw new IllegalStateException("아이디 확인 세션이 만료되었습니다.");
+		}
+
+		String sessionKey = VERIFY_SESSION_PREFIX + verifyToken;
 
 		String inputId = (String)redisTemplate.opsForValue().get(sessionKey);
 
@@ -135,17 +138,22 @@ public class AccountServiceImpl implements AccountService {
 			RESET_PASSWORD_TTL
 		);
 
-		response.addHeader(HttpHeaders.SET_COOKIE, createCookie("rp_t", resetToken).toString());
+		cookieService.addCookie(response, RESET_COOKIE_PREFIX, resetToken, RESET_PASSWORD_TTL, true);
 
 		redisTemplate.delete(sessionKey);
-		removeCookie(response, "ex_u");
+		cookieService.removeCookie(response, VERIFY_COOKIE_PREFIX, true);
 	}
 
 	@Override
 	@Transactional
 	public void resetPassword(HttpServletRequest request, HttpServletResponse response,
 		ResetPasswordRequestDto resetPasswordRequestDto) {
-		String resetToken = getTokenFromCookies(request, "rp_t");
+		String resetToken = cookieService.getCookieValue(request, RESET_COOKIE_PREFIX);
+		
+		if (resetToken == null || resetToken.isBlank()) {
+			throw new IllegalStateException("비밀번호 재설정 인증이 만료되었습니다.");
+		}
+
 		String key = RESET_PASSWORD_PREFIX + resetToken;
 
 		String userId = (String)redisTemplate.opsForValue().get(key);
@@ -160,7 +168,7 @@ public class AccountServiceImpl implements AccountService {
 		user.updatePassword(passwordEncoder.encode(resetPasswordRequestDto.newPassword()));
 
 		redisTemplate.delete(key);
-		removeCookie(response, "rp_t");
+		cookieService.removeCookie(response, RESET_COOKIE_PREFIX, true);
 	}
 
 	@Override
@@ -186,54 +194,5 @@ public class AccountServiceImpl implements AccountService {
 		} catch (Exception e) {
 			throw new PhoneHashingException("전화번호 해시 생성에 실패 하였습니다.", e);
 		}
-	}
-
-	private ResponseCookie createCookie(String name, String value) {
-		return ResponseCookie.from(name, value)
-			.maxAge(Duration.ofMinutes(5))
-			.secure(true)
-			// .httpOnly(true)
-			.sameSite("None")
-			.path("/")
-			// .domain(".kkubeurakko-anyang.shop")
-			.build();
-	}
-
-	private String getTokenFromCookies(HttpServletRequest request, String name) {
-		Cookie[] cookies = request.getCookies();
-		if (cookies == null) {
-			throw new AuthenticationCredentialsNotFoundException("인증 세션이 만료되었습니다.");
-		}
-		for (Cookie cookie : cookies) {
-			if (name.equals(cookie.getName())) {
-				return cookie.getValue();
-			}
-		}
-		throw new BadCredentialsException(name + " 인증 세션이 만료되었습니다.");
-	}
-
-	private String getOptionalCookie(HttpServletRequest request, String name) {
-		if (request.getCookies() == null)
-			return null;
-
-		for (Cookie cookie : request.getCookies()) {
-			if (name.equals(cookie.getName())) {
-				return cookie.getValue();
-			}
-		}
-		return null;
-	}
-
-	private void removeCookie(HttpServletResponse response, String name) {
-		ResponseCookie responseCookie = ResponseCookie.from(name, null)
-			.maxAge(0)
-			.secure(true)
-			// .httpOnly(true)
-			.sameSite("None")
-			.path("/")
-			// .domain(".kkubeurakko-anyang.shop")
-			.build();
-
-		response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
 	}
 }
