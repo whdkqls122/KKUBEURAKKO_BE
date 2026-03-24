@@ -97,7 +97,7 @@ public class DeliveryRegionController {
 
 		return ResponseEntity.ok(
 			ApiResponse.success(
-				"배달 가능 여부 조회 성공",
+				"배달 가능 여부 조회가 완료 되었습니다.",
 				deliverable
 			)
 		);
