@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.auth.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ExistUserRequestDto;
@@ -27,13 +29,15 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceImplTest {
-
+	private static final String VERIFY_SESSION_PREFIX = "VERIFY_SESSION:";
+	private static final String RESET_PASSWORD_PREFIX = "RESET_PASSWORD:";
+	private static final String VERIFY_COOKIE_PREFIX = "ex_u";
+	private static final String RESET_COOKIE_PREFIX = "rp_t";
 	@Mock
 	private PortOneService portOneService;
 
@@ -44,14 +48,18 @@ class AccountServiceImplTest {
 	private RedisTemplate<String, Object> redisTemplate;
 
 	@Mock
+	private PasswordEncoder passwordEncoder;
+
+	@Mock
+	private CookieService cookieService;
+	@Mock
 	private HttpServletRequest request;
 
 	@Mock
 	private HttpServletResponse response;
+
 	@Mock
-	private PasswordEncoder passwordEncoder;
-	@Mock
-	private org.springframework.data.redis.core.ValueOperations<String, Object> valueOperations;
+	private ValueOperations<String, Object> valueOperations;
 
 	@InjectMocks
 	private AccountServiceImpl accountService;
@@ -108,13 +116,14 @@ class AccountServiceImplTest {
 		when(userRepository.existsById("testId")).thenReturn(true);
 		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
-		// when
+		//when
 		accountService.existUser(response, dto);
 
-		// then
+		//then
 		verify(valueOperations)
-			.set(startsWith("VERIFY_SESSION:"), eq("testId"), any());
-		verify(response).addHeader(eq("Set-Cookie"), anyString());
+			.set(startsWith(VERIFY_SESSION_PREFIX), eq("testId"), eq(Duration.ofMinutes(5)));
+		verify(cookieService)
+			.addCookie(eq(response), eq(VERIFY_COOKIE_PREFIX), anyString(), eq(Duration.ofMinutes(5)), eq(true));
 	}
 
 	@Test
@@ -132,15 +141,13 @@ class AccountServiceImplTest {
 	@DisplayName("본인 인증 후 비밀번호 재설정 토큰 발급이 정상 동작한다.")
 	void verifyForResetPassword_success() {
 		// given
-		String sessionId = "session123";
+		String verifyToken = "session123";
 		String userId = "testId";
 		String phone = "01099998888";
 
-		when(request.getCookies())
-			.thenReturn(new Cookie[] {new Cookie("ex_u", sessionId)});
-
+		when(cookieService.getCookieValue(request, VERIFY_COOKIE_PREFIX)).thenReturn(verifyToken);
 		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-		when(valueOperations.get("VERIFY_SESSION:" + sessionId)).thenReturn(userId);
+		when(valueOperations.get(VERIFY_SESSION_PREFIX + verifyToken)).thenReturn(userId);
 
 		UserVerifyRequestDto dto = new UserVerifyRequestDto("verifyId");
 
@@ -159,9 +166,11 @@ class AccountServiceImplTest {
 
 		// then
 		verify(valueOperations)
-			.set(startsWith("RESET_PASSWORD:"), eq(userId), any());
-		verify(redisTemplate).delete("VERIFY_SESSION:" + sessionId);
-		verify(response, atLeastOnce()).addHeader(eq("Set-Cookie"), anyString());
+			.set(startsWith(RESET_PASSWORD_PREFIX), eq(userId), eq(Duration.ofMinutes(5)));
+		verify(cookieService)
+			.addCookie(eq(response), eq(RESET_COOKIE_PREFIX), anyString(), eq(Duration.ofMinutes(5)), eq(true));
+		verify(redisTemplate).delete(VERIFY_SESSION_PREFIX + verifyToken);
+		verify(cookieService).removeCookie(response, VERIFY_COOKIE_PREFIX, true);
 	}
 
 	@Test
@@ -172,11 +181,9 @@ class AccountServiceImplTest {
 		String userId = "userId";
 		String encodedPw = "encodedPw";
 
-		when(request.getCookies())
-			.thenReturn(new Cookie[] {new Cookie("rp_t", resetToken)});
-
+		when(cookieService.getCookieValue(request, RESET_COOKIE_PREFIX)).thenReturn(resetToken);
 		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-		when(valueOperations.get("RESET_PASSWORD:" + resetToken)).thenReturn(userId);
+		when(valueOperations.get(RESET_PASSWORD_PREFIX + resetToken)).thenReturn(userId);
 
 		Users user = mock(Users.class);
 		when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -184,13 +191,13 @@ class AccountServiceImplTest {
 
 		ResetPasswordRequestDto dto = new ResetPasswordRequestDto("newPassword");
 
-		// when
+		//when
 		accountService.resetPassword(request, response, dto);
 
-		// then
+		//then
 		verify(user).updatePassword(encodedPw);
-		verify(redisTemplate).delete("RESET_PASSWORD:" + resetToken);
-		verify(response).addHeader(eq("Set-Cookie"), anyString());
+		verify(redisTemplate).delete(RESET_PASSWORD_PREFIX + resetToken);
+		verify(cookieService).removeCookie(response, RESET_COOKIE_PREFIX, true);
 	}
 
 	@Test
