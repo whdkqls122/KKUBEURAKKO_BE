@@ -1,12 +1,9 @@
 package com.kkubeurakko.kkubeurakko_be.domain.auth.service;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -15,7 +12,6 @@ import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenReposito
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +26,10 @@ public class LogoutServiceImpl implements LogoutService {
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final RedisTemplate<String, String> redisTemplate;
 	private final UserService userService;
-	private final TokenService tokenService;
+	private final CookieService cookieService;
+	private static final String REFRESH_COOKIE_NAME = "refresh";
+	private static final String SAVED_ID_COOKIE_NAME = "SAVED_ID";
+	private static final String BLACKLIST_PREFIX = "blacklist:";
 
 	@Override
 	public void logout(
@@ -38,26 +37,25 @@ public class LogoutServiceImpl implements LogoutService {
 		HttpServletResponse response
 	) {
 		Optional<String> accessTokenOpt = extractAccessTokenOptional(request);
-		Optional<String> refreshTokenOpt = extractRefreshToken(request);
+		String refreshToken = cookieService.getCookieValue(request, REFRESH_COOKIE_NAME);
 
 		// refreshToken 없으면 → 이미 로그아웃 상태로 간주
-		if (refreshTokenOpt.isEmpty()) {
-			tokenService.removeRefreshToken(response);
+		if (refreshToken == null || refreshToken.isBlank()) {
+			cookieService.removeCookie(response, REFRESH_COOKIE_NAME, true);
 			return;
 		}
+		try {
+			String userNumber = jwtUtil.getUserNumber(refreshToken);
 
-		String refreshToken = refreshTokenOpt.get();
-		String userNumber = jwtUtil.getUserNumber(refreshToken);
+			accessTokenOpt.ifPresent(this::blacklistAccessToken);
+			refreshTokenRepository.deleteById(userNumber);
 
-		// AccessToken 있으면 블랙리스트
-		accessTokenOpt.ifPresent(this::blacklistAccessToken);
-
-		// RefreshToken 삭제
-		refreshTokenRepository.deleteById(userNumber);
-		tokenService.removeRefreshToken(response);
-
-		log.info("로그아웃 완료 user={}", userNumber);
-
+			log.info("로그아웃 완료 user={}", userNumber);
+		} catch (Exception e) {
+			log.warn("RefreshToken 파싱 실패. 쿠키만 제거합니다.", e);
+		} finally {
+			cookieService.removeCookie(response, REFRESH_COOKIE_NAME, true);
+		}
 	}
 
 	@Override
@@ -69,26 +67,30 @@ public class LogoutServiceImpl implements LogoutService {
 		try {
 			Users user = userService.getUser(customOAuth2User.getName());
 			Optional<String> accessTokenOpt = extractAccessTokenOptional(request);
-			String refreshToken = extractRefreshToken(request)
-				.orElse(null);
+			String refreshToken = cookieService.getCookieValue(request, REFRESH_COOKIE_NAME);
 
 			accessTokenOpt.ifPresent(this::blacklistAccessToken);
 
-			if (refreshToken != null && refreshTokenRepository.existsById(user.getUserNumber())) {
+			if (refreshToken != null && !refreshToken.isBlank()
+				&& refreshTokenRepository.existsById(user.getUserNumber())) {
 				refreshTokenRepository.deleteById(user.getUserNumber());
 			}
-			removeSavedIdCookie(response);
-			tokenService.removeRefreshToken(response);
 			log.info("회원 탈퇴로 인한 강제 로그아웃 완료");
 		} catch (Exception e) {
 			log.error("강제 로그아웃 중 오류 발생", e);
+		} finally {
+			cookieService.removeCookie(response, SAVED_ID_COOKIE_NAME, false);
+			cookieService.removeCookie(response, REFRESH_COOKIE_NAME, true);
 		}
 	}
 
 	private void blacklistAccessToken(String accessToken) {
 		long expiration = jwtUtil.getRemainingExpiration(accessToken);
+		if (expiration <= 0) {
+			return;
+		}
 		redisTemplate.opsForValue()
-			.set("blacklist:" + accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
+			.set(BLACKLIST_PREFIX + accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
 	}
 
 	private Optional<String> extractAccessTokenOptional(HttpServletRequest request) {
@@ -97,29 +99,5 @@ public class LogoutServiceImpl implements LogoutService {
 			return Optional.empty();
 		}
 		return Optional.of(accessToken.substring(7));
-	}
-
-	private Optional<String> extractRefreshToken(HttpServletRequest request) {
-		Cookie[] cookies = request.getCookies();
-		if (cookies == null) {
-			return Optional.empty();
-		}
-		return Arrays.stream(cookies)
-			.filter(cookie -> "refresh".equals(cookie.getName()))
-			.map(Cookie::getValue)
-			.findFirst();
-	}
-
-	private void removeSavedIdCookie(HttpServletResponse response) {
-		ResponseCookie deleteSavedIdCookie = ResponseCookie.from("SAVED_ID", "")
-			.maxAge(0)
-			.path("/")
-			// .domain(".kkubeurakko-anyang.shop")
-			.secure(true)
-			.httpOnly(false)
-			.sameSite("None")
-			.build();
-
-		response.addHeader(HttpHeaders.SET_COOKIE, deleteSavedIdCookie.toString());
 	}
 }
