@@ -60,7 +60,7 @@ public class DeliveryRegionController {
 		);
 
 		return ResponseEntity.ok(
-			ApiResponse.success("배달 지역 상태를 성공적으로 변경했습니다.", null)
+			ApiResponse.success("배달 반경 거리 수정이 완료되었습니다.", null)
 		);
 	}
 
@@ -76,7 +76,7 @@ public class DeliveryRegionController {
 		DeliveryRegionResponse deliveryRegionResponse = deliveryRegionService.getDeliveryRegion(storeId);
 		return ResponseEntity.ok(
 			ApiResponse.success(
-				"배달 지역 리스트를 성공적으로 조회했습니다.",
+				"배달 가능 지역 정보 조회가 완료되었습니다.",
 				deliveryRegionResponse
 			)
 		);
