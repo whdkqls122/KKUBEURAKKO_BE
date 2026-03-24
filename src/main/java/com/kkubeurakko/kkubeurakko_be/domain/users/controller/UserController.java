@@ -101,7 +101,7 @@ public class UserController {
 		HttpServletRequest request,
 		HttpServletResponse response
 	) {
-		String accessToken = tokenService.createToken(request, response);
+		String accessToken = tokenService.createTokenAfterSignup(request, response);
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Authorization", accessToken);
