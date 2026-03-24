@@ -1,10 +1,8 @@
 package com.kkubeurakko.kkubeurakko_be.domain.auth.service;
 
+import java.time.Duration;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,9 +16,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Admins;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.AdminRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
-import com.kkubeurakko.kkubeurakko_be.global.jwt.entity.RefreshToken;
-import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenRepository;
-import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -31,16 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LoginServiceImpl implements LoginService {
 	private final AdminRepository adminRepository;
-	private final JwtUtil jwtUtil;
-	private final RefreshTokenRepository refreshTokenRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final UserRepository userRepository;
+	private final TokenService tokenService;
+	private final CookieService cookieService;
 
-	@Value("${spring.jwt.access-token-expiry}")
-	private long accessTokenExpiry;
-
-	@Value("${spring.jwt.refresh-token-expiry}")
-	private long refreshTokenExpiry;
+	private static final String SAVED_ID_COOKIE_NAME = "SAVED_ID";
 
 	@Override
 	public String adminLogin(LoginRequestDto loginRequestDto, HttpServletResponse response) {
@@ -62,15 +53,7 @@ public class LoginServiceImpl implements LoginService {
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 		// JWT 발급
-		String accessToken = jwtUtil.createAccessToken(admin.getId(), admin.getRole().toString(), accessTokenExpiry);
-		String refreshToken = jwtUtil.createRefreshToken(admin.getId(), admin.getRole().toString(), refreshTokenExpiry);
-
-		saveRefreshToken(admin.getId(), refreshToken);
-
-		ResponseCookie cookie = createRefreshCookie(refreshToken);
-		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-
-		return accessToken;
+		return tokenService.createLoginToken(response, admin.getId(), admin.getRole().toString());
 	}
 
 	@Override
@@ -90,65 +73,16 @@ public class LoginServiceImpl implements LoginService {
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
-		String accessToken = jwtUtil.createAccessToken(user.getUserNumber(), user.getRole().toString(),
-			accessTokenExpiry);
-		String refreshToken = jwtUtil.createRefreshToken(user.getUserNumber(), user.getRole().toString(),
-			refreshTokenExpiry);
+		createSavedIdCookie(response, loginRequestDto.id(), loginRequestDto.isSaveId());
 
-		saveRefreshToken(user.getUserNumber(), refreshToken);
-
-		ResponseCookie cookie = createRefreshCookie(refreshToken);
-		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-
-		ResponseCookie savedIdCookie = createSavedIdCookie(
-			loginRequestDto.id(),
-			loginRequestDto.isSaveId()
-		);
-		response.addHeader(HttpHeaders.SET_COOKIE, savedIdCookie.toString());
-
-		return accessToken;
+		return tokenService.createLoginToken(response, user.getUserNumber(), user.getRole().toString());
 	}
 
-	private ResponseCookie createRefreshCookie(String value) {
-		return ResponseCookie.from("refresh", value)
-			.maxAge(refreshTokenExpiry / 1000)
-			.secure(true)
-			// .httpOnly(true)
-			.sameSite("None")
-			.path("/")
-			// .domain(".kkubeurakko-anyang.shop")
-			.build();
-	}
-
-	private void saveRefreshToken(String key, String refreshToken) {
-		RefreshToken refreshTokenEntity = RefreshToken.builder()
-			.refresh(refreshToken)
-			.userNumber(key)
-			.build();
-
-		refreshTokenRepository.save(refreshTokenEntity);
-	}
-
-	private ResponseCookie createSavedIdCookie(String id, boolean saveId) {
+	private void createSavedIdCookie(HttpServletResponse response, String id, boolean saveId) {
 		if (!saveId) {
-			return ResponseCookie.from("SAVED_ID", "")
-				.maxAge(0)
-				.path("/")
-				// .domain(".kkubeurakko-anyang.shop")
-				.secure(true)
-				.httpOnly(false)
-				.sameSite("None")
-				.build();
+			cookieService.removeCookie(response, "SAVED_ID", false);
+			return;
 		}
-
-		return ResponseCookie.from("SAVED_ID", id)
-			.maxAge(60 * 60 * 24 * 30)
-			.path("/")
-			// .domain(".kkubeurakko-anyang.shop")
-			.secure(true)
-			.httpOnly(false)
-			.sameSite("None")
-			.build();
+		cookieService.addCookie(response, SAVED_ID_COOKIE_NAME, id, Duration.ofDays(30), false);
 	}
-
 }
