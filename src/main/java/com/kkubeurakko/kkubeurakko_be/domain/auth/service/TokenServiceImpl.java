@@ -32,6 +32,8 @@ public class TokenServiceImpl implements TokenService {
 
 	@Value("${spring.jwt.access-token-expiry}")
 	private long accessTokenExpiry;
+	@Value("${spring.jwt.admin-access-token-expiry}")
+	private long adminAccessTokenExpiry;
 	@Value("${spring.jwt.refresh-token-expiry}")
 	private long refreshTokenExpiry;
 	@Value("${spring.jwt.temp-token-expiry}")
@@ -55,10 +57,16 @@ public class TokenServiceImpl implements TokenService {
 		String userNumber = jwtUtil.getUserNumber(refreshToken);
 		isExistRefreshToken(refreshToken, userNumber);
 		String role = jwtUtil.getRole(refreshToken);
+		long expiry;
 
+		if (UserRole.ADMIN.getRole().equals(role)) {
+			expiry = adminAccessTokenExpiry;
+		} else {
+			expiry = accessTokenExpiry;
+		}
 		log.info("Accesstoken 재발급 성공");
 		//토큰 생성 및 반환
-		return jwtUtil.createAccessToken(userNumber, role, accessTokenExpiry);
+		return jwtUtil.createAccessToken(userNumber, role, expiry);
 	}
 
 	@Override
@@ -95,7 +103,15 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public String createLoginToken(HttpServletResponse response, String key, String role) {
-		String accessToken = jwtUtil.createAccessToken(key, role, accessTokenExpiry);
+		long expiry;
+
+		if (UserRole.ADMIN.getRole().equals(role)) {
+			expiry = adminAccessTokenExpiry;
+		} else {
+			expiry = accessTokenExpiry;
+		}
+
+		String accessToken = jwtUtil.createAccessToken(key, role, expiry);
 		String refreshToken = jwtUtil.createRefreshToken(key, role, refreshTokenExpiry);
 
 		saveRefreshToken(key, refreshToken);
