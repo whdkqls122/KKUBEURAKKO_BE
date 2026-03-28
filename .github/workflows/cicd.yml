@@ -85,6 +85,7 @@ jobs:
             -e REDIS_PORT="${{ secrets.REDIS_PORT }}" \
             -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
             -e JWT_ACCESS_EXP="${{ secrets.JWT_ACCESS_EXP }}" \
+            -e JWT_ADMIN_ACCESS_EXP="${{ secrets.JWT_ADMIN_ACCESS_EXP }}" \
             -e JWT_REFRESH_EXP="${{ secrets.JWT_REFRESH_EXP }}" \
             -e JWT_TEMP_EXP="${{ secrets.JWT_TEMP_EXP }}" \
             -e KAKAO_CLIENT_ID="${{ secrets.KAKAO_CLIENT_ID }}" \
