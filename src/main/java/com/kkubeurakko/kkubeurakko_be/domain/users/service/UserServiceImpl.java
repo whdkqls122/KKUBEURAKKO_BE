@@ -42,34 +42,26 @@ public class UserServiceImpl implements UserService {
 		String phone = responseDto.verifiedCustomer().phoneNumber();
 		String phoneHash = hashPhone(phone);
 		String name = responseDto.verifiedCustomer().name();
-		try {
-			if (userRepository.existsByPhoneHash(phoneHash)) {
-				log.error("중복된 사용자 전화 번호");
-				throw new IllegalStateException();
-			}
 
-			Users.UsersBuilder builder = Users.builder()
-				.userNumber(tempUser.getUserNumber())
-				.nickname(tempUser.getNickname())
-				.role(UserRole.CUSTOMER)
-				.name(name)
-				.phone(aesUtil.encryptToBase64(phone))
-				.phoneHash(phoneHash);
+		validateDuplicatePhone(phoneHash);
 
-			if (tempUser instanceof OAuthTempUserDto oauthUser) {
-				builder.email(oauthUser.getEmail());
-			} else if (tempUser instanceof LocalTempUserDto localUser) {
-				builder.email(localUser.getEmail());
-				builder.id(localUser.getId());
-				builder.password(localUser.getPasswordHash());
-			}
+		Users.UsersBuilder builder = Users.builder()
+			.userNumber(tempUser.getUserNumber())
+			.nickname(tempUser.getNickname())
+			.role(UserRole.CUSTOMER)
+			.name(name)
+			.phone(aesUtil.encryptToBase64(phone))
+			.phoneHash(phoneHash);
 
-			userRepository.save(builder.build());
-
-		} catch (IllegalStateException e) {
-			throw new DuplicatePhoneException("이미 가입된 계정이 존재합니다.", e);
+		if (tempUser instanceof OAuthTempUserDto oauthUser) {
+			builder.email(oauthUser.getEmail());
+		} else if (tempUser instanceof LocalTempUserDto localUser) {
+			builder.email(localUser.getEmail());
+			builder.id(localUser.getId());
+			builder.password(localUser.getPasswordHash());
 		}
 
+		userRepository.save(builder.build());
 	}
 
 	@Override
@@ -128,5 +120,24 @@ public class UserServiceImpl implements UserService {
 
 	private String getProvider(String userNumber) {
 		return userNumber.substring(0, userNumber.indexOf("_"));
+	}
+
+	private void validateDuplicatePhone(String phoneHash) {
+		userRepository.findByPhoneHash(phoneHash)
+			.ifPresent(user -> {
+				log.error("중복된 사용자 전화 번호");
+
+				String errMsg = buildDuplicatePhoneMessage(user);
+				throw new DuplicatePhoneException(errMsg);
+			});
+	}
+
+	private String buildDuplicatePhoneMessage(Users user) {
+		String provider = getProvider(user.getUserNumber());
+
+		if ("local".equals(provider))
+			return "이미 가입된 계정이 존재합니다.\n일반 로그인 회원입니다.";
+		else
+			return "이미 가입된 계정이 존재합니다.\n간편 로그인 회원입니다.";
 	}
 }
