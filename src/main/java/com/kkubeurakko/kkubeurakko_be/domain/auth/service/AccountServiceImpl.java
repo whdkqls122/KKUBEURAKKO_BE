@@ -16,6 +16,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.NextStepDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ResetPasswordMeRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ResetPasswordRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.UserIdResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.auth.exception.SocialAccountException;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.util.UserIdMaskingUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
@@ -59,9 +60,13 @@ public class AccountServiceImpl implements AccountService {
 		Users users = userRepository.findByPhoneHash(phoneHash)
 			.orElseThrow(() -> new EntityNotFoundException("가입된 이력이 없습니다."));
 
-		return UserIdResponseDto.builder()
-			.id(UserIdMaskingUtil.mask(users.getId()))
-			.build();
+		if ("local".equals(getProvider(users.getUserNumber()))) {
+			return UserIdResponseDto.builder()
+				.id(UserIdMaskingUtil.mask(users.getId()))
+				.build();
+		} else {
+			throw new SocialAccountException("소셜 로그인 계정입니다. 간편 로그인을 이용해주세요.");
+		}
 	}
 
 	@Override
@@ -149,7 +154,7 @@ public class AccountServiceImpl implements AccountService {
 	public void resetPassword(HttpServletRequest request, HttpServletResponse response,
 		ResetPasswordRequestDto resetPasswordRequestDto) {
 		String resetToken = cookieService.getCookieValue(request, RESET_COOKIE_PREFIX);
-		
+
 		if (resetToken == null || resetToken.isBlank()) {
 			throw new IllegalStateException("비밀번호 재설정 인증이 만료되었습니다.");
 		}
@@ -194,5 +199,9 @@ public class AccountServiceImpl implements AccountService {
 		} catch (Exception e) {
 			throw new PhoneHashingException("전화번호 해시 생성에 실패 하였습니다.", e);
 		}
+	}
+
+	private String getProvider(String userNumber) {
+		return userNumber.substring(0, userNumber.indexOf("_"));
 	}
 }
