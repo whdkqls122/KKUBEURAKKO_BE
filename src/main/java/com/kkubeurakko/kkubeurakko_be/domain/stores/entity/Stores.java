@@ -11,6 +11,8 @@ import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,8 +36,9 @@ public class Stores extends BaseEntity {
 	@Column(name = "stores_id")
 	private Long id;
 
-	@Column(name = "is_open", nullable = false)
-	private boolean isOpen;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "status", nullable = false)
+	private StoreStatus status;
 
 	@Column(name = "min_order_price", nullable = false)
 	private int minOrderPrice;
@@ -92,18 +95,22 @@ public class Stores extends BaseEntity {
 		}
 	}
 
+	public void open() {
+		this.status = StoreStatus.OPEN;
+	}
+
 	public void close() {
-		this.isOpen = false;
+		this.status = StoreStatus.CLOSED;
 	}
 
 	public void pause(LocalDateTime start, LocalDateTime end) {
-		this.isOpen = false;
+		this.status = StoreStatus.PAUSED;
 		this.pauseStartAt = start;
 		this.pauseEndAt = end;
 	}
 
 	public void reopen() {
-		this.isOpen = true;
+		this.status = StoreStatus.OPEN;
 		this.pauseStartAt = null;
 		this.pauseEndAt = null;
 	}
