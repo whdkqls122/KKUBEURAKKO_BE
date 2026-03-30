@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreBusinessHoursService;
@@ -27,7 +28,7 @@ public class StoreCloseScheduler {
 	public void closeStores() {
 
 		List<Stores> stores =
-			storeRepository.findOpenStoresWithHours();
+			storeRepository.findOpenStoresWithHours(StoreStatus.OPEN);
 
 		LocalDateTime now = LocalDateTime.now();
 
@@ -47,7 +48,7 @@ public class StoreCloseScheduler {
 			storeBusinessHoursService.getHoursByDate(store.getId(), businessDate);
 
 		LocalDateTime closeDateTime;
-		
+
 		if (hours.getCloseTime().isBefore(hours.getOpenTime())) {
 			closeDateTime =
 				LocalDateTime.of(businessDate.plusDays(1), hours.getCloseTime());

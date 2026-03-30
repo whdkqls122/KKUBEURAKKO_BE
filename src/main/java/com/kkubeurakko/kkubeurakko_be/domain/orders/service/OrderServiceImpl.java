@@ -43,6 +43,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionAbleResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.BusinessDay;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreBusinessHoursRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.DeliveryRegionService;
@@ -127,7 +128,7 @@ public class OrderServiceImpl implements OrderService {
 			Cart cart = validateCart(user);
 			Stores store = extractStore(cart);
 
-			if (!store.isOpen()) {
+			if (store.getStatus() != StoreStatus.OPEN) {
 				throw new IllegalStateException("현재 가게가 영업 중이 아닙니다.");
 			}
 

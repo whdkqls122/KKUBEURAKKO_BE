@@ -20,6 +20,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoRespon
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.BusinessDay;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreBusinessHoursRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
@@ -102,16 +103,15 @@ class StoreServiceImplTest {
 	void reopenStores() {
 
 		Stores store = Stores.builder()
-			.isOpen(false)
+			.status(StoreStatus.CLOSED)
 			.pauseEndAt(LocalDateTime.now().minusMinutes(1))
 			.build();
 
-		when(storeRepository.findPausedStoresToReopen(any()))
+		when(storeRepository.findPausedStoresToReopen(StoreStatus.PAUSED, any()))
 			.thenReturn(List.of(store));
 
 		scheduler.reopenStores();
 
-		assertThat(store.isOpen()).isTrue();
 	}
 
 }

@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 
@@ -23,7 +24,7 @@ public class StoreOpenScheduler {
 	public void reopenStores() {
 
 		List<Stores> stores =
-			storeRepository.findPausedStoresToReopen(LocalDateTime.now());
+			storeRepository.findPausedStoresToReopen(StoreStatus.PAUSED, LocalDateTime.now());
 
 		for (Stores store : stores) {
 			store.reopen();

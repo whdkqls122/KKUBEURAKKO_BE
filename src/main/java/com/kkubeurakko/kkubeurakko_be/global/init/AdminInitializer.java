@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Admins;
@@ -35,7 +36,7 @@ public class AdminInitializer {
 	private Stores initStore() {
 		if (!storeRepository.existsById(1L)) {
 			Stores store = Stores.builder()
-				.isOpen(true)
+				.status(StoreStatus.OPEN)
 				.minOrderPrice(17000)
 				.packagingAvgTime(10)
 				.deliveryAvgTime(60)

@@ -7,28 +7,32 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 
 @Repository
 public interface StoreRepository extends JpaRepository<Stores, Long> {
 	@Query("""
-			select s from Stores s
-			where s.isOpen = false
-			and s.pauseEndAt <= :now
+		    select s from Stores s
+		    where s.status = :status
+		    and s.pauseEndAt <= :now
 		""")
-	List<Stores> findPausedStoresToReopen(LocalDateTime now);
+	List<Stores> findPausedStoresToReopen(
+		StoreStatus status,
+		LocalDateTime now
+	);
 
 	@Query("""
 		    select s
 		    from Stores s
-		    join StoreBusinessHours h on h.store = s
-		    where s.isOpen = true
+		    join s.storeBusinessHoursList h
+		    where s.status = :status
 		""")
-	List<Stores> findOpenStoresWithHours();
+	List<Stores> findOpenStoresWithHours(StoreStatus status);
 
 	@Query("""
 		    select s from Stores s
-		    where s.isOpen = false
+		    where s.status = :status
 		""")
-	List<Stores> findClosedStores();
+	List<Stores> findClosedStores(StoreStatus status);
 }

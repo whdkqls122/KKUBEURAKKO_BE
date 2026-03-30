@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreBusinessHoursService;
@@ -27,7 +28,7 @@ public class StoreReopenScheduler {
 	public void reopenStores() {
 
 		LocalDateTime now = LocalDateTime.now();
-		List<Stores> stores = storeRepository.findClosedStores();
+		List<Stores> stores = storeRepository.findClosedStores(StoreStatus.CLOSED);
 
 		for (Stores store : stores) {
 
