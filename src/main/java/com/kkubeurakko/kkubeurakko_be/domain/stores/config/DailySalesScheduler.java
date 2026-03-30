@@ -15,8 +15,8 @@ public class DailySalesScheduler {
 
 	private final DailySalesBatchService dailySalesBatchService;
 
-	//새벽 1시
-	@Scheduled(cron = "0 0 1 * * *")
+	//새벽 3시
+	@Scheduled(cron = "0 0 3 * * *")
 	public void saveYesterdaySales() {
 
 		LocalDate yesterday = LocalDate.now().minusDays(1);
