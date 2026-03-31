@@ -76,10 +76,11 @@ public class StoreController {
 		description = "가게의 영업 상태를 변경합니다."
 	)
 	@PatchMapping("/{storeId}/pause")
-	public void pauseStore(
+	public ResponseEntity<ApiResponse<Void>> pauseStore(
 		@PathVariable Long storeId
 	) {
 		storeService.pauseStore(storeId);
+		return ResponseEntity.ok(ApiResponse.success("영업이 일시 중지 되었습니다.", null));
 	}
 
 	@Operation(
@@ -87,7 +88,8 @@ public class StoreController {
 		description = "가게의 영업 상태를 조회합니다."
 	)
 	@GetMapping("/{storeId}/status")
-	public StoreStatusResponse getStoreStatus(@PathVariable Long storeId) {
-		return storeService.getStoreStatus(storeId);
+	public ResponseEntity<ApiResponse<StoreStatusResponse>> getStoreStatus(@PathVariable Long storeId) {
+		StoreStatusResponse responseDto = storeService.getStoreStatus(storeId);
+		return ResponseEntity.ok(ApiResponse.success("영업 상태 조회가 완료되었습니다.", responseDto));
 	}
 }
