@@ -28,7 +28,9 @@ public class StoreCloseScheduler {
 	public void closeStores() {
 
 		List<Stores> stores =
-			storeRepository.findOpenStoresWithHours(StoreStatus.OPEN);
+			storeRepository.findStoresByStatuses(
+				List.of(StoreStatus.OPEN, StoreStatus.PAUSED)
+			);
 
 		LocalDateTime now = LocalDateTime.now();
 
