@@ -16,14 +16,6 @@ public interface StoreRepository extends JpaRepository<Stores, Long> {
 		    select s
 		    from Stores s
 		    join s.storeBusinessHoursList h
-		    where s.status = :status
-		""")
-	List<Stores> findOpenStoresWithHours(StoreStatus status);
-
-	@Query("""
-		    select s
-		    from Stores s
-		    join s.storeBusinessHoursList h
 		    where s.status in :statuses
 		""")
 	List<Stores> findStoresByStatuses(List<StoreStatus> statuses);
