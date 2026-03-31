@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.CouponRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class CouponScheduler {
 	@Transactional
 	public void hideExpiredCoupons() {
 		LocalDate today = LocalDate.now();
-		int updatedCount = couponRepository.hideExpiredCoupons(today);
+		int updatedCount = couponRepository.updateExpiredCoupons(Status.EXHAUSTED, today);
 
 		System.out.println("만료 쿠폰 숨김 처리 개수: " + updatedCount);
 	}

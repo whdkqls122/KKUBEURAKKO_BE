@@ -39,4 +39,15 @@ public interface CouponRepository extends JpaRepository<Coupons, Long> {
 	@Modifying
 	@Query("UPDATE Coupons c SET c.status = 'HIDE' WHERE c.validUntil < :today AND c.status = 'OFFER'")
 	int hideExpiredCoupons(@Param("today") LocalDate today);
+
+	@Modifying
+	@Query("""
+		    UPDATE Coupons c
+		    SET c.status = :status
+		    WHERE c.validUntil < :today
+		""")
+	int updateExpiredCoupons(
+		@Param("status") Status status,
+		@Param("today") LocalDate today
+	);
 }
