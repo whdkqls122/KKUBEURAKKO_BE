@@ -163,6 +163,9 @@ public class CouponServiceImpl implements CouponService {
 		if (!coupon.getStore().getId().equals(storeId)) {
 			throw new IllegalArgumentException("해당 매장의 쿠폰이 아닙니다.");
 		}
+		if (coupon.getStatus() == Status.EXHAUSTED) {
+			throw new IllegalStateException("이미 소진된 쿠폰은 다시 활성화할 수 없습니다.");
+		}
 
 		coupon.show();
 	}
