@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StorePauseRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreStatusResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
@@ -85,5 +86,14 @@ public class StoreController {
 		return ResponseEntity.ok(
 			ApiResponse.success("영업이 일시 중지되었습니다.", null)
 		);
+	}
+
+	@Operation(
+		summary = "영업 상태 조회",
+		description = "가게의 영업 상태를 조회합니다."
+	)
+	@GetMapping("/{storeId}/status")
+	public StoreStatusResponse getStoreStatus(@PathVariable Long storeId) {
+		return storeService.getStoreStatus(storeId);
 	}
 }

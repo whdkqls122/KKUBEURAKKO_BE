@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StorePauseRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreStatusResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.BusinessDay;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
@@ -85,6 +86,17 @@ public class StoreServiceImpl implements StoreService {
 		store.pause(
 			request.startDateTime(),
 			request.endDateTime()
+		);
+	}
+
+	@Override
+	public StoreStatusResponse getStoreStatus(Long storeId) {
+
+		Stores store = storeRepository.findById(storeId)
+			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
+
+		return new StoreStatusResponse(
+			store.getStatus()
 		);
 	}
 
