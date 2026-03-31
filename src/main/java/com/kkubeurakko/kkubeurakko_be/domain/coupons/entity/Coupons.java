@@ -85,7 +85,7 @@ public class Coupons extends BaseEntity {
 		this.quantity -= 1;
 
 		if (this.quantity == 0) {
-			this.status = Status.HIDE;
+			this.status = Status.EXHAUSTED;
 		}
 	}
 
