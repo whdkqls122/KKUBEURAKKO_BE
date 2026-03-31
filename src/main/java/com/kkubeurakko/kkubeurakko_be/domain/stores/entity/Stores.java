@@ -103,10 +103,8 @@ public class Stores extends BaseEntity {
 		this.status = StoreStatus.CLOSED;
 	}
 
-	public void pause(LocalDateTime start, LocalDateTime end) {
+	public void pause() {
 		this.status = StoreStatus.PAUSED;
-		this.pauseStartAt = start;
-		this.pauseEndAt = end;
 	}
 
 	public void reopen() {

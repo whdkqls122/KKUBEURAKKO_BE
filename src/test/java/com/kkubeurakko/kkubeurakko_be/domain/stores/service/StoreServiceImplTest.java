@@ -3,9 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.mockito.Mockito.*;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -15,12 +13,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.kkubeurakko.kkubeurakko_be.domain.stores.config.StoreOpenScheduler;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.BusinessDay;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreBusinessHoursRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
@@ -36,9 +32,6 @@ class StoreServiceImplTest {
 
 	@Mock
 	private StoreBusinessHoursRepository businessHoursRepository;
-
-	@InjectMocks
-	private StoreOpenScheduler scheduler;
 
 	@Test
 	void storeUpdate() {
@@ -96,22 +89,6 @@ class StoreServiceImplTest {
 		assertThat(result.openTime()).isEqualTo(LocalTime.of(9, 0));
 		assertThat(result.closeTime()).isEqualTo(LocalTime.of(22, 0));
 		assertThat(result.minOrderPrice()).isEqualTo(17000);
-	}
-
-	@Test
-	@DisplayName("다시 정상 영업이 실행되는지 테스트한다.")
-	void reopenStores() {
-
-		Stores store = Stores.builder()
-			.status(StoreStatus.CLOSED)
-			.pauseEndAt(LocalDateTime.now().minusMinutes(1))
-			.build();
-
-		when(storeRepository.findPausedStoresToReopen(StoreStatus.PAUSED, any()))
-			.thenReturn(List.of(store));
-
-		scheduler.reopenStores();
-
 	}
 
 }

@@ -2,7 +2,6 @@ package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoResponse;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StorePauseRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreStatusResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
 
@@ -16,7 +15,7 @@ public interface StoreService {
 	StoreOperationInfoResponse getOperationInfo(Long storeId);
 
 	//가게 영업 일시 중지
-	void pauseStore(Long storeId, StorePauseRequest request);
+	void pauseStore(Long storeId);
 
 	//가게 상태 조회
 	StoreStatusResponse getStoreStatus(Long storeId);

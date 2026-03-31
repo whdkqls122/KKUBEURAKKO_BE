@@ -7,11 +7,11 @@ import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoResponse;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StorePauseRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreStatusResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.BusinessDay;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreBusinessHours;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreBusinessHoursRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
@@ -78,15 +78,18 @@ public class StoreServiceImpl implements StoreService {
 
 	@Override
 	@Transactional
-	public void pauseStore(Long storeId, StorePauseRequest request) {
+	public void pauseStore(Long storeId) {
 
 		Stores store = storeRepository.findById(storeId)
 			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
 
-		store.pause(
-			request.startDateTime(),
-			request.endDateTime()
-		);
+		if (store.getStatus() == StoreStatus.PAUSED) {
+			store.open();
+		} else if (store.getStatus() == StoreStatus.OPEN) {
+			store.pause();
+		} else {
+			throw new IllegalStateException("영업 종료 상태에서는 일시중지 변경이 불가능합니다.");
+		}
 	}
 
 	@Override

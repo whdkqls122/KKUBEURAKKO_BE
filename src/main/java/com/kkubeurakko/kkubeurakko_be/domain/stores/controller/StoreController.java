@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreOperationInfoResponse;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StorePauseRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreStatusResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreUpdateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreService;
@@ -76,16 +75,11 @@ public class StoreController {
 		summary = "영업 일시중지",
 		description = "가게의 영업 상태를 변경합니다."
 	)
-	@PostMapping("/{storeId}/pause")
-	public ResponseEntity<ApiResponse<Void>> pauseStore(
-		@PathVariable Long storeId,
-		@RequestBody @Valid StorePauseRequest request
+	@PatchMapping("/{storeId}/pause")
+	public void pauseStore(
+		@PathVariable Long storeId
 	) {
-		storeService.pauseStore(storeId, request);
-
-		return ResponseEntity.ok(
-			ApiResponse.success("영업이 일시 중지되었습니다.", null)
-		);
+		storeService.pauseStore(storeId);
 	}
 
 	@Operation(
