@@ -10,6 +10,8 @@ public record AddressResponseDto(
 	String addressName,
 	String address,
 	boolean isPrimary,
+	double latitude,
+	double longitude,
 	AddressCategory category,
 	String requestContent,
 	String entrancePassword,
