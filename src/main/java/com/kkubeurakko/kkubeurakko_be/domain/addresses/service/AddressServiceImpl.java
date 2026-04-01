@@ -198,6 +198,8 @@ public class AddressServiceImpl implements AddressService {
 				.addressName(addresses.getAddressName())
 				.address(resolveAddressName(addresses.getRoadName(), addresses.getDetailAddress()))
 				.isPrimary(addresses.getIsPrimary())
+				.latitude(addresses.getLatitude())
+				.longitude(addresses.getLongitude())
 				.category(addresses.getCategory())
 				.requestContent(addresses.getRequestContent())
 				.entrancePassword(
@@ -217,6 +219,8 @@ public class AddressServiceImpl implements AddressService {
 			.address(resolveAddressName(address.getRoadName(), address.getDetailAddress()))
 			.isPrimary(address.getIsPrimary())
 			.category(address.getCategory())
+			.latitude(address.getLatitude())
+			.longitude(address.getLongitude())
 			.requestContent(address.getRequestContent())
 			.entrancePassword(
 				address.getEntrancePassword() != null ?
