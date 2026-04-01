@@ -12,6 +12,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreBusinessHoursService;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreHolidayService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class StoreCloseScheduler {
 
 	private final StoreRepository storeRepository;
 	private final StoreBusinessHoursService storeBusinessHoursService;
+	private final StoreHolidayService storeHolidayService;
 
 	@Scheduled(fixedDelay = 60_000) // 1분마다
 	@Transactional
@@ -33,8 +35,13 @@ public class StoreCloseScheduler {
 			);
 
 		LocalDateTime now = LocalDateTime.now();
+		LocalDate today = now.toLocalDate();
 
 		for (Stores store : stores) {
+			if (storeHolidayService.isHoliday(store.getId(), today)) {
+				store.close();
+				continue;
+			}
 
 			if (shouldClose(store, now)) {
 				store.close();
