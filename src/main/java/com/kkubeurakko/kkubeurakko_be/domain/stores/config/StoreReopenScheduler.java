@@ -12,6 +12,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreBusinessHoursService;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreHolidayService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,16 +23,22 @@ public class StoreReopenScheduler {
 
 	private final StoreRepository storeRepository;
 	private final StoreBusinessHoursService businessHoursService;
+	private final StoreHolidayService storeHolidayService;
 
 	@Scheduled(fixedRate = 10_000)
 	@Transactional
 	public void reopenStores() {
 
 		LocalDateTime now = LocalDateTime.now();
+		LocalDate today = now.toLocalDate();
 		List<Stores> stores = storeRepository.findClosedStores(StoreStatus.CLOSED);
 
 		for (Stores store : stores) {
 
+			if (storeHolidayService.isHoliday(store.getId(), today)) {
+				continue;
+			}
+			
 			StoreBusinessHours hours =
 				businessHoursService.getHoursByDate(
 					store.getId(),
