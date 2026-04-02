@@ -1,13 +1,17 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.controller;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.OnceHolidayCreateRequest;
@@ -65,6 +69,32 @@ public class StoreHolidayController {
 	) {
 		List<StoreHolidayResponse> responseDto = holidayService.getHolidays(storeId);
 		return ResponseEntity.ok(ApiResponse.success("휴무일이 조회되었습니다.", responseDto));
+	}
+
+	@Operation(
+		summary = "단일 휴무일 삭제",
+		description = "단일 휴무일 데이터를 삭제합니다."
+	)
+	@DeleteMapping("/")
+	public ResponseEntity<ApiResponse<Void>> deleteOnceHoliday(
+		@PathVariable Long storeId,
+		@RequestParam LocalDate holidayDate
+	) {
+		holidayService.deleteOnceHoliday(storeId, holidayDate);
+		return ResponseEntity.ok(ApiResponse.success("단일 휴무가 삭제되었습니다.", null));
+	}
+
+	@Operation(
+		summary = "반복 휴무일 삭제",
+		description = "반복 휴무일 데이터를 삭제합니다."
+	)
+	@DeleteMapping("/")
+	public ResponseEntity<ApiResponse<Void>> deleteWeeklyHoliday(
+		@PathVariable Long storeId,
+		@RequestParam DayOfWeek dayOfWeek
+	) {
+		holidayService.deleteWeeklyHoliday(storeId, dayOfWeek);
+		return ResponseEntity.ok(ApiResponse.success("반복 휴무가 삭제되었습니다.", null));
 	}
 
 }
