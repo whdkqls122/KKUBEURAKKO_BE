@@ -46,7 +46,6 @@ public class AdminInitializer {
 				.deliveryAvgTime(60)
 				.latitude(37.3941024672772)
 				.longitude(126.923668362232)
-				.status(StoreStatus.OPEN)
 				.build();
 
 			return storeRepository.save(store);
