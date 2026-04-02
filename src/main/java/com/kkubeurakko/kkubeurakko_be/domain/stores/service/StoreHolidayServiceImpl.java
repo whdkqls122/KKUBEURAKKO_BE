@@ -1,10 +1,12 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.OnceHolidayCreateRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.StoreHolidayResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.WeeklyHolidayCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.HolidayType;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreHoliday;
@@ -60,9 +62,23 @@ public class StoreHolidayServiceImpl implements StoreHolidayService {
 			);
 	}
 
+	@Override
+	public List<StoreHolidayResponse> getHolidays(Long storeId) {
+
+		return holidayRepository.findByStoreId(storeId)
+			.stream()
+			.map(h -> StoreHolidayResponse.builder()
+				.holidayType(h.getHolidayType())
+				.holidayDate(h.getHolidayDate())
+				.dayOfWeek(h.getDayOfWeek())
+				.build()
+			)
+			.toList();
+	}
+
 	private Stores findStore(Long storeId) {
 		return storeRepository.findById(storeId)
 			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
 	}
-	
+
 }
