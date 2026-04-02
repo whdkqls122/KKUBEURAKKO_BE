@@ -24,7 +24,7 @@ public interface StoreHolidayRepository extends JpaRepository<StoreHoliday, Long
 		HolidayType holidayType,
 		LocalDate holidayDate
 	);
-	
+
 	void deleteByStoreIdAndHolidayTypeAndHolidayDate(
 		Long storeId,
 		HolidayType holidayType,
@@ -36,4 +36,6 @@ public interface StoreHolidayRepository extends JpaRepository<StoreHoliday, Long
 		HolidayType holidayType,
 		DayOfWeek dayOfWeek
 	);
+
+	void deleteAllByStoreId(Long storeId);
 }

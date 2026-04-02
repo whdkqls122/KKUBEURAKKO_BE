@@ -127,6 +127,15 @@ public class StoreHolidayServiceImpl implements StoreHolidayService {
 		);
 	}
 
+	@Override
+	public void deleteAllHolidays(Long storeId) {
+		
+		storeRepository.findById(storeId)
+			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
+
+		holidayRepository.deleteAllByStoreId(storeId);
+	}
+
 	private Stores findStore(Long storeId) {
 		return storeRepository.findById(storeId)
 			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));

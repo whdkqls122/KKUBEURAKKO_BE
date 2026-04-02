@@ -75,7 +75,7 @@ public class StoreHolidayController {
 		summary = "단일 휴무일 삭제",
 		description = "단일 휴무일 데이터를 삭제합니다."
 	)
-	@DeleteMapping("/")
+	@DeleteMapping("/once")
 	public ResponseEntity<ApiResponse<Void>> deleteOnceHoliday(
 		@PathVariable Long storeId,
 		@RequestParam LocalDate holidayDate
@@ -88,13 +88,25 @@ public class StoreHolidayController {
 		summary = "반복 휴무일 삭제",
 		description = "반복 휴무일 데이터를 삭제합니다."
 	)
-	@DeleteMapping("/")
+	@DeleteMapping("/weekly")
 	public ResponseEntity<ApiResponse<Void>> deleteWeeklyHoliday(
 		@PathVariable Long storeId,
 		@RequestParam DayOfWeek dayOfWeek
 	) {
 		holidayService.deleteWeeklyHoliday(storeId, dayOfWeek);
 		return ResponseEntity.ok(ApiResponse.success("반복 휴무가 삭제되었습니다.", null));
+	}
+
+	@Operation(
+		summary = "휴무일 없음 설정",
+		description = "기존 휴무일 정보가 전체 삭제됩니다."
+	)
+	@DeleteMapping("/clear")
+	public ResponseEntity<ApiResponse<Void>> deleteAllHolidays(
+		@PathVariable Long storeId
+	) {
+		holidayService.deleteAllHolidays(storeId);
+		return ResponseEntity.ok(ApiResponse.success("휴무일이 없음으로 설정되었습니다.", null));
 	}
 
 }

@@ -23,4 +23,7 @@ public interface StoreHolidayService {
 
 	//반복 휴무 삭제
 	void deleteWeeklyHoliday(Long storeId, DayOfWeek dayOfWeek);
+
+	//휴무일 전체 삭제
+	void deleteAllHolidays(Long storeId);
 }
