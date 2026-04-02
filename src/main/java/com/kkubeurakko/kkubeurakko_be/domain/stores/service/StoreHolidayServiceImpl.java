@@ -42,6 +42,16 @@ public class StoreHolidayServiceImpl implements StoreHolidayService {
 	public void createWeeklyHoliday(Long storeId, WeeklyHolidayCreateRequest request) {
 		Stores store = findStore(storeId);
 
+		boolean exists = holidayRepository.existsByStoreIdAndHolidayTypeAndDayOfWeek(
+			storeId,
+			HolidayType.WEEKLY,
+			request.dayOfWeek()
+		);
+
+		if (exists) {
+			throw new IllegalStateException("이미 해당 요일에 반복 휴무가 존재합니다.");
+		}
+		
 		StoreHoliday holiday = StoreHoliday.builder()
 			.store(store)
 			.holidayType(HolidayType.WEEKLY)
