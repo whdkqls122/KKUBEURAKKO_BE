@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.stores.service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -51,7 +52,7 @@ public class StoreHolidayServiceImpl implements StoreHolidayService {
 		if (exists) {
 			throw new IllegalStateException("이미 해당 요일에 반복 휴무가 존재합니다.");
 		}
-		
+
 		StoreHoliday holiday = StoreHoliday.builder()
 			.store(store)
 			.holidayType(HolidayType.WEEKLY)
@@ -84,6 +85,46 @@ public class StoreHolidayServiceImpl implements StoreHolidayService {
 				.build()
 			)
 			.toList();
+	}
+
+	@Override
+	public void deleteOnceHoliday(Long storeId, LocalDate holidayDate) {
+
+		boolean exists = holidayRepository.existsByStoreIdAndHolidayTypeAndHolidayDate(
+			storeId,
+			HolidayType.ONCE,
+			holidayDate
+		);
+
+		if (!exists) {
+			throw new IllegalArgumentException("해당 날짜의 휴무일이 존재하지 않습니다.");
+		}
+
+		holidayRepository.deleteByStoreIdAndHolidayTypeAndHolidayDate(
+			storeId,
+			HolidayType.ONCE,
+			holidayDate
+		);
+	}
+
+	@Override
+	public void deleteWeeklyHoliday(Long storeId, DayOfWeek dayOfWeek) {
+
+		boolean exists = holidayRepository.existsByStoreIdAndHolidayTypeAndDayOfWeek(
+			storeId,
+			HolidayType.WEEKLY,
+			dayOfWeek
+		);
+
+		if (!exists) {
+			throw new IllegalArgumentException("해당 요일의 반복 휴무가 존재하지 않습니다.");
+		}
+
+		holidayRepository.deleteByStoreIdAndHolidayTypeAndDayOfWeek(
+			storeId,
+			HolidayType.WEEKLY,
+			dayOfWeek
+		);
 	}
 
 	private Stores findStore(Long storeId) {
