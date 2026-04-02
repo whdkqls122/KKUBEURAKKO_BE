@@ -25,8 +25,10 @@ public class AdminInitializer {
 	private final PasswordEncoder passwordEncoder;
 	private final StoreRepository storeRepository;
 	private final DeliveryRegionRepository deliveryRegionRepository;
+
 	@Value("${admin.initial.id}")
 	private String id;
+
 	@Value("${admin.initial.password}")
 	private String password;
 
@@ -38,19 +40,19 @@ public class AdminInitializer {
 	}
 
 	private Stores initStore() {
-		if (!storeRepository.existsById(1L)) {
-			Stores store = Stores.builder()
-				.status(StoreStatus.OPEN)
-				.minOrderPrice(17000)
-				.packagingAvgTime(10)
-				.deliveryAvgTime(60)
-				.latitude(37.3941024672772)
-				.longitude(126.923668362232)
-				.build();
+		return storeRepository.findById(1L)
+			.orElseGet(() -> {
+				Stores store = Stores.builder()
+					.status(StoreStatus.OPEN)
+					.minOrderPrice(17000)
+					.packagingAvgTime(10)
+					.deliveryAvgTime(60)
+					.latitude(37.3941024672772)
+					.longitude(126.923668362232)
+					.build();
 
-			return storeRepository.save(store);
-		}
-		return null;
+				return storeRepository.save(store);
+			});
 	}
 
 	private void initDeliveryRegion(Stores store) {
