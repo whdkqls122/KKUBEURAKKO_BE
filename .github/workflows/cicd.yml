@@ -43,7 +43,6 @@ jobs:
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app:latest
 
   run-docker-image-on-ec2:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs: build-docker-image
     runs-on: self-hosted
 
