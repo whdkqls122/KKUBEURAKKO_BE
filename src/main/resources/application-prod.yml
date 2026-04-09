@@ -25,7 +25,7 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT:6379}
-
+      password: ${REDIS_PASSWORD}
   jwt:
     secret: ${JWT_SECRET}
     access-token-expiry: ${JWT_ACCESS_EXP:3600000}
