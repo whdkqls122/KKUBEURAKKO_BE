@@ -43,6 +43,7 @@ jobs:
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app:latest
 
   run-docker-image-on-ec2:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs: build-docker-image
     runs-on: self-hosted
 
@@ -52,10 +53,20 @@ jobs:
           df -h
           sudo docker system df || true
 
-      - name: Stop and remove existing container
+      - name: Create docker network if not exists
+        run: |
+          sudo docker network inspect kkubeurakko-net >/dev/null 2>&1 || \
+          sudo docker network create kkubeurakko-net
+
+      - name: Stop and remove existing app container
         run: |
           sudo docker stop kkubeurakko-app || true
           sudo docker rm kkubeurakko-app || true
+
+      - name: Stop and remove existing redis container
+        run: |
+          sudo docker stop kkubeurakko-redis || true
+          sudo docker rm kkubeurakko-redis || true
 
       - name: Cleanup docker before pull
         run: |
@@ -67,22 +78,33 @@ jobs:
           df -h
           sudo docker system df || true
 
-      - name: Docker pull
+      - name: Docker pull app image
         run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app:latest
 
-      - name: Docker run new container
+      - name: Run redis container
+        run: |
+          sudo docker run -d \
+            --name kkubeurakko-redis \
+            --network kkubeurakko-net \
+            --restart unless-stopped \
+            redis:7 \
+            redis-server --requirepass "${{ secrets.REDIS_PASSWORD }}" --appendonly yes
+
+      - name: Run spring boot container
         run: |
           sudo docker run -d \
             -p 8080:8080 \
             --name kkubeurakko-app \
+            --network kkubeurakko-net \
             --restart unless-stopped \
             -e TZ=Asia/Seoul \
             -e JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Seoul" \
             -e DB_URL="${{ secrets.DB_URL }}" \
             -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
             -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-            -e REDIS_HOST="${{ secrets.REDIS_HOST }}" \
-            -e REDIS_PORT="${{ secrets.REDIS_PORT }}" \
+            -e REDIS_HOST="kkubeurakko-redis" \
+            -e REDIS_PORT="6379" \
+            -e REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}" \
             -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
             -e JWT_ACCESS_EXP="${{ secrets.JWT_ACCESS_EXP }}" \
             -e JWT_ADMIN_ACCESS_EXP="${{ secrets.JWT_ADMIN_ACCESS_EXP }}" \
@@ -117,7 +139,15 @@ jobs:
           sudo docker image prune -af || true
           sudo docker builder prune -af || true
 
-      - name: Check running container
+      - name: Check running containers
         run: |
           sudo docker ps
+          echo "=== APP LOGS ==="
           sudo docker logs --tail 100 kkubeurakko-app || true
+          echo "=== REDIS LOGS ==="
+          sudo docker logs --tail 50 kkubeurakko-redis || true
+
+      - name: Health check app
+        run: |
+          sleep 10
+          curl -i http://localhost:8080/actuator/health || true
