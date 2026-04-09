@@ -72,6 +72,11 @@ jobs:
           sudo docker system prune -af || true
           sudo docker builder prune -af || true
 
+      - name: Create docker network if not exists
+        run: |
+          sudo docker network inspect kkubeurakko-net >/dev/null 2>&1 || \
+          sudo docker network create kkubeurakko-net
+
       - name: Check disk usage after cleanup
         run: |
           df -h
