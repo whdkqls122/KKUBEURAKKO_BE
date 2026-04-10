@@ -202,7 +202,9 @@ public class MenuServiceImpl implements MenuService {
 	})
 	public void deleteMenu(Long menuId) {
 		Menus menu = menuRepository.findById(menuId).orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
-
+		if (menu.getS3Key() != null) {
+			s3Service.deleteImage(menu.getS3Key());
+		}
 		menu.deleteMenu();
 	}
 
