@@ -1,14 +1,16 @@
 package com.kkubeurakko.kkubeurakko_be.global.aws.service;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.kkubeurakko.kkubeurakko_be.domain.menus.dto.ConvertedImageDto;
+import com.kkubeurakko.kkubeurakko_be.domain.menus.util.ImageConvertUtil;
 import com.kkubeurakko.kkubeurakko_be.global.aws.dto.S3UploadResponseDto;
 
 import lombok.RequiredArgsConstructor;
@@ -28,12 +30,14 @@ public class S3ServiceImpl implements S3Service {
 	@Value("${cloud.aws.cloudfront.domain}")
 	private String cloudFrontDomain;
 
+	private final ImageConvertUtil imageConvertUtil;
+
 	@Override
 	public S3UploadResponseDto uploadImage(MultipartFile file) throws IOException {
-		String ext = FilenameUtils.getExtension(file.getOriginalFilename());
-		String key = createKey(ext);
+		ConvertedImageDto convertedImage = imageConvertUtil.convertToWebp(file);
+		String key = createKey(convertedImage.extension());
 
-		putObject(file, key);
+		putObject(convertedImage, key);
 		return S3UploadResponseDto.builder()
 			.imageUrl(cloudFrontDomain + "/" + key)
 			.imageKey(key)
@@ -42,7 +46,8 @@ public class S3ServiceImpl implements S3Service {
 
 	@Override
 	public String updateImage(MultipartFile file, String key) throws IOException {
-		putObject(file, key);
+		ConvertedImageDto convertedImage = imageConvertUtil.convertToWebp(file);
+		putObject(convertedImage, key);
 		return cloudFrontDomain + "/" + key;
 	}
 
@@ -56,16 +61,17 @@ public class S3ServiceImpl implements S3Service {
 		);
 	}
 
-	private void putObject(MultipartFile file, String key) throws IOException {
+	private void putObject(ConvertedImageDto convertedImage, String key) {
 		s3Client.putObject(
-			PutObjectRequest
-				.builder()
+			PutObjectRequest.builder()
 				.bucket(bucket)
 				.key(key)
-				.contentType(file.getContentType())
+				.contentType(convertedImage.contentType())
 				.build(),
-
-			RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+			RequestBody.fromInputStream(
+				new ByteArrayInputStream(convertedImage.data()),
+				convertedImage.data().length
+			)
 		);
 	}
 
