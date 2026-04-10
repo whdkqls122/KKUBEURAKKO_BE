@@ -70,6 +70,9 @@ dependencies {
 
     //cache
     implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+    //webp
+    implementation 'org.sejda.imageio:webp-imageio:0.1.6'
 }
 
 tasks.named('test') {
