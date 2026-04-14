@@ -123,11 +123,13 @@ public class OrderController {
 	}
 
 	@PatchMapping("/{orderId}/delivery-start")
-	public ResponseEntity<Void> startDelivery(@PathVariable Long orderId) {
+	public ResponseEntity<ApiResponse<Void>> startDelivery(@PathVariable Long orderId) {
 
 		orderService.startDelivery(orderId);
 
-		return ResponseEntity.ok().build();
+		return ResponseEntity.ok(
+			ApiResponse.success("배달 시작 완료", null)
+		);
 	}
 
 	@PatchMapping("/{orderId}/complete")
