@@ -25,6 +25,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 import com.kkubeurakko.kkubeurakko_be.global.aws.service.S3Service;
@@ -112,7 +113,7 @@ class MenuGroupServiceImplTest {
 		MenuGroupRequestDto dto = new MenuGroupRequestDto("인기메뉴", "꾸브라꼬 대표 인기 메뉴");
 		Stores mockStore = Stores.builder()
 			.id(1L)
-			.isOpen(true)
+			.status(StoreStatus.OPEN)
 			.minOrderPrice(10000)
 			.deliveryAvgTime(60)
 			.packagingAvgTime(10)

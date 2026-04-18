@@ -33,6 +33,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PaymentAmount;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PaymentMethodDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -42,7 +43,7 @@ public class TestFixture {
 	public static Stores createStore() {
 		return Stores.builder()
 			.id(1L)
-			.isOpen(true)
+			.status(StoreStatus.OPEN)
 			.minOrderPrice(10000)
 			.deliveryAvgTime(60)
 			.packagingAvgTime(10)
