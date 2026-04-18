@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class SurveyServiceImpl {
+public class SurveyServiceImpl implements SurveyService {
 
 	private final SurveyRepository surveyRepository;
 	private final UserService userService;
