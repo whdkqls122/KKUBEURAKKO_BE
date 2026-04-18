@@ -36,12 +36,12 @@ public class Survey {
 	private Long id;
 
 	// Q1
-	@Column(columnDefinition = "TEXT")
-	private String improvementContent;
+	@Column(length = 150)
+	private String improvement;
 
 	// Q3
-	@Column(columnDefinition = "TEXT")
-	private String inconvenienceDetail;
+	@Column(length = 150)
+	private String inconvenience;
 
 	@Column(nullable = false)
 	private boolean rewarded;
