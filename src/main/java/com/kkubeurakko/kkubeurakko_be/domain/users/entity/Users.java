@@ -7,6 +7,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
+import com.kkubeurakko.kkubeurakko_be.domain.survey.entity.Survey;
 import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
 
 import jakarta.persistence.CascadeType;
@@ -74,6 +75,9 @@ public class Users extends BaseEntity {
 	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "cart_id")
 	private Cart cart;
+
+	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Survey survey;
 
 	public void updateNickname(String nickname) {
 		this.nickname = nickname;
