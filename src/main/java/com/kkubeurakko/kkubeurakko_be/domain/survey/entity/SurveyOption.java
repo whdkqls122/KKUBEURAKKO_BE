@@ -36,4 +36,8 @@ public class SurveyOption {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "option_type", nullable = false)
 	private OptionType optionType;
+
+	public void addSurvey(Survey survey) {
+		this.survey = survey;
+	}
 }

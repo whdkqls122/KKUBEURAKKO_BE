@@ -56,6 +56,11 @@ public class Survey {
 	@JoinColumn(name = "user_number", nullable = false, unique = true)
 	private Users user;
 
+	public void addSurveyOption(SurveyOption surveyOption) {
+		options.add(surveyOption);
+		surveyOption.addSurvey(this);
+	}
+
 	public void markRewarded() {
 		this.rewarded = true;
 	}
