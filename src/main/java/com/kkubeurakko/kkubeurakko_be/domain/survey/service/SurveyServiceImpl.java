@@ -1,5 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.domain.survey.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +43,7 @@ public class SurveyServiceImpl implements SurveyService {
 			.improvement(surveyRequestDto.improvement())
 			.inconvenience(surveyRequestDto.inconvenience())
 			.user(user)
+			.createdAt(LocalDateTime.now())
 			.build();
 
 		for (OptionType optionType : surveyRequestDto.optionTypes()) {
