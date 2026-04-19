@@ -1,7 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.coupons.service;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -11,12 +10,14 @@ import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.AdminCouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponCategory;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.exception.DuplicatedCouponNumberException;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.CouponRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.util.GeneratedCouponNumberUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -34,6 +35,7 @@ public class CouponServiceImpl implements CouponService {
 	private final CouponRepository couponRepository;
 	private final UserCouponRepository userCouponRepository;
 	private final StoreRepository storeRepository;
+	private final GeneratedCouponNumberUtil generatedCouponNumberUtil;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -78,11 +80,12 @@ public class CouponServiceImpl implements CouponService {
 
 		coupon.updateQuantity();
 
+		String couponNumber = generatedCouponNumberUtil.generatedCouponNumber();
 		try {
 			UsersCoupons userCoupon = UsersCoupons.builder()
 				.coupon(coupon)
 				.user(user)
-				.couponsNumber(generatedCouponNumber())
+				.couponsNumber(couponNumber)
 				.isUsed(false)
 				.build();
 
@@ -112,6 +115,11 @@ public class CouponServiceImpl implements CouponService {
 			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
 
 		validateDiscount(request);
+
+		if (request.couponCategory() != CouponCategory.GENERAL &&
+			couponRepository.existsByCouponCategoryAndStatus(request.couponCategory(), Status.OFFER)) {
+			throw new IllegalArgumentException("이미 발행 중인 " + request.couponCategory().getCategory() + "이 있습니다.");
+		}
 
 		Coupons coupon = Coupons.builder()
 			.name(request.name())
@@ -233,16 +241,5 @@ public class CouponServiceImpl implements CouponService {
 					.build()
 			)
 			.collect(Collectors.toList());
-	}
-
-	private String generatedCouponNumber() {
-		int maxAttempts = 10;
-		for (int i = 0; i < maxAttempts; i++) {
-			String couponNumber = UUID.randomUUID().toString().replace("-", "").substring(0, 19);
-			if (!userCouponRepository.existsByCouponsNumber(couponNumber)) {
-				return couponNumber;
-			}
-		}
-		throw new IllegalStateException("다시 요청 해주세요");
 	}
 }
