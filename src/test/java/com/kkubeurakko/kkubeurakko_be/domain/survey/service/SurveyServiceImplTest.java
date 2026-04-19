@@ -10,6 +10,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.kkubeurakko.kkubeurakko_be.TestFixture;
+import com.kkubeurakko.kkubeurakko_be.domain.survey.dto.SurveyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.survey.repository.SurveyRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
@@ -72,5 +74,55 @@ class SurveyServiceImplTest {
 
 		// then
 		assertThat(result).isFalse();
+	}
+
+	@Test
+	@DisplayName("설문에 저장이 원할히 되는지 검증한다.")
+	void completeSurvey() {
+
+		// given
+		String userNumber = "user123";
+
+		Users user = Users.builder()
+			.userNumber(userNumber)
+			.build();
+
+		when(userService.getUser(userNumber))
+			.thenReturn(user);
+		when(surveyRepository.existsByUser(user))
+			.thenReturn(false);
+
+		SurveyRequestDto surveyRequestDto = TestFixture.createSurveyRequest();
+
+		// when
+		surveyService.completeSurvey(userNumber, surveyRequestDto);
+
+		// then
+		verify(surveyRepository, times(1)).save(any());
+	}
+
+	@Test
+	@DisplayName("설문 중복 참여 시 IllegalArgumentException이 발생한다.")
+	void completeSurvey_fail() {
+
+		// given
+		String userNumber = "user123";
+
+		Users user = Users.builder()
+			.userNumber(userNumber)
+			.build();
+
+		when(userService.getUser(userNumber))
+			.thenReturn(user);
+		when(surveyRepository.existsByUser(user))
+			.thenReturn(true);
+
+		SurveyRequestDto surveyRequestDto = TestFixture.createSurveyRequest();
+
+		// when
+		// then
+		assertThatThrownBy(() -> surveyService.completeSurvey(userNumber, surveyRequestDto))
+			.isInstanceOf(IllegalArgumentException.class)
+			.hasMessage("이미 설문에 참여했습니다.");
 	}
 }
