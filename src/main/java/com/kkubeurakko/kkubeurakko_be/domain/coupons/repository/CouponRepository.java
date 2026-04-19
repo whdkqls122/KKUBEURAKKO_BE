@@ -28,8 +28,13 @@ public interface CouponRepository extends JpaRepository<Coupons, Long> {
 		    AND c.validFrom <= CURRENT_DATE
 		    AND c.quantity > 0
 		    AND c.status = :status
+		    AND c.couponCategory = :category
 		""")
-	List<Coupons> findAllUserDoesNotHave(@Param("userNumber") String userNumber, @Param("status") Status status);
+	List<Coupons> findAllUserDoesNotHave(
+		@Param("userNumber") String userNumber,
+		@Param("status") Status status,
+		@Param("category") CouponCategory category
+	);
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("SELECT c FROM Coupons c WHERE c.id = :couponId")

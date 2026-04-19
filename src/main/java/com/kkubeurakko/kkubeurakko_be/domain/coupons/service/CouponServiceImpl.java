@@ -41,7 +41,11 @@ public class CouponServiceImpl implements CouponService {
 	@Transactional(readOnly = true)
 	public List<CouponResponseDto> getAllCouponDoesNotHave(CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
-		List<Coupons> couponList = couponRepository.findAllUserDoesNotHave(user.getUserNumber(), Status.OFFER);
+		List<Coupons> couponList = couponRepository.findAllUserDoesNotHave(
+			user.getUserNumber(),
+			Status.OFFER,
+			CouponCategory.GENERAL
+		);
 
 		log.info("쿠폰 조회 성공");
 		return toResponseDto(couponList);
