@@ -1,10 +1,10 @@
 package com.kkubeurakko.kkubeurakko_be.domain.survey.entity;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
-import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "survey")
 @Builder
-public class Survey extends BaseEntity {
+public class Survey {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,6 +45,9 @@ public class Survey extends BaseEntity {
 
 	@Column(nullable = false)
 	private boolean rewarded;
+
+	@Column(nullable = false)
+	private LocalDateTime createdAt;
 
 	@Builder.Default
 	@OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, orphanRemoval = true)
