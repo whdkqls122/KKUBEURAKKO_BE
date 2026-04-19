@@ -35,6 +35,8 @@ import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PaymentMethodDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
+import com.kkubeurakko.kkubeurakko_be.domain.survey.dto.SurveyRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.survey.entity.OptionType;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 
@@ -319,6 +321,14 @@ public class TestFixture {
 				"PaymentMethodCard",
 				Map.of()
 			)
+		);
+	}
+
+	public static SurveyRequestDto createSurveyRequest() {
+		return new SurveyRequestDto(
+			"1번 답변",
+			List.of(OptionType.SLOW_PAGE, OptionType.BAD_DESIGN),
+			"2번 답변"
 		);
 	}
 }
