@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponCategory;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 
@@ -50,4 +51,9 @@ public interface CouponRepository extends JpaRepository<Coupons, Long> {
 		@Param("status") Status status,
 		@Param("today") LocalDate today
 	);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	Optional<Coupons> findByCouponCategoryAndStatus(CouponCategory couponCategory, Status status);
+
+	boolean existsByCouponCategoryAndStatus(CouponCategory couponCategory, Status status);
 }
