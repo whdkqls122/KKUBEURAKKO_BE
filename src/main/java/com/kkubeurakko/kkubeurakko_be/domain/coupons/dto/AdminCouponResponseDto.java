@@ -2,6 +2,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.coupons.dto;
 
 import java.time.LocalDate;
 
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponCategory;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponType;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 
@@ -15,6 +16,7 @@ public record AdminCouponResponseDto(
 	Integer discountRate,
 	int minOrderAmount,
 	CouponType couponType,
+	CouponCategory couponCategory,
 	LocalDate validFrom,
 	LocalDate validUntil,
 	int quantity,

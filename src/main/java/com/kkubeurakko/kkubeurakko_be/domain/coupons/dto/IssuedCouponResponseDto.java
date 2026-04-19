@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.coupons.dto;
 import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponCategory;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponType;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 
@@ -17,6 +18,7 @@ public record IssuedCouponResponseDto(
 	Integer discountRate,
 	int minOrderAmount,
 	CouponType couponType,
+	CouponCategory couponCategory,
 	@JsonFormat(pattern = "yyyy-MM-dd")
 	LocalDate validFrom,
 	@JsonFormat(pattern = "yyyy-MM-dd")
