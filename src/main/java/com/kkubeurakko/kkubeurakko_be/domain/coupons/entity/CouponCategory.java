@@ -6,7 +6,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum CouponCategory {
-	GENERAL("일반"),
+	GENERAL("일반 쿠폰"),
 	WELCOME("신규 가입 쿠폰"),
 	SURVEY_REWARD("설문 참여 쿠폰"),
 	EVENT("이벤트 쿠폰");
