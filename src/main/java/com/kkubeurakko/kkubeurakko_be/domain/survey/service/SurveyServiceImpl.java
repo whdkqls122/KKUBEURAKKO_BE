@@ -12,9 +12,11 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SurveyServiceImpl implements SurveyService {
 
 	private final SurveyRepository surveyRepository;
@@ -48,7 +50,7 @@ public class SurveyServiceImpl implements SurveyService {
 					.build()
 			);
 		}
-
+		log.info("설문 참여 완료");
 		surveyRepository.save(survey);
 	}
 }
