@@ -22,6 +22,7 @@ import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponCategory;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponType;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
@@ -232,6 +233,7 @@ class CouponServiceImplTest {
 			null,
 			15000,
 			CouponType.DELIVERY,
+			CouponCategory.SURVEY_REWARD,
 			LocalDate.now(),
 			LocalDate.now().plusDays(7),
 			100
