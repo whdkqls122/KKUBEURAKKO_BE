@@ -49,6 +49,7 @@ public class Survey {
 	@Column(nullable = false)
 	private LocalDateTime createdAt;
 
+	@Builder.Default
 	@OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<SurveyOption> options = new ArrayList<>();
 
