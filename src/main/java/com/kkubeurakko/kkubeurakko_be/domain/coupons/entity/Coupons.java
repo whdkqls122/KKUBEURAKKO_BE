@@ -56,6 +56,10 @@ public class Coupons extends BaseEntity {
 	@Column(name = "coupon_type", nullable = false)
 	private CouponType couponType;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "coupon_category", nullable = false)
+	private CouponCategory couponCategory;
+
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	@Column(name = "valid_from", nullable = false)
 	private LocalDate validFrom;
