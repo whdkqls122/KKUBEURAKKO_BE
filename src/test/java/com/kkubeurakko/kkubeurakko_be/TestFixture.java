@@ -12,6 +12,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItem;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItemOption;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponCategory;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponType;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
@@ -275,13 +276,15 @@ public class TestFixture {
 	}
 
 	public static Coupons createCoupon(Long id, String name, int quantity, LocalDate validFrom, LocalDate validUntil,
-		CouponType couponType, com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status status, Stores store) {
+		CouponType couponType, CouponCategory couponCategory,
+		com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status status, Stores store) {
 		return Coupons.builder()
 			.id(id)
 			.name(name)
 			.discountAmount(1000) // 예시
 			.minOrderAmount(12000)
 			.couponType(couponType)
+			.couponCategory(couponCategory)
 			.validFrom(validFrom)
 			.validUntil(validUntil)
 			.quantity(quantity)

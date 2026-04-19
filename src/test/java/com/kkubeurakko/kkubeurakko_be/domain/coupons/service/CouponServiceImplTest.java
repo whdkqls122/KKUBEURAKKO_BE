@@ -29,6 +29,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.CouponRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.util.GeneratedCouponNumberUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
@@ -44,6 +45,8 @@ class CouponServiceImplTest {
 	CouponRepository couponRepository;
 	@Mock
 	UserCouponRepository userCouponRepository;
+	@Mock
+	GeneratedCouponNumberUtil generatedCouponNumberUtil;
 
 	@Mock
 	private StoreRepository storeRepository;
@@ -62,7 +65,7 @@ class CouponServiceImplTest {
 			1L, "쿠폰1", 10,
 			LocalDate.now().minusDays(1),
 			LocalDate.now().plusDays(10),
-			CouponType.DELIVERY, Status.OFFER,
+			CouponType.DELIVERY, CouponCategory.GENERAL, Status.OFFER,
 			TestFixture.createStore()
 		);
 
@@ -70,7 +73,7 @@ class CouponServiceImplTest {
 			2L, "쿠폰2", 5,
 			LocalDate.now().minusDays(5),
 			LocalDate.now().plusDays(5),
-			CouponType.DELIVERY, Status.OFFER,
+			CouponType.DELIVERY, CouponCategory.SURVEY_REWARD, Status.OFFER,
 			TestFixture.createStore()
 		);
 	}
@@ -82,13 +85,14 @@ class CouponServiceImplTest {
 		when(oauthUser.getName()).thenReturn("U123");
 
 		when(userService.getUser("U123")).thenReturn(testUser);
-		when(couponRepository.findAllUserDoesNotHave("U123", Status.OFFER))
-			.thenReturn(List.of(coupon1, coupon2));
+		when(couponRepository.findAllUserDoesNotHave("U123", Status.OFFER, CouponCategory.GENERAL))
+			.thenReturn(List.of(coupon1));
 
 		List<CouponResponseDto> result = couponService.getAllCouponDoesNotHave(oauthUser);
 
-		assertThat(result).hasSize(2);
-		verify(couponRepository).findAllUserDoesNotHave("U123", Status.OFFER);
+		assertThat(result.get(0).couponCategory()).isEqualTo(CouponCategory.GENERAL);
+		assertThat(result).hasSize(1);
+		verify(couponRepository).findAllUserDoesNotHave("U123", Status.OFFER, CouponCategory.GENERAL);
 	}
 
 	@Test
@@ -175,7 +179,7 @@ class CouponServiceImplTest {
 			100L, "동시성쿠폰", 10,
 			LocalDate.now().minusDays(1),
 			LocalDate.now().plusDays(10),
-			CouponType.DELIVERY, Status.OFFER,
+			CouponType.DELIVERY, CouponCategory.GENERAL, Status.OFFER,
 			TestFixture.createStore()
 		);
 
@@ -285,6 +289,7 @@ class CouponServiceImplTest {
 			LocalDate.now().minusDays(1),
 			LocalDate.now().plusDays(10),
 			CouponType.DELIVERY,
+			CouponCategory.GENERAL,
 			Status.OFFER,
 			store
 		);
@@ -312,6 +317,7 @@ class CouponServiceImplTest {
 			LocalDate.now().minusDays(1),
 			LocalDate.now().plusDays(10),
 			CouponType.DELIVERY,
+			CouponCategory.GENERAL,
 			Status.HIDE,
 			store
 		);
