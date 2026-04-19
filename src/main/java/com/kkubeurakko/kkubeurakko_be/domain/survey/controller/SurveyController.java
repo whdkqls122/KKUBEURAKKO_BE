@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.survey.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,12 +14,14 @@ import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/surveys")
+@Tag(name = "Survey API", description = "설문 조사 API")
 public class SurveyController {
 
 	private final SurveyServiceImpl surveyService;
@@ -39,10 +42,10 @@ public class SurveyController {
 	}
 
 	@Operation(
-		summary = "설문 응답 저장 API",
+		summary = "설문 응답 저장",
 		description = "설문 응답을 저장합니다."
 	)
-	@GetMapping("/complete")
+	@PostMapping("/complete")
 	public ResponseEntity<ApiResponse<Boolean>> completeSurvey(
 		@AuthenticationPrincipal CustomOAuth2User user,
 		@Valid @RequestBody SurveyRequestDto surveyRequestDto
