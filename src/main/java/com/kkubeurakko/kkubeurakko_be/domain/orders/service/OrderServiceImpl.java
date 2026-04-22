@@ -143,13 +143,16 @@ public class OrderServiceImpl implements OrderService {
 			PortOnePaymentResponseDto paymentResponse =
 				verifyPaymentAndIssueCashReceipt(user, request, finalAmount);
 
+			UsersCoupons usersCoupon = getUsersCouponIfExists(user, request);
+
 			Orders order = createOrderEntity(
 				request,
 				user,
 				address,
 				totalAmount,
 				orderNumber,
-				cart
+				cart,
+				usersCoupon
 			);
 
 			Payments payment = toPaymentEntity(order, discountAmount, paymentResponse);
@@ -229,7 +232,7 @@ public class OrderServiceImpl implements OrderService {
 		if (usersCoupon != null) {
 			usersCoupon.rollbackUse();
 		}
-		
+
 		Long storeId = extractStoreId(order);
 		OrderSocketResponse response =
 			orderDecryptService.toResponse(order);
@@ -568,9 +571,10 @@ public class OrderServiceImpl implements OrderService {
 		Addresses address,
 		int totalAmount,
 		String orderNumber,
-		Cart cart
+		Cart cart,
+		UsersCoupons usersCoupon
 	) {
-		Orders order = request.toOrderEntity(user, address, totalAmount, orderNumber);
+		Orders order = request.toOrderEntity(user, address, totalAmount, orderNumber, usersCoupon);
 		createOrderItems(order, cart);
 		return order;
 	}
@@ -606,5 +610,18 @@ public class OrderServiceImpl implements OrderService {
 		if (!isDeliverable.able()) {
 			throw new IllegalStateException("배달 불가능한 지역입니다.");
 		}
+	}
+
+	private UsersCoupons getUsersCouponIfExists(Users user, OrderCreateRequest request) {
+		if (request.couponNumber() == null) {
+			return null;
+		}
+
+		return userCouponRepository
+			.findByUser_UserNumberAndCouponsNumber(
+				user.getUserNumber(),
+				request.couponNumber()
+			)
+			.orElseThrow(() -> new IllegalArgumentException("쿠폰이 존재하지 않습니다."));
 	}
 }
