@@ -53,4 +53,11 @@ public class UsersCoupons {
 		}
 		this.isUsed = true;
 	}
+
+	public void rollbackUse() {
+		if (!this.isUsed) {
+			throw new IllegalStateException("사용되지 않은 쿠폰입니다.");
+		}
+		this.isUsed = false;
+	}
 }
