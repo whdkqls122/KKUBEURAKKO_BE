@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 
@@ -75,6 +76,10 @@ public class Orders {
 
 	@OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
 	private Payments payments;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "users_coupons_id")
+	private UsersCoupons usersCoupon;
 
 	@Embedded
 	private OrderAddressSnapshot addressSnapshot;
