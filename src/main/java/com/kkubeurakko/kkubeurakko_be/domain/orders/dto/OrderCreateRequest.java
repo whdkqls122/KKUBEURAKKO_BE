@@ -74,6 +74,7 @@ public record OrderCreateRequest(
 			.totalAmount(totalAmount)
 			.addressSnapshot(snapshot)
 			.orderNumber(orderNumber)
+			.usersCoupon(usersCoupon)
 			.build();
 	}
 }
