@@ -248,6 +248,10 @@ public class OrderServiceImpl implements OrderService {
 
 		order.refund();
 
+		UsersCoupons usersCoupon = order.getUsersCoupon();
+		if (usersCoupon != null) {
+			usersCoupon.rollbackUse();
+		}
 		Long storeId = extractStoreId(order);
 		OrderSocketResponse response =
 			orderDecryptService.toResponse(order);
