@@ -7,7 +7,8 @@ import lombok.Getter;
 @Getter
 public enum CouponType {
 	DELIVERY("배달"),
-	TAKEOUT("포장");
+	TAKEOUT("포장"),
+	ALL("전체");
 
 	private final String type;
 }
