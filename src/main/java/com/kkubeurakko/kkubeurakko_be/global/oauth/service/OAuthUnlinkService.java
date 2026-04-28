@@ -7,8 +7,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.client.OAuthUnlinkClient;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.OAuthProvider;
+import com.kkubeurakko.kkubeurakko_be.global.task.service.FailedTaskService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,13 +18,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OAuthUnlinkService {
 	private final OAuth2TokenService tokenService;
+	private final FailedTaskService failedTaskService;
 	private final Map<OAuthProvider, OAuthUnlinkClient> unlinkClientMap;
 
 	public OAuthUnlinkService(
 		OAuth2TokenService tokenService,
-		List<OAuthUnlinkClient> clients
+		List<OAuthUnlinkClient> clients,
+		FailedTaskService failedTaskService
 	) {
 		this.tokenService = tokenService;
+		this.failedTaskService = failedTaskService;
 		this.unlinkClientMap = clients.stream()
 			.collect(Collectors.toMap(
 				OAuthUnlinkClient::supports,
@@ -30,7 +35,7 @@ public class OAuthUnlinkService {
 			));
 	}
 
-	public void revokeOAuthAccount(String userNumber) {
+	public void revokeOAuthAccount(String userNumber) throws JsonProcessingException {
 		String accessToken = tokenService.getValidAccessToken(userNumber);
 		String provider = tokenService.getProvider(userNumber);
 
@@ -46,10 +51,15 @@ public class OAuthUnlinkService {
 
 		try {
 			client.unlink(accessToken);
+			tokenService.deleteAll(userNumber);
 		} catch (Exception e) {
 			log.error("OAuth unlink 실패 userNumber={}", userNumber, e);
-		} finally {
-			tokenService.deleteAll(userNumber);
+			failedTaskService.saveSocialUnlinkTask(
+				userNumber,
+				provider,
+				e.getMessage(),
+				e.getClass().getSimpleName()
+			);
 		}
 	}
 }
