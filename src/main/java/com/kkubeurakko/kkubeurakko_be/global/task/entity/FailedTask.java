@@ -41,4 +41,21 @@ public class FailedTask extends BaseEntity {
 	private String lastErrorMessage;
 	@Column(name = "last_error_type")
 	private String lastErrorType;
+
+	public void increaseRetryCount() {
+		retryCount += 1;
+	}
+
+	public void updateError(String errorMessage, String errorType) {
+		this.lastErrorMessage = errorMessage;
+		this.lastErrorType = errorType;
+	}
+
+	public void markFailed() {
+		this.taskStatus = TaskStatus.FAILED;
+	}
+
+	public void markSuccess() {
+		this.taskStatus = TaskStatus.SUCCESS;
+	}
 }
