@@ -12,8 +12,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.LogoutService;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.TokenService;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.service.OrderService;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.users.dto.OAuthTempUserDto;
@@ -58,6 +60,9 @@ class UserVerifyFacadeServiceImplTest {
 	private HttpServletResponse response;
 
 	@Mock
+	private OrderService orderService;
+
+	@Mock
 	private org.springframework.data.redis.core.ValueOperations<String, Object> valueOperations;
 
 	@InjectMocks
@@ -76,7 +81,7 @@ class UserVerifyFacadeServiceImplTest {
 
 	@Test
 	@DisplayName("임시 사용자 본인인증 후 회원 생성 성공")
-	void verifyAndSaveUser_success() {
+	void verifyAndSaveUser_success() throws JsonProcessingException {
 		// given
 		UserVerifyRequestDto requestDto = mock(UserVerifyRequestDto.class);
 		PortOneVerifyInfoResponseDto portOneDto = mock(PortOneVerifyInfoResponseDto.class);
@@ -106,7 +111,7 @@ class UserVerifyFacadeServiceImplTest {
 
 	@Test
 	@DisplayName("본인인증 실패 시 tempToken 제거 + OAuth unlink 수행")
-	void verifyAndSaveUser_fail() {
+	void verifyAndSaveUser_fail() throws JsonProcessingException {
 		// given
 		UserVerifyRequestDto requestDto = mock(UserVerifyRequestDto.class);
 
@@ -135,7 +140,7 @@ class UserVerifyFacadeServiceImplTest {
 
 	@Test
 	@DisplayName("사용자 탈퇴 및 oAuthUnlink 요청이 정상적으로 이루어지는지 검증한다.")
-	void deleteUserAndUnlink() {
+	void deleteUserAndUnlink() throws JsonProcessingException {
 		// given
 		when(customOAuth2User.getName()).thenReturn("kakao_1234");
 		when(userService.getUser("kakao_1234")).thenReturn(user);
