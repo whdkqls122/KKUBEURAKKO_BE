@@ -30,30 +30,36 @@ public class StoreReopenScheduler {
 	public void reopenStores() {
 
 		LocalDateTime now = LocalDateTime.now();
-		LocalDate today = now.toLocalDate();
 		List<Stores> stores = storeRepository.findClosedStores(StoreStatus.CLOSED);
 
 		for (Stores store : stores) {
 
-			if (storeHolidayService.isHoliday(store.getId(), today)) {
+			LocalDate businessDate =
+				businessHoursService.resolveBusinessDate(store.getId());
+
+			if (storeHolidayService.isHoliday(store.getId(), businessDate)) {
 				continue;
 			}
-			
+
 			StoreBusinessHours hours =
 				businessHoursService.getHoursByDate(
 					store.getId(),
-					now.toLocalDate()
+					businessDate
 				);
 
 			LocalDateTime openTime =
-				LocalDateTime.of(now.toLocalDate(), hours.getOpenTime());
+				LocalDateTime.of(businessDate, hours.getOpenTime());
 
 			LocalDateTime closeTime =
-				buildCloseDateTime(hours, now.toLocalDate());
+				buildCloseDateTime(hours, businessDate);
 
-			if (!now.isBefore(openTime) && now.isBefore(closeTime)) {
+			if (store.getStatus() == StoreStatus.CLOSED &&
+				!now.isBefore(openTime) &&
+				now.isBefore(closeTime)) {
+
 				store.reopen();
 			}
+
 		}
 	}
 
