@@ -95,8 +95,8 @@ public class StoreBusinessHoursServiceImpl implements StoreBusinessHoursService 
 			return yesterday;
 		}
 
-		log.info("RESOLVE → now={}, todayOpen={}, todayClose={}, yesterdayOpen={}, yesterdayClose={}",
-			now, todayOpen, todayClose, yesterdayOpen, yesterdayClose);
+		// log.info("RESOLVE → now={}, todayOpen={}, todayClose={}, yesterdayOpen={}, yesterdayClose={}",
+		// 	now, todayOpen, todayClose, yesterdayOpen, yesterdayClose);
 		// 그 외 → 오늘 영업일
 		return today;
 	}

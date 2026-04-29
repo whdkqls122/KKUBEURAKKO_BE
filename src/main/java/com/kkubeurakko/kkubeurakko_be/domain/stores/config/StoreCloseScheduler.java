@@ -83,8 +83,8 @@ public class StoreCloseScheduler {
 				LocalDateTime.of(businessDate, hours.getCloseTime());
 		}
 
-		log.info("CLOSE CHECK → storeId={}, now={}, businessDate={}, closeTime={}, status={}",
-			store.getId(), now, businessDate, closeDateTime, store.getStatus());
+		// log.info("CLOSE CHECK → storeId={}, now={}, businessDate={}, closeTime={}, status={}",
+		// 	store.getId(), now, businessDate, closeDateTime, store.getStatus());
 
 		return now.isBefore(openDateTime) || !now.isBefore(closeDateTime);
 	}

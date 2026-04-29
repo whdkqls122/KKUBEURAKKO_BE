@@ -59,8 +59,8 @@ public class StoreReopenScheduler {
 				!now.isBefore(openTime) &&
 				now.isBefore(closeTime)) {
 
-				log.info("REOPEN → storeId={}, now={}, businessDate={}, openTime={}, closeTime={}",
-					store.getId(), now, businessDate, openTime, closeTime);
+				// log.info("REOPEN → storeId={}, now={}, businessDate={}, openTime={}, closeTime={}",
+				// 	store.getId(), now, businessDate, openTime, closeTime);
 				store.reopen();
 			}
 
