@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kkubeurakko.kkubeurakko_be.global.task.dto.CashReceiptCancelPayload;
+import com.kkubeurakko.kkubeurakko_be.global.task.dto.RefundPayload;
 import com.kkubeurakko.kkubeurakko_be.global.task.dto.SocialUnlinkPayload;
 import com.kkubeurakko.kkubeurakko_be.global.task.entity.FailedTask;
 import com.kkubeurakko.kkubeurakko_be.global.task.entity.TaskStatus;
@@ -39,6 +41,48 @@ public class FailedTaskServiceImpl implements FailedTaskService {
 
 		FailedTask failedTask = FailedTask.builder()
 			.taskType(TaskType.SOCIAL_UNLINK)
+			.payload(payload)
+			.retryCount(0)
+			.taskStatus(TaskStatus.PENDING)
+			.lastErrorType(errorType)
+			.lastErrorMessage(errorMessage)
+			.build();
+
+		failedTaskRepository.save(failedTask);
+	}
+
+	@Override
+	public void saveRefundPaymentTask(String paymentId, String errorType, String errorMessage)
+		throws JsonProcessingException {
+		RefundPayload refundPayload = RefundPayload.builder()
+			.paymentId(paymentId)
+			.build();
+
+		String payload = objectMapper.writeValueAsString(refundPayload);
+
+		FailedTask failedTask = FailedTask.builder()
+			.taskType(TaskType.REFUND_PAYMENT)
+			.payload(payload)
+			.retryCount(0)
+			.taskStatus(TaskStatus.PENDING)
+			.lastErrorType(errorType)
+			.lastErrorMessage(errorMessage)
+			.build();
+
+		failedTaskRepository.save(failedTask);
+	}
+
+	@Override
+	public void saveCashReceiptCancelTask(String paymentId, String errorType, String errorMessage)
+		throws JsonProcessingException {
+		CashReceiptCancelPayload cashReceiptCancelPayload = CashReceiptCancelPayload.builder()
+			.paymentId(paymentId)
+			.build();
+
+		String payload = objectMapper.writeValueAsString(cashReceiptCancelPayload);
+
+		FailedTask failedTask = FailedTask.builder()
+			.taskType(TaskType.CANCEL_CASH_RECEIPT)
 			.payload(payload)
 			.retryCount(0)
 			.taskStatus(TaskStatus.PENDING)

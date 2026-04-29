@@ -13,6 +13,18 @@ public interface FailedTaskService {
 		String errorMessage
 	) throws JsonProcessingException;
 
+	void saveRefundPaymentTask(
+		String paymentId,
+		String errorType,
+		String errorMessage
+	) throws JsonProcessingException;
+
+	void saveCashReceiptCancelTask(
+		String paymentId,
+		String errorType,
+		String errorMessage
+	) throws JsonProcessingException;
+
 	void markSuccess(FailedTask failedTask);
 
 	void markFailure(FailedTask failedTask, Exception e);
