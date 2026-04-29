@@ -35,7 +35,40 @@ public class OAuthUnlinkService {
 			));
 	}
 
+	//소셜 연결 해제
 	public void revokeOAuthAccount(String userNumber) throws JsonProcessingException {
+		try {
+			doUnlink(userNumber);
+		} catch (Exception e) {
+			log.error("OAuth unlink 실패 userNumber={}", userNumber, e);
+
+			failedTaskService.saveSocialUnlinkTask(
+				userNumber,
+				tokenService.getProvider(userNumber),
+				e.getClass().getSimpleName(),
+				e.getMessage()
+			);
+		}
+	}
+
+	/*
+	 * 재시도 소셜 연결 해제
+	 * 위 revokeOAuthAccount 는 호출부 쪽에서 예외를 받기 때문에 상관없지만
+	 * 재시도 시에는 소셜 연결 요청만 수행하기 때문에 예외를 던지는 곳이 없음
+	 * 따라서 재시도 요청 로직을 분리
+	 */
+	public void retryRevokeOAuthAccount(String userNumber) {
+
+		try {
+			doUnlink(userNumber);
+
+		} catch (Exception e) {
+			log.error("OAuth unlink 재시도 실패 userNumber={}", userNumber, e);
+			throw e;
+		}
+	}
+
+	private void doUnlink(String userNumber) {
 		String accessToken = tokenService.getValidAccessToken(userNumber);
 		String provider = tokenService.getProvider(userNumber);
 
@@ -49,18 +82,9 @@ public class OAuthUnlinkService {
 
 		OAuthUnlinkClient client = unlinkClientMap.get(oauthProvider);
 
-		try {
-			client.unlink(accessToken);
-			tokenService.deleteAll(userNumber);
-		} catch (Exception e) {
-			log.error("OAuth unlink 실패 userNumber={}", userNumber, e);
-			failedTaskService.saveSocialUnlinkTask(
-				userNumber,
-				provider,
-				e.getMessage(),
-				e.getClass().getSimpleName()
-			);
-		}
+		client.unlink(accessToken);
+
+		tokenService.deleteAll(userNumber);
 	}
 }
 
