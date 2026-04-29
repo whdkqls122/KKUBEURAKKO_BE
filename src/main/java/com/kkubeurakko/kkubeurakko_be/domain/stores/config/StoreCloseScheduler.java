@@ -16,7 +16,9 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreHolidayService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class StoreCloseScheduler {
@@ -38,23 +40,38 @@ public class StoreCloseScheduler {
 		LocalDate today = now.toLocalDate();
 
 		for (Stores store : stores) {
-			if (storeHolidayService.isHoliday(store.getId(), today)) {
-				store.close();
+
+			LocalDate businessDate =
+				storeBusinessHoursService.resolveBusinessDate(store.getId());
+
+			if (storeHolidayService.isHoliday(store.getId(), businessDate)) {
+				if (store.getStatus() != StoreStatus.CLOSED) {
+					store.close();
+				}
 				continue;
 			}
 
-			if (shouldClose(store, now)) {
-				store.close();
+			if (shouldClose(store, now, businessDate)) {
+				if (store.getStatus() == StoreStatus.OPEN
+					|| store.getStatus() == StoreStatus.PAUSED) {
+
+					store.close();
+				}
 			}
 		}
 	}
 
-	private boolean shouldClose(Stores store, LocalDateTime now) {
+	private boolean shouldClose(
+		Stores store,
+		LocalDateTime now,
+		LocalDate businessDate
+	) {
 
-		LocalDate businessDate =
-			storeBusinessHoursService.resolveBusinessDate(store.getId());
 		StoreBusinessHours hours =
 			storeBusinessHoursService.getHoursByDate(store.getId(), businessDate);
+
+		LocalDateTime openDateTime =
+			LocalDateTime.of(businessDate, hours.getOpenTime());
 
 		LocalDateTime closeDateTime;
 
@@ -66,6 +83,9 @@ public class StoreCloseScheduler {
 				LocalDateTime.of(businessDate, hours.getCloseTime());
 		}
 
-		return now.isAfter(closeDateTime);
+		log.info("CLOSE CHECK → storeId={}, now={}, businessDate={}, closeTime={}, status={}",
+			store.getId(), now, businessDate, closeDateTime, store.getStatus());
+
+		return now.isBefore(openDateTime) || !now.isBefore(closeDateTime);
 	}
 }

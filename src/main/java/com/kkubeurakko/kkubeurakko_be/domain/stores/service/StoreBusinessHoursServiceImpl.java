@@ -18,7 +18,9 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StoreBusinessHoursServiceImpl implements StoreBusinessHoursService {
@@ -73,23 +75,28 @@ public class StoreBusinessHoursServiceImpl implements StoreBusinessHoursService 
 
 		// 오늘 영업시간 조회
 		StoreBusinessHours todayHours = findHours(storeId, today);
+		LocalDateTime todayOpen = LocalDateTime.of(today, todayHours.getOpenTime());
 		LocalDateTime todayClose = buildCloseDateTime(todayHours, today);
 
 		// 아직 오늘 영업이 끝나지 않았다면 → 오늘 영업일
-		if (now.isBefore(todayClose)) {
+		if (!now.isBefore(todayOpen) && now.isBefore(todayClose)) {
 			return today;
 		}
 
 		// 어제 영업시간
 		StoreBusinessHours yesterdayHours = findHours(storeId, yesterday);
+		LocalDateTime yesterdayOpen =
+			LocalDateTime.of(yesterday, yesterdayHours.getOpenTime());
 		LocalDateTime yesterdayClose =
 			buildCloseDateTime(yesterdayHours, yesterday);
 
 		// 어제 영업이 아직 끝나지 않았으면 → 어제 영업일
-		if (now.isBefore(yesterdayClose)) {
+		if (!now.isBefore(yesterdayOpen) && now.isBefore(yesterdayClose)) {
 			return yesterday;
 		}
 
+		log.info("RESOLVE → now={}, todayOpen={}, todayClose={}, yesterdayOpen={}, yesterdayClose={}",
+			now, todayOpen, todayClose, yesterdayOpen, yesterdayClose);
 		// 그 외 → 오늘 영업일
 		return today;
 	}

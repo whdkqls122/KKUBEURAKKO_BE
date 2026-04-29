@@ -16,7 +16,9 @@ import com.kkubeurakko.kkubeurakko_be.domain.stores.service.StoreHolidayService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class StoreReopenScheduler {
@@ -57,6 +59,8 @@ public class StoreReopenScheduler {
 				!now.isBefore(openTime) &&
 				now.isBefore(closeTime)) {
 
+				log.info("REOPEN → storeId={}, now={}, businessDate={}, openTime={}, closeTime={}",
+					store.getId(), now, businessDate, openTime, closeTime);
 				store.reopen();
 			}
 
