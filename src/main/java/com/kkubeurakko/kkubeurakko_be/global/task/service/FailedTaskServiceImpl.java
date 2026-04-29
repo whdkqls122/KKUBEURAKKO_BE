@@ -1,6 +1,9 @@
 package com.kkubeurakko.kkubeurakko_be.global.task.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,5 +47,27 @@ public class FailedTaskServiceImpl implements FailedTaskService {
 			.build();
 
 		failedTaskRepository.save(failedTask);
+	}
+
+	@Override
+	@Transactional
+	public void markSuccess(FailedTask failedTask) {
+		failedTask.markSuccess();
+	}
+
+	@Override
+	@Transactional
+	public void markFailure(FailedTask failedTask, Exception e) {
+		failedTask.increaseRetryCount();
+		failedTask.updateError(e.getMessage(), e.getClass().getSimpleName());
+
+		if (failedTask.getRetryCount() > 5) {
+			failedTask.markFailed();
+		}
+	}
+
+	@Override
+	public List<FailedTask> findRetryableTasks() {
+		return failedTaskRepository.findFailedTaskByTaskStatus(TaskStatus.PENDING);
 	}
 }
