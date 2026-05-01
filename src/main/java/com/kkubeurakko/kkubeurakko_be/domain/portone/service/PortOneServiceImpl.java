@@ -10,13 +10,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.CashReceiptRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.IssueCashReceiptCustomerInput;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PaymentAmountInput;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneCashReceiptRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneErrorResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentCancelRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneVerifyInfoResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.entity.ErrorAction;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.entity.PortOneErrorType;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.exception.PortOnePaymentCancelException;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.exception.PortOnePaymentHistoryException;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.exception.PortOneVerifyException;
@@ -38,17 +42,14 @@ public class PortOneServiceImpl implements PortOneService {
 	private String secretKey;
 	@Value("${spring.portOne.payment.channel-key}")
 	private String paymentChannelKey;
+	private final ObjectMapper objectMapper;
 
 	@Override
 	public PortOnePaymentResponseDto getPortOnePayment(String paymentId) {
 		try {
 			String url = requestUri + "/payments/" + paymentId;
 
-			HttpHeaders headers = new HttpHeaders();
-			headers.set("Authorization", "PortOne " + secretKey);
-			headers.setContentType(MediaType.APPLICATION_JSON);
-
-			HttpEntity<Void> entity = new HttpEntity<>(headers);
+			HttpEntity<Void> entity = new HttpEntity<>(createHeaders());
 
 			ResponseEntity<PortOnePaymentResponseDto> response =
 				restTemplate.exchange(url, HttpMethod.GET, entity, PortOnePaymentResponseDto.class);
@@ -71,11 +72,8 @@ public class PortOneServiceImpl implements PortOneService {
 	public PortOneVerifyInfoResponseDto getPortOneVerifyInfo(String identityVerificationId) {
 		try {
 			String url = requestUri + "/identity-verifications/" + identityVerificationId;
-			HttpHeaders headers = new HttpHeaders();
-			headers.set("Authorization", "PortOne " + secretKey);
-			headers.setContentType(MediaType.APPLICATION_JSON);
 
-			HttpEntity<Void> entity = new HttpEntity<>(headers);
+			HttpEntity<Void> entity = new HttpEntity<>(createHeaders());
 
 			ResponseEntity<PortOneVerifyInfoResponseDto> response =
 				restTemplate.exchange(url, HttpMethod.GET, entity, PortOneVerifyInfoResponseDto.class);
@@ -96,95 +94,155 @@ public class PortOneServiceImpl implements PortOneService {
 	// 결제 정보 저장 실패 시 -> 자동 환불 로직
 	@Override
 	public void cancelPortOnePayment(String paymentId) {
-
-		String url = requestUri + "/payments/" + paymentId + "/cancel";
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "PortOne " + secretKey);
-		headers.setContentType(MediaType.APPLICATION_JSON);
-
-		PortOnePaymentCancelRequestDto body = PortOnePaymentCancelRequestDto.builder()
-			.reason("주문 생성 중 오류로 인한 자동 취소")
-			.build();
-
-		HttpEntity<PortOnePaymentCancelRequestDto> entity = new HttpEntity<>(body, headers);
 		try {
-			restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+			doCancelPayment(paymentId);
 			log.info("결제 취소 성공 (paymentId={})", paymentId);
+
 		} catch (HttpStatusCodeException e) {
-			log.error(
-				"PortOne 결제 취소 실패 - status: {}, body: {}",
-				e.getStatusCode(),
-				e.getResponseBodyAsString()
+			log.error("결제 취소 실패", e);
+
+			throw new PortOnePaymentCancelException(
+				"결제 취소 실패",
+				ErrorAction.RETRY,
+				PortOneErrorType.UNKNOWN,
+				e
 			);
-			throw new PortOnePaymentCancelException("결제 취소 실패", e);
+		}
+	}
+
+	@Override
+	public void retryCancelPortOnePayment(String paymentId) {
+		try {
+			doCancelPayment(paymentId);
+			log.info("결제 취소 재시도 성공 (paymentId={})", paymentId);
+
+		} catch (HttpStatusCodeException e) {
+			throw convertToException(e);
 		}
 	}
 
 	@Override
 	public void issueCashReceipt(Users user, String paymentId,
 		CashReceiptRequestDto cashReceiptRequestDto, int totalAmount) {
-		String url = requestUri + "/cash-receipts";
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "PortOne " + secretKey);
-		headers.setContentType(MediaType.APPLICATION_JSON);
-
-		PaymentAmountInput amount = PaymentAmountInput.builder()
-			.total(totalAmount)
-			.build();
-
-		IssueCashReceiptCustomerInput customer = IssueCashReceiptCustomerInput.builder()
-			.identityNumber(cashReceiptRequestDto.identityNumber())
-			.name(user.getName())
-			.email(user.getEmail())
-			.build();
-
-		PortOneCashReceiptRequestDto body = PortOneCashReceiptRequestDto.builder()
-			.storeId(storeId)
-			.paymentId(paymentId)
-			.channelKey(paymentChannelKey)
-			.type(cashReceiptRequestDto.type())
-			.orderName("치킨 주문")
-			.currency("KRW")
-			.amount(amount)
-			.customer(customer)
-			.build();
-
-		HttpEntity<PortOneCashReceiptRequestDto> entity = new HttpEntity<>(body, headers);
 		try {
+			String url = requestUri + "/cash-receipts";
+
+			HttpHeaders headers = createHeaders();
+
+			PaymentAmountInput amount = PaymentAmountInput.builder()
+				.total(totalAmount)
+				.build();
+
+			IssueCashReceiptCustomerInput customer = IssueCashReceiptCustomerInput.builder()
+				.identityNumber(cashReceiptRequestDto.identityNumber())
+				.name(user.getName())
+				.email(user.getEmail())
+				.build();
+
+			PortOneCashReceiptRequestDto body = PortOneCashReceiptRequestDto.builder()
+				.storeId(storeId)
+				.paymentId(paymentId)
+				.channelKey(paymentChannelKey)
+				.type(cashReceiptRequestDto.type())
+				.orderName("치킨 주문")
+				.currency("KRW")
+				.amount(amount)
+				.customer(customer)
+				.build();
+
+			HttpEntity<PortOneCashReceiptRequestDto> entity =
+				new HttpEntity<>(body, headers);
+
 			restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
-			log.info("현금 영수증 발급 성공 (paymentId={})", paymentId);
+
+			log.info("현금영수증 발급 성공");
 		} catch (HttpStatusCodeException e) {
-			log.error(
-				"현금 영수증 발급 실패 - status: {}, body: {}",
-				e.getStatusCode(),
-				e.getResponseBodyAsString()
+			throw new PortOnePaymentCancelException(
+				"현금영수증 발급 실패",
+				ErrorAction.RETRY,
+				PortOneErrorType.UNKNOWN,
+				e
 			);
-			throw new PortOnePaymentCancelException("현금 영수증 발급 실패", e);
 		}
 	}
 
 	@Override
 	public void cancelIssueCashReceipt(String paymentId) {
+		try {
+			doCancelCashReceipt(paymentId);
+			log.info("현금영수증 취소 성공 (paymentId={})", paymentId);
+
+		} catch (HttpStatusCodeException e) {
+			throw new PortOnePaymentCancelException(
+				"현금영수증 취소 실패",
+				ErrorAction.RETRY,
+				PortOneErrorType.UNKNOWN,
+				e
+			);
+		}
+	}
+
+	@Override
+	public void retryCancelIssueCashReceipt(String paymentId) {
+		try {
+			doCancelCashReceipt(paymentId);
+			log.info("현금영수증 취소 재시도 성공 (paymentId={})", paymentId);
+
+		} catch (HttpStatusCodeException e) {
+			throw convertToException(e);
+		}
+	}
+
+	private void doCancelCashReceipt(String paymentId) {
 		String url = requestUri + "/payments/" + paymentId + "/cash-receipt/cancel";
 
+		HttpEntity<Void> entity =
+			new HttpEntity<>(createHeaders());
+
+		restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+	}
+
+	private void doCancelPayment(String paymentId) {
+		String url = requestUri + "/payments/" + paymentId + "/cancel";
+
+		PortOnePaymentCancelRequestDto body =
+			PortOnePaymentCancelRequestDto.builder()
+				.reason("주문 생성 실패로 인한 자동 취소")
+				.build();
+
+		HttpEntity<PortOnePaymentCancelRequestDto> entity =
+			new HttpEntity<>(body, createHeaders());
+
+		restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+	}
+
+	private HttpHeaders createHeaders() {
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Authorization", "PortOne " + secretKey);
 		headers.setContentType(MediaType.APPLICATION_JSON);
+		return headers;
+	}
 
-		HttpEntity<Void> entity = new HttpEntity<>(headers);
-
+	private PortOnePaymentCancelException convertToException(HttpStatusCodeException e) {
 		try {
-			restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
-			log.info("현금 영수증 취소 성공 (paymentId={})", paymentId);
-		} catch (HttpStatusCodeException e) {
-			log.error(
-				"현금 영수증 취소 실패 - status: {}, body: {}",
-				e.getStatusCode(),
-				e.getResponseBodyAsString()
+			PortOneErrorResponse error =
+				objectMapper.readValue(e.getResponseBodyAsString(), PortOneErrorResponse.class);
+
+			PortOneErrorType type = PortOneErrorType.from(error.type());
+
+			return new PortOnePaymentCancelException(
+				error.message(),
+				type.getAction(),
+				type,
+				e
 			);
-			throw new PortOnePaymentCancelException("현금 영수증 취소 실패", e);
+		} catch (Exception ex) {
+			return new PortOnePaymentCancelException(
+				"알 수 없는 오류",
+				ErrorAction.RETRY,
+				PortOneErrorType.UNKNOWN,
+				e
+			);
 		}
 	}
 }
