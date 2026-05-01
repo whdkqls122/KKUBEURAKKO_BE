@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.kkubeurakko.kkubeurakko_be.domain.portone.exception.PortOnePaymentCancelException;
 import com.kkubeurakko.kkubeurakko_be.global.task.entity.FailedTask;
 import com.kkubeurakko.kkubeurakko_be.global.task.service.FailedTaskService;
 import com.kkubeurakko.kkubeurakko_be.global.task.service.TaskProcessor;
@@ -33,8 +34,15 @@ public class FailedTaskScheduler {
 				taskProcessor.process(task);
 				failedTaskService.markSuccess(task);
 
+			} catch (PortOnePaymentCancelException e) {
+
+				switch (e.getAction()) {
+					case SUCCESS -> failedTaskService.markSuccess(task);
+					case FAIL -> task.markFailed();
+					case RETRY -> failedTaskService.markFailure(task, e);
+				}
+
 			} catch (Exception e) {
-				log.error("재시도 실패 taskId={}", task.getId(), e);
 				failedTaskService.markFailure(task, e);
 			}
 		}
