@@ -1,6 +1,8 @@
 package com.kkubeurakko.kkubeurakko_be.global.oauth.handler;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.TokenService;
 import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenRepository;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.service.OAuth2TokenService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,6 +30,7 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 	private final OAuth2AuthorizedClientService authorizedClientService;
 	private final RedisTemplate<String, String> redisTemplate;
 	private final TokenService tokenService;
+	private final OAuth2TokenService oAuth2TokenService;
 
 	@Override
 	public void onAuthenticationSuccess(
@@ -58,7 +62,18 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 				? authorizedClient.getRefreshToken().getTokenValue()
 				: null;
 
-		saveOAuthToken(provider, userNumber, providerAccessToken, providerRefreshToken);
+		long expiresIn = Duration.between(
+			Instant.now(),
+			authorizedClient.getAccessToken().getExpiresAt()
+		).getSeconds();
+
+		oAuth2TokenService.save(
+			userNumber,
+			provider,
+			providerAccessToken,
+			providerRefreshToken,
+			expiresIn
+		);
 		String redirectUrl;
 
 		boolean firstLogin = customUserDetails.getUserDto().isFirstLogin();
@@ -73,25 +88,5 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
 		}
 		log.info("로그인 성공");
 		response.sendRedirect(redirectUrl);
-	}
-
-	private void saveOAuthToken(
-		String provider,
-		String userNumber,
-		String providerAccessToken,
-		String providerRefreshToken
-	) {
-		redisTemplate.opsForValue().set(
-			"OAUTH:AT:" + userNumber,
-			providerAccessToken
-		);
-		redisTemplate.opsForValue().set(
-			"OAUTH:RT:" + userNumber,
-			providerRefreshToken
-		);
-		redisTemplate.opsForValue().set(
-			"OAUTH:PROVIDER:" + userNumber,
-			provider
-		);
 	}
 }
