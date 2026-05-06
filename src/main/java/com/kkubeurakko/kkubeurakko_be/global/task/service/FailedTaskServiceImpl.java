@@ -3,6 +3,7 @@ package com.kkubeurakko.kkubeurakko_be.global.task.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,6 +27,7 @@ public class FailedTaskServiceImpl implements FailedTaskService {
 	private final ObjectMapper objectMapper;
 
 	@Override
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void saveSocialUnlinkTask(
 		String userNumber,
 		String provider,
@@ -52,6 +54,7 @@ public class FailedTaskServiceImpl implements FailedTaskService {
 	}
 
 	@Override
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void saveRefundPaymentTask(String paymentId, String errorType, String errorMessage)
 		throws JsonProcessingException {
 		RefundPayload refundPayload = RefundPayload.builder()
@@ -73,6 +76,7 @@ public class FailedTaskServiceImpl implements FailedTaskService {
 	}
 
 	@Override
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void saveCashReceiptCancelTask(String paymentId, String errorType, String errorMessage)
 		throws JsonProcessingException {
 		CashReceiptCancelPayload cashReceiptCancelPayload = CashReceiptCancelPayload.builder()
