@@ -99,10 +99,11 @@ public class PortOneServiceImpl implements PortOneService {
 			log.info("결제 취소 성공 (paymentId={})", paymentId);
 
 		} catch (HttpStatusCodeException e) {
+			throw convertToException(e);
+		} catch (Exception e) {
 			log.error("결제 취소 실패", e);
-
 			throw new PortOnePaymentCancelException(
-				"결제 취소 실패",
+				"알 수 없는 오류",
 				ErrorAction.RETRY,
 				PortOneErrorType.UNKNOWN,
 				e
@@ -118,6 +119,14 @@ public class PortOneServiceImpl implements PortOneService {
 
 		} catch (HttpStatusCodeException e) {
 			throw convertToException(e);
+		} catch (Exception e) {
+			log.error("결제 취소 재시도 실패", e);
+			throw new PortOnePaymentCancelException(
+				"알 수 없는 오류",
+				ErrorAction.RETRY,
+				PortOneErrorType.UNKNOWN,
+				e
+			);
 		}
 	}
 
@@ -163,6 +172,14 @@ public class PortOneServiceImpl implements PortOneService {
 				PortOneErrorType.UNKNOWN,
 				e
 			);
+		} catch (Exception e) {
+			log.error("현금영수증 발급 실패", e);
+			throw new PortOnePaymentCancelException(
+				"알 수 없는 오류",
+				ErrorAction.RETRY,
+				PortOneErrorType.UNKNOWN,
+				e
+			);
 		}
 	}
 
@@ -173,8 +190,17 @@ public class PortOneServiceImpl implements PortOneService {
 			log.info("현금영수증 취소 성공 (paymentId={})", paymentId);
 
 		} catch (HttpStatusCodeException e) {
+			log.error("현금영수증 취소 실패", e);
 			throw new PortOnePaymentCancelException(
 				"현금영수증 취소 실패",
+				ErrorAction.RETRY,
+				PortOneErrorType.UNKNOWN,
+				e
+			);
+		} catch (Exception e) {
+			log.error("현금영수증 취소 실패", e);
+			throw new PortOnePaymentCancelException(
+				"알 수 없는 오류",
 				ErrorAction.RETRY,
 				PortOneErrorType.UNKNOWN,
 				e
@@ -190,6 +216,14 @@ public class PortOneServiceImpl implements PortOneService {
 
 		} catch (HttpStatusCodeException e) {
 			throw convertToException(e);
+		} catch (Exception e) {
+			log.error("현금영수증 취소 재시도 실패", e);
+			throw new PortOnePaymentCancelException(
+				"알 수 없는 오류",
+				ErrorAction.RETRY,
+				PortOneErrorType.UNKNOWN,
+				e
+			);
 		}
 	}
 
