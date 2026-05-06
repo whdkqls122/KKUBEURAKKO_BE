@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.OAuthProvider;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.token.OAuthTokenResponse;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.refresher.OAuthTokenRefresher;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.validator.OAuthTokenValidator;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,18 +21,25 @@ import lombok.extern.slf4j.Slf4j;
 public class OAuth2TokenService {
 	private final RedisTemplate<String, String> redisTemplate;
 	private final Map<OAuthProvider, OAuthTokenRefresher> refresherMap;
+	private final Map<OAuthProvider, OAuthTokenValidator> validatorMap;
 	private static final String AT_KEY = "OAUTH:AT:";
 	private static final String RT_KEY = "OAUTH:RT:";
 	private static final String PROVIDER_KEY = "OAUTH:PROVIDER:";
 
 	public OAuth2TokenService(
 		RedisTemplate<String, String> redisTemplate,
-		List<OAuthTokenRefresher> refreshers
+		List<OAuthTokenRefresher> refreshers,
+		List<OAuthTokenValidator> validators
 	) {
 		this.redisTemplate = redisTemplate;
 		this.refresherMap = refreshers.stream()
 			.collect(Collectors.toMap(
 				OAuthTokenRefresher::supports,
+				Function.identity()
+			));
+		this.validatorMap = validators.stream()
+			.collect(Collectors.toMap(
+				OAuthTokenValidator::supports,
 				Function.identity()
 			));
 	}
@@ -68,14 +76,18 @@ public class OAuth2TokenService {
 		return redisTemplate.opsForValue().get(PROVIDER_KEY + userNumber);
 	}
 
-	public boolean isAccessTokenValid(String userNumber) {
-		Long ttl = redisTemplate.getExpire(AT_KEY + userNumber, TimeUnit.SECONDS);
-		return ttl != null && ttl > 0;
-	}
-
 	public String getValidAccessToken(String userNumber) {
-		if (isAccessTokenValid(userNumber)) {
-			return getOAuthAccessToken(userNumber);
+		String accessToken = getOAuthAccessToken(userNumber);
+		String provider = getProvider(userNumber);
+
+		OAuthProvider oauthProvider =
+			OAuthProvider.valueOf(provider.toUpperCase());
+
+		OAuthTokenValidator validator =
+			validatorMap.get(oauthProvider);
+
+		if (validator != null && validator.validate(accessToken)) {
+			return accessToken;
 		}
 
 		log.info("AccessToken 만료 → refresh 시도 user={}", userNumber);
