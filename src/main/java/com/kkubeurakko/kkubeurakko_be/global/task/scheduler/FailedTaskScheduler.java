@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kkubeurakko.kkubeurakko_be.domain.portone.exception.PortOnePaymentCancelException;
 import com.kkubeurakko.kkubeurakko_be.global.task.entity.FailedTask;
@@ -21,6 +22,7 @@ public class FailedTaskScheduler {
 	private final TaskProcessor taskProcessor;
 
 	@Scheduled(fixedDelay = 60000)
+	@Transactional
 	public void retryFailedTasks() {
 
 		List<FailedTask> tasks = failedTaskService.findRetryableTasks();
