@@ -82,12 +82,15 @@ spring:
     kakao:
       refresh-url: https://kauth.kakao.com/oauth/token
       unlink-url: https://kapi.kakao.com/v1/user/unlink
+      validate-token-url: https://kapi.kakao.com/v1/user/access_token_info
     naver:
       refresh-url: https://nid.naver.com/oauth2.0/token
       unlink-url: https://nid.naver.com/oauth2.0/token
+      validate-token-url: https://openapi.naver.com/v1/nid/me
     google:
       refresh-url: https://oauth2.googleapis.com/token
       unlink-url: https://oauth2.googleapis.com/revoke
+      validate-token-url: https://oauth2.googleapis.com/tokeninfo
 
   portOne:
     request-uri: ${PORT_ONE_REQUEST_URL}
