@@ -60,5 +60,8 @@ public interface CouponRepository extends JpaRepository<Coupons, Long> {
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<Coupons> findByCouponCategoryAndStatus(CouponCategory couponCategory, Status status);
 
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	List<Coupons> findAllByCouponCategoryAndStatus(CouponCategory couponCategory, Status status);
+
 	boolean existsByCouponCategoryAndStatus(CouponCategory couponCategory, Status status);
 }
