@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.coupons.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,6 +12,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.CouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.dto.IssuedCouponResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponCategory;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponType;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
@@ -144,6 +146,20 @@ public class CouponServiceImpl implements CouponService {
 	}
 
 	@Override
+	@Transactional
+	public void createGiftCoupon(Long storeId) {
+		Stores store = storeRepository.findById(storeId)
+			.orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
+
+		LocalDate today = LocalDate.now();
+
+		Coupons coupon1 = createGiftCouponEntity(store, 3000, 20000, today);
+		Coupons coupon2 = createGiftCouponEntity(store, 5000, 40000, today);
+
+		couponRepository.saveAll(List.of(coupon1, coupon2));
+	}
+
+	@Override
 	public List<AdminCouponResponseDto> getCouponsByStore(Long storeId) {
 
 		return couponRepository.findByStoreId(storeId)
@@ -245,5 +261,26 @@ public class CouponServiceImpl implements CouponService {
 					.build()
 			)
 			.collect(Collectors.toList());
+	}
+
+	private Coupons createGiftCouponEntity(
+		Stores store,
+		int discountAmount,
+		int minOrderAmount,
+		LocalDate today
+	) {
+		return Coupons.builder()
+			.name("서비스 이용 감사 쿠폰")
+			.discountAmount(discountAmount)
+			.discountRate(null)
+			.minOrderAmount(minOrderAmount)
+			.couponType(CouponType.ALL)
+			.couponCategory(CouponCategory.GIFT)
+			.validFrom(today)
+			.validUntil(today.plusDays(1))
+			.quantity(200)
+			.status(Status.OFFER)
+			.store(store)
+			.build();
 	}
 }

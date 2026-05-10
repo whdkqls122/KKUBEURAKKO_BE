@@ -24,6 +24,9 @@ public interface CouponService {
 	//가게측 쿠폰 발행
 	void createCoupon(Long storeId, CouponCreateRequest request);
 
+	//서비스 이용 쿠폰
+	void createGiftCoupon(Long storeId);
+
 	//가게측 쿠폰 전체 조회
 	List<AdminCouponResponseDto> getCouponsByStore(Long storeId);
 
