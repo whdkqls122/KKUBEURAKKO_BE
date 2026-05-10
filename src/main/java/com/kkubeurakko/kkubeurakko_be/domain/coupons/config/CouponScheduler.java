@@ -25,8 +25,8 @@ public class CouponScheduler {
 	private final CouponProviderService couponProviderService;
 
 	// 1분마다 실행 (테스트용)
-	@Scheduled(fixedRate = 60000)
-	// @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
+	// @Scheduled(fixedRate = 60000)
+	@Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
 	@Transactional
 	public void refreshCoupons() {
 		LocalDate today = LocalDate.now();
