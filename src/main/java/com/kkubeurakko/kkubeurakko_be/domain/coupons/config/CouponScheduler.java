@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponCategory;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.CouponRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.service.CouponProviderService;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.service.CouponService;
 
 import lombok.RequiredArgsConstructor;
@@ -21,10 +22,11 @@ public class CouponScheduler {
 
 	private final CouponRepository couponRepository;
 	private final CouponService couponService;
+	private final CouponProviderService couponProviderService;
 
 	// 1분마다 실행 (테스트용)
-	// @Scheduled(fixedRate = 60000)
-	@Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
+	@Scheduled(fixedRate = 60000)
+	// @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
 	@Transactional
 	public void refreshCoupons() {
 		LocalDate today = LocalDate.now();
@@ -39,5 +41,11 @@ public class CouponScheduler {
 			couponService.createGiftCoupon(1L);
 			log.info("GIFT 쿠폰 생성 완료");
 		}
+	}
+
+	@Scheduled(fixedDelay = 300000)
+	@Transactional
+	public void issuedGiftCoupons() {
+		couponProviderService.provideGiftCoupon();
 	}
 }
