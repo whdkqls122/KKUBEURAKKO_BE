@@ -27,6 +27,7 @@ import com.kkubeurakko.kkubeurakko_be.global.jwt.repository.RefreshTokenReposito
 import com.kkubeurakko.kkubeurakko_be.global.jwt.util.JwtUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.handler.CustomSuccessHandler;
+import com.kkubeurakko.kkubeurakko_be.global.oauth.service.OAuth2TokenService;
 import com.kkubeurakko.kkubeurakko_be.global.security.filter.CustomLogoutFilter;
 
 import jakarta.servlet.FilterChain;
@@ -69,6 +70,8 @@ class OAuthTest {
 
 	@Mock
 	private LogoutService logoutService;
+	@Mock
+	private OAuth2TokenService oAuth2TokenService;
 
 	private JwtUtil jwtUtil;
 	private CustomSuccessHandler successHandler;
@@ -83,7 +86,8 @@ class OAuthTest {
 			refreshTokenRepository,
 			oAuth2AuthorizedClientService,
 			redisTemplate,
-			tokenService
+			tokenService,
+			oAuth2TokenService
 		);
 
 		String secret = Base64.getEncoder()
