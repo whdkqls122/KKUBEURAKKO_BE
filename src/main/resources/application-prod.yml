@@ -76,6 +76,9 @@ spring:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&prompt=consent
 
+    cookie:
+      domain: .kkubeurakko-anyang.shop
+
     aes:
       secret: ${AES_SECRET}
 

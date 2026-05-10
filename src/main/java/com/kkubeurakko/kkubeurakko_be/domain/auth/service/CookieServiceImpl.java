@@ -2,6 +2,7 @@ package com.kkubeurakko.kkubeurakko_be.domain.auth.service;
 
 import java.time.Duration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class CookieServiceImpl implements CookieService {
+	@Value("${spring.security.cookie.domain}")
+	private String domain;
+
 	@Override
 	public void addCookie(HttpServletResponse response, String name, String value, Duration maxAge, boolean httpOnly) {
 		ResponseCookie cookie = ResponseCookie.from(name, value)
@@ -24,7 +28,7 @@ public class CookieServiceImpl implements CookieService {
 			.httpOnly(httpOnly)
 			.sameSite("None")
 			.path("/")
-			// .domain(".kkubeurakko-anyang.shop")
+			.domain(domain)
 			.build();
 
 		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -38,7 +42,7 @@ public class CookieServiceImpl implements CookieService {
 			.httpOnly(httpOnly)
 			.sameSite("None")
 			.path("/")
-			// .domain(".kkubeurakko-anyang.shop")
+			.domain(domain)
 			.build();
 
 		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
