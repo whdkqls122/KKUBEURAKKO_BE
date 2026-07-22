@@ -1,0 +1,61 @@
+package com.kkubeurakko.kkubeurakko_be.domain.auth.controller;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.LoginRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.UserLoginRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.auth.service.LoginService;
+import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequiredArgsConstructor
+@Tag(name = "Login API", description = "로그인 API")
+@RequestMapping("/v1")
+public class LoginController {
+	private final LoginService loginService;
+
+	@Operation(
+		summary = "관리자 로그인",
+		description = "관리자가 로그인할 때 사용합니다."
+	)
+	@PostMapping("/admin/login")
+	public ResponseEntity<ApiResponse<Void>> adminLogin(
+		@RequestBody @Valid LoginRequestDto loginRequestDto,
+		HttpServletResponse response
+	) {
+		String accessToken = loginService.adminLogin(loginRequestDto, response);
+
+		return ResponseEntity.ok()
+			.header(HttpHeaders.AUTHORIZATION, accessToken)
+			.body(ApiResponse.success("로그인 성공", null));
+
+	}
+
+	@Operation(
+		summary = "일반 사용자 로그인 API",
+		description = "일반 사용자가 로그인할 때 사용하는 API 입니다."
+	)
+	@PostMapping("/user/login")
+	public ResponseEntity<ApiResponse<Void>> adminLogin(
+		@RequestBody @Valid UserLoginRequestDto loginRequestDto,
+		HttpServletResponse response
+	) {
+		String accessToken = loginService.login(loginRequestDto, response);
+
+		return ResponseEntity.ok()
+			.header(HttpHeaders.AUTHORIZATION, accessToken)
+			.body(ApiResponse.success("로그인 성공", null));
+
+	}
+}

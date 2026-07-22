@@ -1,0 +1,20 @@
+package com.kkubeurakko.kkubeurakko_be.domain.addresses.dto;
+
+import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.AddressCategory;
+
+import lombok.Builder;
+
+@Builder
+public record AddressResponseDto(
+	Long id,
+	String addressName,
+	String address,
+	boolean isPrimary,
+	double latitude,
+	double longitude,
+	AddressCategory category,
+	String requestContent,
+	String entrancePassword,
+	String directionsInfo
+) {
+}

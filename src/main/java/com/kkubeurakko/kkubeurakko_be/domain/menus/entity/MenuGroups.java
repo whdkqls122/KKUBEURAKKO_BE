@@ -1,0 +1,73 @@
+package com.kkubeurakko.kkubeurakko_be.domain.menus.entity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
+import com.kkubeurakko.kkubeurakko_be.global.BaseEntity;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "MenuGroups")
+@Getter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+public class MenuGroups extends BaseEntity {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "menu_groups_id")
+	private Long id;
+
+	@Column(name = "name", nullable = false, length = 70)
+	private String name;
+
+	@Column(name = "description", length = 250)
+	private String description;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "status", nullable = false)
+	private MenuStatus menuStatus;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "stores_id", nullable = false)
+	private Stores store;
+
+	@OneToMany(mappedBy = "menuGroup",
+		fetch = FetchType.LAZY,
+		cascade = CascadeType.ALL
+	)
+	@Builder.Default
+	private List<Menus> menus = new ArrayList<>();
+
+	public void updateMenuGroup(String name, String description) {
+		this.name = name;
+		this.description = description;
+	}
+
+	public void updateStatus(MenuStatus status) {
+		this.menuStatus = status;
+	}
+
+	public void deleteMenuGroup() {
+		this.menuStatus = MenuStatus.DELETED;
+	}
+}

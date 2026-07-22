@@ -44,9 +44,6 @@ dependencies {
     //Spring Boot
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    //coolsms
-    implementation 'net.nurigo:sdk:4.3.2'
-
     //mysql
     runtimeOnly 'com.mysql:mysql-connector-j'
 
@@ -56,10 +53,26 @@ dependencies {
     //aws
     implementation 'com.amazonaws:aws-java-sdk-s3:1.12.791'
 
+    //swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    //aws health-check
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    //aws s3
+    implementation 'software.amazon.awssdk:s3'
+    implementation platform('software.amazon.awssdk:bom:2.25.60')
+    implementation "commons-io:commons-io:2.15.1"
+
+    //cache
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+    //webp
+    implementation 'org.sejda.imageio:webp-imageio:0.1.6'
 }
 
 tasks.named('test') {
