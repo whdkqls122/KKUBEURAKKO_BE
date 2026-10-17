@@ -2,7 +2,7 @@
 language: "ko-KR"
 
 reviews:
-  profile: "assertive"        # 꼼꼼하게 지적 (가볍게 받고 싶으면 "chill")
+  profile: "assertive"
   poem: false
 
   path_instructions:
