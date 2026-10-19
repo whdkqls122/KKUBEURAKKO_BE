@@ -6,15 +6,21 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-docker-image:
+  test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
       - uses: actions/checkout@v4
-
+        with:
+          persist-credentials: false
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -22,136 +28,17 @@ jobs:
           distribution: "temurin"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build -x test
+      - name: Run tests
+        run: ./gradlew test
 
-      - name: Docker build
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app:latest .
-
-      - name: Docker login
-        uses: docker/login-action@v2
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      - name: Docker push
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app:latest
-
-  run-docker-image-on-ec2:
-    needs: build-docker-image
-    runs-on: self-hosted
-
-    steps:
-      - name: Check disk usage before cleanup
-        run: |
-          df -h
-          sudo docker system df || true
-
-      - name: Create docker network if not exists
-        run: |
-          sudo docker network inspect kkubeurakko-net >/dev/null 2>&1 || \
-          sudo docker network create kkubeurakko-net
-
-      - name: Stop and remove existing app container
-        run: |
-          sudo docker stop kkubeurakko-app || true
-          sudo docker rm kkubeurakko-app || true
-
-      - name: Stop and remove existing redis container
-        run: |
-          sudo docker stop kkubeurakko-redis || true
-          sudo docker rm kkubeurakko-redis || true
-
-      - name: Cleanup docker before pull
-        run: |
-          sudo docker system prune -af || true
-          sudo docker builder prune -af || true
-
-      - name: Create docker network if not exists
-        run: |
-          sudo docker network inspect kkubeurakko-net >/dev/null 2>&1 || \
-          sudo docker network create kkubeurakko-net
-
-      - name: Check disk usage after cleanup
-        run: |
-          df -h
-          sudo docker system df || true
-
-      - name: Docker pull app image
-        run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app:latest
-
-      - name: Run redis container
-        run: |
-          sudo docker run -d \
-            --name kkubeurakko-redis \
-            --network kkubeurakko-net \
-            --restart unless-stopped \
-            redis:7 \
-            redis-server --requirepass "${{ secrets.REDIS_PASSWORD }}" --appendonly yes
-
-      - name: Run spring boot container
-        run: |
-          sudo docker run -d \
-            -p 8080:8080 \
-            --name kkubeurakko-app \
-            --network kkubeurakko-net \
-            --restart unless-stopped \
-            -e TZ=Asia/Seoul \
-            -e JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Seoul" \
-            -e DB_URL="${{ secrets.DB_URL }}" \
-            -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
-            -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-            -e REDIS_HOST="kkubeurakko-redis" \
-            -e REDIS_PORT="6379" \
-            -e REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}" \
-            -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-            -e JWT_ACCESS_EXP="${{ secrets.JWT_ACCESS_EXP }}" \
-            -e JWT_ADMIN_ACCESS_EXP="${{ secrets.JWT_ADMIN_ACCESS_EXP }}" \
-            -e JWT_REFRESH_EXP="${{ secrets.JWT_REFRESH_EXP }}" \
-            -e JWT_TEMP_EXP="${{ secrets.JWT_TEMP_EXP }}" \
-            -e KAKAO_CLIENT_ID="${{ secrets.KAKAO_CLIENT_ID }}" \
-            -e KAKAO_CLIENT_SECRET="${{ secrets.KAKAO_CLIENT_SECRET }}" \
-            -e KAKAO_REDIRECT_URI="${{ secrets.KAKAO_REDIRECT_URI }}" \
-            -e NAVER_CLIENT_ID="${{ secrets.NAVER_CLIENT_ID }}" \
-            -e NAVER_CLIENT_SECRET="${{ secrets.NAVER_CLIENT_SECRET }}" \
-            -e NAVER_REDIRECT_URI="${{ secrets.NAVER_REDIRECT_URI }}" \
-            -e GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
-            -e GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
-            -e GOOGLE_REDIRECT_URI="${{ secrets.GOOGLE_REDIRECT_URI }}" \
-            -e AES_SECRET="${{ secrets.AES_SECRET }}" \
-            -e PORT_ONE_REQUEST_URL="${{ secrets.PORT_ONE_REQUEST_URL }}" \
-            -e PORT_ONE_STORE_ID="${{ secrets.PORT_ONE_STORE_ID }}" \
-            -e PORT_ONE_SECRET="${{ secrets.PORT_ONE_SECRET }}" \
-            -e PORT_ONE_PAYMENT_CHANNEL_KEY="${{ secrets.PORT_ONE_PAYMENT_CHANNEL_KEY }}" \
-            -e PORT_ONE_VERIFY_CHANNEL_KEY="${{ secrets.PORT_ONE_VERIFY_CHANNEL_KEY }}" \
-            -e AWS_REGION="${{ secrets.AWS_REGION }}" \
-            -e AWS_BUCKET_NAME="${{ secrets.AWS_BUCKET_NAME }}" \
-            -e AWS_CLOUDFRONT_DOMAIN="${{ secrets.AWS_CLOUDFRONT_DOMAIN }}" \
-            -e AWS_CREDENTIALS_ACCESS_KEY="${{ secrets.AWS_CREDENTIALS_ACCESS_KEY }}" \
-            -e AWS_CREDENTIALS_SECRET_KEY="${{ secrets.AWS_CREDENTIALS_SECRET_KEY }}" \
-            -e ADMIN_ID="${{ secrets.ADMIN_ID }}" \
-            -e ADMIN_PASSWORD="${{ secrets.ADMIN_PASSWORD }}" \
-            ${{ secrets.DOCKERHUB_USERNAME }}/kkubeurakko-app:latest
-
-      - name: Cleanup unused images after deploy
-        run: |
-          sudo docker image prune -af || true
-          sudo docker builder prune -af || true
-
-      - name: Check running containers
-        run: |
-          sudo docker ps
-          echo "=== APP LOGS ==="
-          sudo docker logs --tail 100 kkubeurakko-app || true
-          echo "=== REDIS LOGS ==="
-          sudo docker logs --tail 50 kkubeurakko-redis || true
-
-      - name: Health check app
-        run: |
-          sleep 10
-          curl -i http://localhost:8080/actuator/health || true
+          name: test-report
+          path: build/reports/tests/test
