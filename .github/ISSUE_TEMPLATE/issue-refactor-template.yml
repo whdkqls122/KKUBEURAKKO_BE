@@ -1,55 +1,90 @@
-name: '♻️ Refactor'
-description: '기존 코드 개선 및 구조 리팩토링'
-title: '[Refactor]: '
-labels: ['♻️ Refactor']
+name: "♻️ Refactor"
+description: "기존 코드의 구조·안정성을 개선합니다."
+title: "[Refactor]: "
+labels: ["♻️ Refactor"]
 body:
-  - type: textarea
+  - type: markdown
     attributes:
-      label: 💡 리팩토링 목적
-      description: 왜 리팩토링이 필요한가요? 배경이나 문제를 설명해주세요.
-      placeholder: 예) 코드 중복 제거, 가독성 향상, 성능 개선 등
-    validations:
-      required: true
-
-  - type: textarea
-    attributes:
-      label: 🧩 기존 코드의 문제점
-      description: 현재 코드의 어떤 부분이 문제인가요?
-      placeholder: 구조가 복잡하거나 네이밍이 모호한 부분 등을 구체적으로 적어주세요. (이슈 번호 언급 권장)
-    validations:
-      required: true
+      value: |
+        우선순위 라벨(`P0`~`P4`)은 이슈를 만든 뒤 오른쪽 Labels에서 붙여주세요.
 
   - type: input
+    id: items
     attributes:
-      label: 🔍 변경 대상 파일/모듈
-      description: 리팩토링 대상이 되는 파일명 또는 컴포넌트를 입력해주세요.
-      placeholder: 예) `UserService.java`, `MainLayout.vue`
+      label: "📌 리팩토링 문서 항목"
+      description: "리팩토링 우선순위 문서의 항목 번호를 적어주세요. 해당 없으면 비워두세요."
+      placeholder: "예) 0-1, 0-2, 0-9"
+
+  - type: textarea
+    id: purpose
+    attributes:
+      label: "💡 리팩토링 목적"
+      description: "이 작업으로 무엇을 이루려는지 한두 문장으로 적어주세요."
+      placeholder: "예) 관리자 기능을 관리자만 호출할 수 있게 인가 규칙을 정리한다."
     validations:
       required: true
 
   - type: textarea
+    id: problem
     attributes:
-      label: ✅ 리팩토링 작업 내용
-      description: 어떤 방식으로 개선할 예정인가요? 할 일을 체크박스로 작성해주세요.
+      label: "🧩 기존 코드의 문제점"
+      description: "지금 코드가 어떻게 동작하고, 그래서 어떤 문제가 생기는지 적어주세요."
       placeholder: |
-        - [ ] 함수 분리
-        - [ ] 중복 제거
-        - [ ] 네이밍 수정
+        - `/v1/menu/**`가 `permitAll`이라 메뉴 수정·삭제를 로그인 없이 호출할 수 있다.
     validations:
       required: true
 
   - type: textarea
+    id: files
     attributes:
-      label: 🚀 기대 효과
-      description: 리팩토링 후 어떤 개선이 이루어질지 작성해주세요.
-      placeholder: 예) 유지보수성 향상, 로직 단순화, 성능 향상
+      label: "🔍 변경 대상 파일/모듈"
+      placeholder: |
+        - `SecurityConfig`
+        - `MenuController`
     validations:
-      required: false
+      required: true
 
   - type: textarea
+    id: tasks
     attributes:
-      label: 🙋🏻 참고 자료
-      description: 참고한 문서나 링크가 있다면 작성해주세요.
-      placeholder: 관련 이슈 링크, 컨벤션 문서 등
+      label: "✅ 작업 내용"
+      description: "PR 하나에서 끝낼 수 있는 크기로 체크박스를 나눠주세요."
+      placeholder: |
+        - [ ] 관리자 API 경로 정리
+        - [ ] 메뉴 조회 API는 GET만 공개
     validations:
-      required: false
+      required: true
+
+  - type: dropdown
+    id: behavior
+    attributes:
+      label: "🔄 기존 동작 변경"
+      description: "API 응답·상태 코드·DB 데이터가 바뀌는지 골라주세요."
+      options:
+        - "없음 (순수 구조 개선)"
+        - "있음 (버그 수정·보안·정책 변경)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: test
+    attributes:
+      label: "🧪 테스트 계획"
+      description: "무엇으로 확인할지 적어주세요. 동작이 바뀐다면 바뀌기 전과 후를 함께 적어주세요."
+      placeholder: |
+        - MockMvc: 비로그인 401, 고객 403, 관리자 200
+        - 기존 `MenuServiceImplTest` 통과
+    validations:
+      required: true
+
+  - type: textarea
+    id: effect
+    attributes:
+      label: "🚀 기대 효과"
+      placeholder: "예) 권한 없는 사용자가 메뉴·가격을 바꿀 수 없다."
+
+  - type: textarea
+    id: references
+    attributes:
+      label: "🙋🏻 참고 자료"
+      placeholder: "관련 이슈, 문서, 링크"

@@ -1,0 +1,51 @@
+name: "🔧 Chore"
+description: "CI/CD, 설정, 의존성, 문서처럼 기능 코드 밖의 작업을 합니다."
+title: "[Chore]: "
+labels: ["🔧 Chore"]
+body:
+  - type: textarea
+    id: purpose
+    attributes:
+      label: "💡 작업 목적"
+      placeholder: "예) PR마다 테스트가 자동으로 돌게 한다."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: "📦 영향 범위"
+      multiple: true
+      options:
+        - "CI/CD"
+        - "배포·인프라"
+        - "의존성"
+        - "설정 파일"
+        - "GitHub 설정·템플릿"
+        - "문서"
+        - "기타"
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: "✅ 작업 내용"
+      placeholder: |
+        - [ ] 배포 job 제거
+        - [ ] PR마다 `./gradlew test` 실행
+    validations:
+      required: true
+
+  - type: textarea
+    id: verify
+    attributes:
+      label: "🧪 확인 방법"
+      placeholder: "예) 테스트 PR을 열어 Actions에서 test job이 통과하는지 확인"
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: "🙋🏻 참고 자료"
