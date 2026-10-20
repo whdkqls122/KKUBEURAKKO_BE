@@ -89,45 +89,40 @@ class CartServiceImplTest {
 	@DisplayName("정상적으로 장바구니 목록이 조회되는지 검증한다.")
 	void getCartList() {
 		Cart cart = Cart.builder().id(1L).user(user).build();
+		user.updateCart(cart);
 		when(userService.getUser(oAuth2User.getName())).thenReturn(user);
-		when(cartRepository.findByUserNumber(user.getUserNumber())).thenReturn(Optional.of(cart));
 
 		CartResponseDto response = cartService.getCartList(oAuth2User);
 
-		assertNotNull(response);
 		assertEquals(1L, response.cartId());
 	}
 
 	@Test
 	@DisplayName("장바구니가 생성되지 않았을 경우 장바구니 생성 후 정상적으로 반환되는지 검증한다.")
 	void getCartList_WhenCartDoesNotExist() {
-		Cart cart = Cart.builder().id(1L).user(user).build();
 		when(userService.getUser(oAuth2User.getName())).thenReturn(user);
-		when(cartRepository.findByUserNumber(user.getUserNumber())).thenReturn(Optional.empty());
-		when(cartRepository.save(any(Cart.class))).thenReturn(cart);
 
 		CartResponseDto response = cartService.getCartList(oAuth2User);
 
-		assertNotNull(response);
-		assertEquals(1L, response.cartId());
+		assertNotNull(user.getCart());
+		assertTrue(response.cartItemResponseDtoList().isEmpty());
 	}
 
 	@Test
 	@DisplayName("장바구니가 정상적으로 생성되고 메뉴가 담기는지 검증한다.")
 	void createCartItem() {
 		CartRequestDto requestDto = new CartRequestDto(1L, 2, List.of(option.getId()));
-		Cart cart = Cart.builder().id(1L).user(user).build();
 
 		when(userService.getUser(oAuth2User.getName())).thenReturn(user);
-		when(cartRepository.findByUserNumber(user.getUserNumber())).thenReturn(Optional.empty());
-		when(cartRepository.save(any(Cart.class))).thenReturn(cart);
 		when(menuRepository.findById(requestDto.menuId())).thenReturn(Optional.of(menu));
 		when(optionRepository.findAllById(requestDto.optionIdList())).thenReturn(List.of(option));
 
 		cartService.createCartItem(requestDto, oAuth2User);
 
-		verify(cartItemRepository, times(1)).save(any(CartItem.class));
-		verify(cartItemOptionRepository, times(1)).saveAll(anyList());
+		List<CartItem> items = user.getCart().getCartItemList();
+		assertEquals(1, items.size());
+		assertEquals(2, items.get(0).getQuantity());
+		assertEquals(1, items.get(0).getOptionList().size());
 	}
 
 	@Test
