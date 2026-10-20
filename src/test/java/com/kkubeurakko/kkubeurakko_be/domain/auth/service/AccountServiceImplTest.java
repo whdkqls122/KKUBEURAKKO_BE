@@ -16,6 +16,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ExistUserRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ResetPasswordMeRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.dto.ResetPasswordRequestDto;
@@ -68,26 +69,22 @@ class AccountServiceImplTest {
 	@DisplayName("휴대폰 인증 후 ID 마스킹 반환이 정상적으로 이루어진다.")
 	void findUserId_success() {
 		// given
-		String phone = "01012345678";
-		String userId = "testUser";
-
 		UserVerifyRequestDto dto = new UserVerifyRequestDto("verifyId");
 
 		PortOneVerifyInfoResponseDto responseDto = mock(PortOneVerifyInfoResponseDto.class);
 		VerifiedCustomer customer = mock(VerifiedCustomer.class);
-		Users user = mock(Users.class);
+		Users user = TestFixture.createUser("local_abc123", "01012345678");
 
 		when(portOneService.getPortOneVerifyInfo("verifyId")).thenReturn(responseDto);
 		when(responseDto.verifiedCustomer()).thenReturn(customer);
-		when(customer.phoneNumber()).thenReturn(phone);
+		when(customer.phoneNumber()).thenReturn(user.getPhone());
 		when(userRepository.findByPhoneHash(any())).thenReturn(Optional.of(user));
-		when(user.getId()).thenReturn(userId);
 
-		// when
+		//when
 		UserIdResponseDto result = accountService.findUserId(dto);
 
 		// then
-		assertThat(result.id()).isNotBlank();
+		assertThat(result.id()).isEqualTo("te****er");
 	}
 
 	@Test
