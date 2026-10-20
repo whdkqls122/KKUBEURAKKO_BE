@@ -300,8 +300,9 @@ class OrderServiceImplTest {
 		);
 		ReflectionTestUtils.setField(order, "status", Status.PENDING);
 
-		given(orderRepository.findById(1L))
-			.willReturn(Optional.of(order));
+		OrderSocketResponse response = OrderSocketResponse.builder().orderId(1L).build();
+		given(orderRepository.findById(1L)).willReturn(Optional.of(order));
+		given(orderDecryptService.toResponse(order)).willReturn(response);
 
 		// when
 		orderService.acceptOrder(1L, 60);
