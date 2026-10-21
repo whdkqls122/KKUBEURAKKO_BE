@@ -2,6 +2,7 @@ package com.kkubeurakko.kkubeurakko_be.global.oauth;
 
 import static org.mockito.Mockito.*;
 
+import java.time.Instant;
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +17,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kkubeurakko.kkubeurakko_be.domain.auth.service.LogoutService;
@@ -121,8 +123,13 @@ class OAuthTest {
 		when(oAuth2AuthorizedClientService.loadAuthorizedClient(any(), any()))
 			.thenReturn(authorizedClient);
 
-		when(authorizedClient.getAccessToken())
-			.thenReturn(mock(org.springframework.security.oauth2.core.OAuth2AccessToken.class));
+		OAuth2AccessToken accessToken = new OAuth2AccessToken(
+			OAuth2AccessToken.TokenType.BEARER,
+			"provider-access-token",
+			Instant.now(),
+			Instant.now().plusSeconds(3600)
+		);
+		when(authorizedClient.getAccessToken()).thenReturn(accessToken);
 
 		// when
 		successHandler.onAuthenticationSuccess(request, response, authentication);
@@ -154,8 +161,13 @@ class OAuthTest {
 		when(oAuth2AuthorizedClientService.loadAuthorizedClient(any(), any()))
 			.thenReturn(authorizedClient);
 
-		when(authorizedClient.getAccessToken())
-			.thenReturn(mock(org.springframework.security.oauth2.core.OAuth2AccessToken.class));
+		OAuth2AccessToken accessToken = new OAuth2AccessToken(
+			OAuth2AccessToken.TokenType.BEARER,
+			"provider-access-token",
+			Instant.now(),
+			Instant.now().plusSeconds(3600)
+		);
+		when(authorizedClient.getAccessToken()).thenReturn(accessToken);
 
 		successHandler.onAuthenticationSuccess(request, response, authentication);
 
@@ -164,30 +176,14 @@ class OAuthTest {
 	}
 
 	@Test
-	@DisplayName("로그아웃 수행 후 RefreshToken 삭제 및 블랙리스트 등록을 검증")
+	@DisplayName("로그아웃 요청이면 LogoutService를 호출하고 다음 필터로 넘기지 않는다")
 	void testLogout() throws Exception {
-		// Access / Refresh 토큰 생성
-		String accessToken = jwtUtil.createAccessToken(TEST_USER, UserRole.CUSTOMER.getRole(), 1000 * 60 * 10);
-		String refreshToken = jwtUtil.createRefreshToken(TEST_USER, UserRole.CUSTOMER.getRole(), 1000 * 60 * 60 * 24);
-
-		// 요청 쿠키 모킹
-		Cookie cookie = new Cookie("Authorization", refreshToken);
-		when(request.getCookies()).thenReturn(new Cookie[] {cookie});
-		when(request.getHeader("Authorization")).thenReturn("Bearer " + accessToken);
-		when(request.getRequestURI()).thenReturn("/logout");
+		when(request.getRequestURI()).thenReturn("/v1/logout");
 		when(request.getMethod()).thenReturn("POST");
-		when(refreshTokenRepository.existsByRefresh(refreshToken)).thenReturn(true);
 
 		logoutFilter.doFilter(request, response, filterChain);
-		CustomOAuth2User principal = new CustomOAuth2User(
-			UserDto.builder()
-				.userNumber(TEST_USER)
-				.role(UserRole.CUSTOMER)
-				.build()
-		);
-		// RefreshToken 삭제 확인
-		verify(refreshTokenRepository, times(1)).deleteById(principal.getName());
-		// Redis 블랙리스트 등록 확인
-		verify(valueOps, times(1)).set(startsWith("blacklist:"), eq("logout"), anyLong(), eq(TimeUnit.MILLISECONDS));
+
+		verify(logoutService).logout(request, response);
+		verify(filterChain, never()).doFilter(request, response);
 	}
 }
