@@ -123,6 +123,8 @@ class CartServiceImplTest {
 		assertEquals(1, items.size());
 		assertEquals(2, items.get(0).getQuantity());
 		assertEquals(1, items.get(0).getOptionList().size());
+		assertSame(menu, items.get(0).getMenu());
+		assertSame(option, items.get(0).getOptionList().get(0).getOption());
 	}
 
 	@Test
