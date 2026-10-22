@@ -109,6 +109,7 @@ public class TestFixture {
 
 	public static Users createUser(String userNumber, String phone) {
 		return Users.builder()
+			.id("testUser")
 			.userNumber(userNumber)
 			.role(UserRole.CUSTOMER)
 			.email("test@naver.com")

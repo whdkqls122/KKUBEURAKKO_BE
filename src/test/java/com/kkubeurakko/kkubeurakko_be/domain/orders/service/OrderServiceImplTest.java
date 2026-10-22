@@ -47,6 +47,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.service.UserService;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
+import static org.mockito.ArgumentMatchers.same;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
@@ -300,8 +301,9 @@ class OrderServiceImplTest {
 		);
 		ReflectionTestUtils.setField(order, "status", Status.PENDING);
 
-		given(orderRepository.findById(1L))
-			.willReturn(Optional.of(order));
+		OrderSocketResponse response = OrderSocketResponse.builder().orderId(1L).build();
+		given(orderRepository.findById(1L)).willReturn(Optional.of(order));
+		given(orderDecryptService.toResponse(order)).willReturn(response);
 
 		// when
 		orderService.acceptOrder(1L, 60);
@@ -310,7 +312,7 @@ class OrderServiceImplTest {
 		assertThat(order.getStatus()).isEqualTo(Status.ACCEPTED);
 		assertThat(order.getCompletionTime()).isEqualTo(60);
 
-		verify(orderSocketSender).sendStatus(eq(store.getId()), any(OrderSocketResponse.class));
+		verify(orderSocketSender).sendStatus(eq(store.getId()), same(response));
 	}
 
 }

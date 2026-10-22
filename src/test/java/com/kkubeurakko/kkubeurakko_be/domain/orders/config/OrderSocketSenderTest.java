@@ -17,9 +17,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderStatusSocketEvent;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.service.OrderDecryptService;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 
@@ -28,48 +29,22 @@ class OrderSocketSenderTest {
 
 	@Mock
 	SimpMessagingTemplate messagingTemplate;
-
+	@Mock
+	OrderDecryptService orderDecryptService;
 	@InjectMocks
 	OrderSocketSender orderSocketSender;
 
 	@Test
 	@DisplayName("주문 상태 변경 WebSocket 송신을 검증한다.")
-	void orderStatusSocketEvent() {
-		// given
-		Stores store = TestFixture.createStore();
-		Users user = TestFixture.createUser("user1", "010-1234-5678");
+	void sendStatus() {
+		OrderSocketResponse orderSocketResponse = OrderSocketResponse.builder()
+			.orderId(1L)
+			.status("ACCEPTED")
+			.build();
 
-		Menus menu = TestFixture.createMenu(
-			1L,
-			TestFixture.createMenuGroup(1L, store)
-		);
+		orderSocketSender.sendStatus(1L, orderSocketResponse);
 
-		Orders order = TestFixture.createOrderWithPayment(
-			1L,
-			user,
-			List.of(menu),
-			List.of(List.of())
-		);
-
-		ReflectionTestUtils.setField(order, "status", Status.PENDING);
-		order.accept(30);
-
-		// when
-		// orderSocketSender.sendStatus(store.getId(), OrderSocketResponse.from(order));
-
-		// then
-		ArgumentCaptor<OrderStatusSocketEvent> captor =
-			ArgumentCaptor.forClass(OrderStatusSocketEvent.class);
-
-		verify(messagingTemplate).convertAndSend(
-			eq("/topic/store/" + store.getId() + "/status"),
-			captor.capture()
-		);
-
-		OrderStatusSocketEvent event = captor.getValue();
-		assertThat(event.getOrderId()).isEqualTo(1L);
-		assertThat(event.getStatus()).isEqualTo("ACCEPTED");
-		assertThat(event.getCompletionTime()).isEqualTo(30);
+		verify(messagingTemplate).convertAndSend("/topic/store/1", orderSocketResponse);
 	}
 
 }
