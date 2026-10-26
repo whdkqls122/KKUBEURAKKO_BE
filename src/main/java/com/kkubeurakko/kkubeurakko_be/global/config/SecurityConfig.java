@@ -83,8 +83,6 @@ public class SecurityConfig {
 			)
 			.authorizeHttpRequests((auth) -> auth
 				.requestMatchers("/ws/**").permitAll()
-				.requestMatchers("/for_user").hasAnyRole(UserRole.CUSTOMER.toString(), UserRole.ADMIN.toString())
-				.requestMatchers("/for_admin").hasRole(UserRole.ADMIN.toString())
 				.requestMatchers(
 					"/",
 					"/swagger-ui/**",
