@@ -2,7 +2,9 @@ package com.kkubeurakko.kkubeurakko_be.global.config;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -39,6 +41,9 @@ public class SecurityConfig {
 	private final CustomSuccessHandler customSuccessHandler;
 	private final RedisTemplate<String, String> redisTemplate;
 	private final LogoutService logoutService;
+
+	@Value("${cors.allowed-origins}")
+	private List<String> allowedOrigins;
 
 	private static final String ADMIN = UserRole.ADMIN.name();
 
@@ -83,12 +88,7 @@ public class SecurityConfig {
 			.cors(corsCustomizer -> corsCustomizer.configurationSource(request -> {
 				CorsConfiguration configuration = new CorsConfiguration();
 
-				configuration.setAllowedOrigins(Arrays.asList(
-					"http://localhost:5173",
-					"http://localhost:5174",
-					"https://www.kkubeurakko-anyang.shop",
-					"https://admin.kkubeurakko-anyang.shop"
-				));
+				configuration.setAllowedOrigins(allowedOrigins);
 				configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 				configuration.setAllowCredentials(true);
 				configuration.setAllowedHeaders(Collections.singletonList("*"));
