@@ -35,7 +35,6 @@ public class SwaggerConfig {
 				.version("v1.0.0"))
 			.servers(List.of(
 				new Server().url("http://localhost:8080").description("Local Server")
-				// new Server().url("https://api.kkubeurakko-anyang.shop").description("Production Server")
 			));
 	}
 }
