@@ -119,3 +119,12 @@ admin:
   initial:
     id: ${ADMIN_ID}
     password: ${ADMIN_PASSWORD}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
