@@ -25,7 +25,6 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
 
 	private static final String AUTHORIZATION = "Authorization";
 	private static final String BEARER = "Bearer ";
-	private static final String STORE_TOPIC_PREFIX = "/topic/store/";
 
 	private final JwtUtil jwtUtil;
 	private final RedisTemplate<String, String> redisTemplate;
@@ -76,17 +75,16 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
 		}
 	}
 
+	/**
+	 * 웹소켓은 관리자 주문 화면에서만 사용하므로 모든 구독을 ADMIN으로 제한
+	 * 브로커가 /topic/** 같은 패턴 구독도 매칭하기 때문에, 목적지 접두사로 검사하면 우회할 가능성이 있음
+	 */
 	private void checkSubscribe(StompHeaderAccessor accessor) {
-		String destination = accessor.getDestination();
-		if (destination == null || !destination.startsWith(STORE_TOPIC_PREFIX)) {
-			return;
-		}
-
 		Authentication user = (Authentication)accessor.getUser();
 		boolean isAdmin = user != null && user.getAuthorities().stream()
 			.anyMatch(authority -> UserRole.ADMIN.name().equals(authority.getAuthority()));
 		if (!isAdmin) {
-			throw new AccessDeniedException("매장 주문 알림은 관리자만 구독할 수 있습니다.");
+			throw new AccessDeniedException("구독은 관리자만 할 수 있습니다.");
 		}
 	}
 }
