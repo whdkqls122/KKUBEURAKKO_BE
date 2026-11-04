@@ -50,8 +50,8 @@ public class TokenServiceImpl implements TokenService {
 		if (refreshToken == null || refreshToken.isBlank()) {
 			throw new AccessDeniedException("Refresh Token 없음");
 		}
-		//토큰 유효성 검사
-		jwtUtil.validateToken(refreshToken);
+		//토큰 유효성 검사 (서명·만료·category)
+		validateCategory(refreshToken, JwtUtil.REFRESH_CATEGORY, "유효하지 않은 Refresh Token입니다.");
 
 		//정보 추출 및 토큰 일치 검사
 		String userNumber = jwtUtil.getUserNumber(refreshToken);
@@ -189,6 +189,7 @@ public class TokenServiceImpl implements TokenService {
 			throw new AccessDeniedException(message);
 		}
 	}
+
 	private void isExistRefreshToken(String refreshToken, String userNumber) {
 		RefreshToken findRefreshToken = refreshTokenRepository.findByUserNumber(userNumber);
 		if (findRefreshToken == null || !refreshToken.equals(findRefreshToken.getRefresh())) {
@@ -204,6 +205,7 @@ public class TokenServiceImpl implements TokenService {
 		RefreshToken refreshToken = RefreshToken.builder()
 			.userNumber(userNumber)
 			.refresh(refresh)
+			.expiration(refreshTokenExpiry)
 			.build();
 
 		refreshTokenRepository.save(refreshToken);
