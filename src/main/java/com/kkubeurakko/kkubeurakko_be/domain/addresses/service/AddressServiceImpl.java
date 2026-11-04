@@ -82,13 +82,11 @@ public class AddressServiceImpl implements AddressService {
 		Users user = userService.getUser(customOAuth2User.getName());
 		Addresses addresses = getOwnedAddress(addressId, user);
 
-		if (addressRepository.existsByUser(user)) {
-			addressRepository.findByUserAndIsPrimary(user, true)
-				.ifPresent(existAddress -> {
-					existAddress.updatePrimary(false);
-					log.info("기존 기본 주소 비활성화 완료");
-				});
-		}
+		addressRepository.findByUserAndIsPrimary(user, true)
+			.ifPresent(existAddress -> {
+				existAddress.updatePrimary(false);
+				log.info("기존 기본 주소 비활성화 완료");
+			});
 		addresses.updatePrimary(true);
 	}
 
