@@ -22,6 +22,9 @@ public interface TokenService {
 	// 임시 사용자 토큰 조회
 	String getTempToken(HttpServletRequest request);
 
+	// 임시 사용자 토큰을 검증 및 사용자 번호 반환
+	String getTempUserNumber(HttpServletRequest request);
+
 	// 인증 완료 및 사용자 정보 저장 이후 임시 사용자 토큰 삭제
 	void removeTempToken(HttpServletResponse response);
 
@@ -31,4 +34,5 @@ public interface TokenService {
 	void removeRefreshToken(HttpServletResponse response);
 
 	void blacklistAccessToken(String accessToken);
+
 }

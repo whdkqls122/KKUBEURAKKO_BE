@@ -8,6 +8,8 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -21,6 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class JwtUtil {
+	public static final String ACCESS_CATEGORY = "access";
+	public static final String REFRESH_CATEGORY = "refresh";
+	public static final String TEMP_CATEGORY = "temp";
+
 	private final SecretKey secretKey;
 
 	public JwtUtil(@Value("${spring.jwt.secret}") String secret) {
@@ -34,13 +40,16 @@ public class JwtUtil {
 	}
 
 	public String createAccessToken(String userNumber, String role, long expiredMs) {
-		return createToken("access", userNumber, role, expiredMs);
+		return createToken(ACCESS_CATEGORY, userNumber, role, expiredMs);
 	}
 
 	public String createRefreshToken(String userNumber, String role, long expiredMs) {
-		return createToken("refresh", userNumber, role, expiredMs);
+		return createToken(REFRESH_CATEGORY, userNumber, role, expiredMs);
 	}
 
+	public String createTempToken(String userNumber, long expiredMs) {
+		return createToken(TEMP_CATEGORY, userNumber, UserRole.TEMP.toString(), expiredMs);
+	}
 	private String createToken(String category, String userNumber, String role, long expiredMs) {
 		long now = System.currentTimeMillis();
 		return Jwts.builder()
