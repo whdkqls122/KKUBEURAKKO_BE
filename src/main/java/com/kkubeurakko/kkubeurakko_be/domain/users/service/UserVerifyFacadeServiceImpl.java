@@ -33,7 +33,6 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 	private final TokenService tokenService;
 	private final LogoutService logoutService;
 	private final RedisTemplate<String, Object> redisTemplate;
-	private final JwtUtil jwtUtil;
 	private final OrderService orderService;
 	private static final String TEMP_USER_PREFIX_KEY = "TEMP_USER:";
 
