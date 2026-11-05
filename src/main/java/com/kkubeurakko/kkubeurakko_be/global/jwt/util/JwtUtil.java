@@ -76,7 +76,7 @@ public class JwtUtil {
 		} catch (JwtException e) {
 			// 서명 불일치(SignatureException), 잘못된 형식, 지원하지 않는 토큰 등
 			log.error("유효하지 않은 Jwt: {}", e.getMessage());
-		} catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException | ClassCastException e) {
 			log.error("Jwt 값이 비어있거나 잘못됨: {}", e.getMessage());
 		}
 		return false;

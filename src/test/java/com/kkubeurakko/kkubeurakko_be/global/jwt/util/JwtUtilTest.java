@@ -59,4 +59,13 @@ class JwtUtilTest {
 
 		assertThat(jwtUtil.validateToken(token)).isFalse();
 	}
+
+	@Test
+	@DisplayName("헤더가 JSON 객체가 아닌 비정상 토큰은 validateToken이 false다")
+	void tokenWithArrayHeader() {
+		// 헤더 "[]", 페이로드 "{}", 서명 "x"를 Base64URL 인코딩한 값
+		String malformedToken = "W10.e30.eA";
+
+		assertThat(jwtUtil.validateToken(malformedToken)).isFalse();
+	}
 }
