@@ -325,8 +325,8 @@ class TokenServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("refresh 토큰을 Redis에 저장할 때 TTL을 refresh 토큰 만료 시간으로 설정한다")
-	void saveRefreshToken_ttlMatchesExpiry() {
+	@DisplayName("refresh 토큰 저장 시 expiration을 refresh 토큰 만료 시간으로 설정한다")
+	void saveRefreshToken_setsExpirationToRefreshExpiry() {
 		when(jwtUtil.createRefreshToken("user123", UserRole.CUSTOMER.toString(), REFRESH_EXPIRY))
 			.thenReturn("refreshToken");
 
