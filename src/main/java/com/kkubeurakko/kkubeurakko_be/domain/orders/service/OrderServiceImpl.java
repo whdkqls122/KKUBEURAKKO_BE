@@ -37,6 +37,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.dto.PaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentException;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
@@ -161,6 +162,9 @@ public class OrderServiceImpl implements OrderService {
 			processAfterOrderSaved(user, request, savedOrder.getId(), store.getId(), address);
 
 			return savedOrder.getId();
+		} catch (InvalidPaymentException e) {
+			// 완료되지 않았거나 사용할 수 없는 결제 - 취소할 결제가 없거나 취소하면 안 되므로 롤백 이벤트를 발행하지 않음
+			throw e;
 		} catch (Exception e) {
 			OrderCreateException exception =
 				new OrderCreateException(
@@ -552,11 +556,7 @@ public class OrderServiceImpl implements OrderService {
 		int expectedFinalAmount
 	) {
 		PortOnePaymentResponseDto paymentResponse =
-			portOneService.getPortOnePayment(request.paymentId());
-
-		if (paymentResponse.amount().total() != expectedFinalAmount) {
-			throw new IllegalStateException("결제 금액이 일치하지 않습니다.");
-		}
+			portOneService.getVerifiedPayment(request.paymentId(), expectedFinalAmount);
 
 		if (request.isCashReceipt()) {
 			portOneService.issueCashReceipt(

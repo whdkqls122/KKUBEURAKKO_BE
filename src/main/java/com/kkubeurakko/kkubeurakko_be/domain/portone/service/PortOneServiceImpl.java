@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.CashReceiptRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentException;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.IssueCashReceiptCustomerInput;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PaymentAmountInput;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneCashReceiptRequestDto;
@@ -44,8 +45,9 @@ public class PortOneServiceImpl implements PortOneService {
 	private String paymentChannelKey;
 	private final ObjectMapper objectMapper;
 
-	@Override
-	public PortOnePaymentResponseDto getPortOnePayment(String paymentId) {
+	private static final String PAID_STATUS = "PAID";
+
+	private PortOnePaymentResponseDto getPortOnePayment(String paymentId) {
 		try {
 			String url = requestUri + "/payments/" + paymentId;
 
@@ -262,6 +264,25 @@ public class PortOneServiceImpl implements PortOneService {
 				e
 			);
 		}
+	}
+
+	@Override
+	public PortOnePaymentResponseDto getVerifiedPayment(String paymentId, int expectedAmount) {
+		PortOnePaymentResponseDto payment = getPortOnePayment(paymentId);
+
+		if (!PAID_STATUS.equals(payment.status())) {
+			log.warn("결제 완료 상태가 아님 - paymentId: {}, status: {}", paymentId, payment.status());
+			throw new InvalidPaymentException("결제가 완료되지 않았습니다.");
+		}
+		if (!storeId.equals(payment.storeId())) {
+			log.warn("결제 상점 불일치 - paymentId: {}, storeId: {}", paymentId, payment.storeId());
+			throw new InvalidPaymentException("결제 상점 정보가 일치하지 않습니다.");
+		}
+		if (payment.amount().total() != expectedAmount) {
+			// 결제는 완료됐으므로 주문 생성 실패 시 자동 환불 대상
+			throw new IllegalStateException("결제 금액이 일치하지 않습니다.");
+		}
+		return payment;
 	}
 
 	private void doCancelCashReceipt(String paymentId) {

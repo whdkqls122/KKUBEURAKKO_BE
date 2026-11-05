@@ -36,6 +36,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentException;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
@@ -206,7 +207,7 @@ class OrderServiceImplTest {
 				36000
 			);
 
-		when(portOneService.getPortOnePayment("paymentid"))
+		when(portOneService.getVerifiedPayment("paymentid", 36000))
 			.thenReturn(portOneResponse);
 
 		// when
@@ -267,13 +268,12 @@ class OrderServiceImplTest {
 		when(orderRepository.save(captor.capture()))
 			.thenReturn(savedOrder);
 
-		when(portOneService.getPortOnePayment("paymentid"))
+		when(portOneService.getVerifiedPayment("paymentid", 36000))
 			.thenReturn(
 				TestFixture.createPortOnePaymentResponse(
 					"paymentid", "tx-123", 36000
 				)
 			);
-
 		// when
 		Long orderId = orderService.createOrder(request, customOAuth2User);
 
@@ -281,6 +281,38 @@ class OrderServiceImplTest {
 		assertThat(orderId).isEqualTo(10L);
 		assertThat(captor.getValue().getOrderNumber())
 			.isEqualTo("A-1");
+	}
+
+	@DisplayName("사용할 수 없는 결제면 롤백(결제 취소) 이벤트 없이 주문 생성이 거절된다")
+	@Test
+	void createOrder_invalidPayment_noRollbackEvent() {
+		// given
+		Users user = TestFixture.createUser("kakao_1234", "01012345678");
+		Cart cart = TestFixture.createCartWithOneItem(user);
+		Addresses address = TestFixture.createAddress(1L, user);
+		Stores stores = TestFixture.createStore();
+		ReflectionTestUtils.setField(user, "cart", cart);
+
+		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
+		when(customOAuth2User.getName()).thenReturn("kakao_1234");
+
+		OrderCreateRequest request = new OrderCreateRequest(
+			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
+			"paymentid", false, null, 36000, 0
+		);
+
+		when(userService.getUser("kakao_1234")).thenReturn(user);
+		when(addressRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(address));
+		when(deliveryRegionService.isDeliverable(stores.getId(), address.getLatitude(), address.getLongitude()))
+			.thenReturn(DeliveryRegionAbleResponse.builder().able(true).build());
+		when(portOneService.getVerifiedPayment("paymentid", 36000))
+			.thenThrow(new InvalidPaymentException("결제가 완료되지 않았습니다."));
+
+		// when & then
+		assertThrows(InvalidPaymentException.class, () -> orderService.createOrder(request, customOAuth2User));
+
+		verify(eventPublisher, never()).publishEvent(any(Object.class));
+		verify(orderRepository, never()).save(any());
 	}
 
 	@DisplayName("PENDING → ACCEPTED로 주문이 접수된다.")
