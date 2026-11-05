@@ -12,6 +12,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -63,7 +64,6 @@ public class JwtUtil {
 	}
 
 	//토큰 유효성 검증
-	//예외 반환 로직 구현 이후 수정 예정
 	public boolean validateToken(String token) {
 		try {
 			Jwts.parserBuilder()
@@ -71,12 +71,11 @@ public class JwtUtil {
 				.build()
 				.parseClaimsJws(token);
 			return true;
-		} catch (SecurityException | MalformedJwtException e) {
-			log.error("Jwt 서명 또는 잘못된 형식: {}", e.getMessage());
 		} catch (ExpiredJwtException e) {
 			log.error("Jwt 만료: {}", e.getMessage());
-		} catch (UnsupportedJwtException e) {
-			log.error("지원하지 않는 Jwt: {}", e.getMessage());
+		} catch (JwtException e) {
+			// 서명 불일치(SignatureException), 잘못된 형식, 지원하지 않는 토큰 등
+			log.error("유효하지 않은 Jwt: {}", e.getMessage());
 		} catch (IllegalArgumentException e) {
 			log.error("Jwt 값이 비어있거나 잘못됨: {}", e.getMessage());
 		}
