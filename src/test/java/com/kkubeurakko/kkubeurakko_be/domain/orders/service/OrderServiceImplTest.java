@@ -36,6 +36,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentException;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
@@ -173,7 +174,7 @@ class OrderServiceImplTest {
 		Addresses address = TestFixture.createAddress(1L, user);
 		Stores stores = TestFixture.createStore();
 		ReflectionTestUtils.setField(user, "cart", cart);
-
+		ArgumentCaptor<Payments> paymentCaptor = ArgumentCaptor.forClass(Payments.class);
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
 		when(customOAuth2User.getName()).thenReturn("kakao_1234");
 
@@ -215,6 +216,8 @@ class OrderServiceImplTest {
 		System.out.println(orderId);
 		// then
 		assertThat(orderId).isEqualTo(10L);
+		verify(paymentRepository).save(paymentCaptor.capture());
+		assertThat(paymentCaptor.getValue().getPaymentId()).isEqualTo("paymentid");
 	}
 
 	@DisplayName("배달 주문 생성 시 주문번호가 정상적으로 생성된다")

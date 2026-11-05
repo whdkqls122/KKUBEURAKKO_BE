@@ -417,6 +417,7 @@ public class OrderServiceImpl implements OrderService {
 			.finalAmount(paymentResponseDto.amount().total())
 			.discountAmount(discountAmount)
 			.transactionId(paymentResponseDto.transactionId())
+			.paymentId(paymentResponseDto.id())
 			.build();
 	}
 
