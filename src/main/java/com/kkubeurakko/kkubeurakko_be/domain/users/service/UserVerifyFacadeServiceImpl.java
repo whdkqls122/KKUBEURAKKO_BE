@@ -33,7 +33,6 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 	private final TokenService tokenService;
 	private final LogoutService logoutService;
 	private final RedisTemplate<String, Object> redisTemplate;
-	private final JwtUtil jwtUtil;
 	private final OrderService orderService;
 	private static final String TEMP_USER_PREFIX_KEY = "TEMP_USER:";
 
@@ -43,10 +42,10 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 		HttpServletRequest request,
 		HttpServletResponse response
 	) {
-		String tempToken = tokenService.getTempToken(request);
-		String userNumber = jwtUtil.getUserNumber(tempToken);
+		String userNumber = tokenService.getTempUserNumber(request);
 		TempUser tempUser = (TempUser)redisTemplate.opsForValue()
 			.get(TEMP_USER_PREFIX_KEY + userNumber);
+
 		try {
 			PortOneVerifyInfoResponseDto responseDto =
 				portOneService.getPortOneVerifyInfo(userVerifyRequestDto.identityVerificationId());
@@ -65,7 +64,7 @@ public class UserVerifyFacadeServiceImpl implements UserVerifyFacadeService {
 
 			throw new UserVerifyException(e.getMessage(), e);
 		} finally {
-			redisTemplate.delete(TEMP_USER_PREFIX_KEY + jwtUtil.getUserNumber(tempToken));
+			redisTemplate.delete(TEMP_USER_PREFIX_KEY + userNumber);
 		}
 	}
 

@@ -46,9 +46,6 @@ class UserVerifyFacadeServiceImplTest {
 	private TokenService tokenService;
 
 	@Mock
-	private JwtUtil jwtUtil;
-
-	@Mock
 	private RedisTemplate<String, Object> redisTemplate;
 	@Mock
 	private LogoutService logoutService;
@@ -90,8 +87,7 @@ class UserVerifyFacadeServiceImplTest {
 			.userNumber("123")
 			.build();
 
-		when(tokenService.getTempToken(request)).thenReturn("tempToken");
-		when(jwtUtil.getUserNumber("tempToken")).thenReturn("123");
+		when(tokenService.getTempUserNumber(request)).thenReturn("123");
 
 		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 		when(valueOperations.get(TEMP_USER_KEY)).thenReturn(tempUserDto);
@@ -119,8 +115,7 @@ class UserVerifyFacadeServiceImplTest {
 			.userNumber("123")
 			.build();
 
-		when(tokenService.getTempToken(request)).thenReturn("tempToken");
-		when(jwtUtil.getUserNumber("tempToken")).thenReturn("123");
+		when(tokenService.getTempUserNumber(request)).thenReturn("123");
 
 		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 		when(valueOperations.get(TEMP_USER_KEY)).thenReturn(tempUserDto);

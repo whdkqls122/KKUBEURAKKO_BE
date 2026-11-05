@@ -50,8 +50,8 @@ public class TokenServiceImpl implements TokenService {
 		if (refreshToken == null || refreshToken.isBlank()) {
 			throw new AccessDeniedException("Refresh Token 없음");
 		}
-		//토큰 유효성 검사
-		jwtUtil.validateToken(refreshToken);
+		//토큰 유효성 검사 (서명·만료·category)
+		validateCategory(refreshToken, JwtUtil.REFRESH_CATEGORY, "유효하지 않은 Refresh Token입니다.");
 
 		//정보 추출 및 토큰 일치 검사
 		String userNumber = jwtUtil.getUserNumber(refreshToken);
@@ -74,10 +74,9 @@ public class TokenServiceImpl implements TokenService {
 		HttpServletRequest request,
 		HttpServletResponse response
 	) {
-		String tempToken = getTempToken(request);
+		String userNumber = getTempUserNumber(request);
 		removeCookie(response, TEMP_COOKIE_NAME);
 
-		String userNumber = jwtUtil.getUserNumber(tempToken);
 		Users user = userService.getUser(userNumber);
 
 		String access = jwtUtil.createAccessToken(
@@ -148,6 +147,16 @@ public class TokenServiceImpl implements TokenService {
 	}
 
 	@Override
+	public String getTempUserNumber(HttpServletRequest request) {
+		String tempToken = getTempToken(request);
+		if (tempToken == null || tempToken.isBlank()) {
+			throw new AccessDeniedException("임시 토큰이 없습니다.");
+		}
+		validateCategory(tempToken, JwtUtil.TEMP_CATEGORY, "유효하지 않은 임시 토큰입니다.");
+		return jwtUtil.getUserNumber(tempToken);
+	}
+
+	@Override
 	public void removeTempToken(HttpServletResponse response) {
 		removeCookie(response, TEMP_COOKIE_NAME);
 	}
@@ -164,7 +173,7 @@ public class TokenServiceImpl implements TokenService {
 
 	@Override
 	public void createTempToken(HttpServletResponse response, String userNumber) {
-		String tempToken = jwtUtil.createAccessToken(userNumber, UserRole.TEMP.toString(), tempTokenExpiry);
+		String tempToken = jwtUtil.createTempToken(userNumber, tempTokenExpiry);
 
 		cookieService.addCookie(
 			response,
@@ -173,6 +182,12 @@ public class TokenServiceImpl implements TokenService {
 			Duration.ofMillis(tempTokenExpiry),
 			true
 		);
+	}
+
+	private void validateCategory(String token, String expectedCategory, String message) {
+		if (!jwtUtil.validateToken(token) || !expectedCategory.equals(jwtUtil.getCategory(token))) {
+			throw new AccessDeniedException(message);
+		}
 	}
 
 	private void isExistRefreshToken(String refreshToken, String userNumber) {
@@ -190,6 +205,7 @@ public class TokenServiceImpl implements TokenService {
 		RefreshToken refreshToken = RefreshToken.builder()
 			.userNumber(userNumber)
 			.refresh(refresh)
+			.expiration(refreshTokenExpiry)
 			.build();
 
 		refreshTokenRepository.save(refreshToken);

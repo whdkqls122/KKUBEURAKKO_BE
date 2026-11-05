@@ -52,9 +52,14 @@ public class AddressServiceImpl implements AddressService {
 	}
 
 	@Override
-	public void updateAddress(Long addressId, AddressRequestDto addressUpdateRequestDto) {
-		Addresses addresses = addressRepository.findById(addressId)
-			.orElseThrow(() -> new IllegalArgumentException("해당 주소 정보가 없습니다."));
+	@Transactional
+	public void updateAddress(
+		Long addressId,
+		AddressRequestDto addressUpdateRequestDto,
+		CustomOAuth2User customOAuth2User
+	) {
+		Users user = userService.getUser(customOAuth2User.getName());
+		Addresses addresses = getOwnedAddress(addressId, user);
 
 		addresses.update(
 			addressUpdateRequestDto.addressName(),
@@ -69,26 +74,19 @@ public class AddressServiceImpl implements AddressService {
 			addressUpdateRequestDto.latitude(),
 			addressUpdateRequestDto.longitude()
 		);
-
-		addressRepository.save(addresses);
 	}
 
 	@Override
 	@Transactional
 	public void updatePrimary(Long addressId, CustomOAuth2User customOAuth2User) {
-		Addresses addresses = addressRepository.findById(addressId)
-			.orElseThrow(() -> new IllegalArgumentException("해당 주소 정보가 없습니다."));
+		Users user = userService.getUser(customOAuth2User.getName());
+		Addresses addresses = getOwnedAddress(addressId, user);
 
-		String userNumber = customOAuth2User.getName();
-		Users user = userService.getUser(userNumber);
-
-		if (addressRepository.existsByUser(user)) {
-			addressRepository.findByUserAndIsPrimary(user, true)
-				.ifPresent(existAddress -> {
-					existAddress.updatePrimary(false);
-					log.info("기존 기본 주소 비활성화 완료");
-				});
-		}
+		addressRepository.findByUserAndIsPrimary(user, true)
+			.ifPresent(existAddress -> {
+				existAddress.updatePrimary(false);
+				log.info("기존 기본 주소 비활성화 완료");
+			});
 		addresses.updatePrimary(true);
 	}
 
@@ -121,8 +119,7 @@ public class AddressServiceImpl implements AddressService {
 	@Transactional(readOnly = true)
 	public AddressDetailResponseDto getAddressDetail(Long id, CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
-		Addresses address = addressRepository.findByIdAndUser(id, user)
-			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
+		Addresses address = getOwnedAddress(id, user);
 		return toDetailResponseDto(address);
 	}
 
@@ -130,8 +127,7 @@ public class AddressServiceImpl implements AddressService {
 	@Transactional
 	public void deleteAddress(Long addressId, CustomOAuth2User customOAuth2User) {
 		Users user = userService.getUser(customOAuth2User.getName());
-		Addresses address = addressRepository.findById(addressId)
-			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
+		Addresses address = getOwnedAddress(addressId, user);
 		boolean isPrimary = address.getIsPrimary();
 
 		addressRepository.delete(address);
@@ -257,5 +253,11 @@ public class AddressServiceImpl implements AddressService {
 
 	private boolean hasText(String value) {
 		return StringUtils.hasText(value);
+	}
+
+	//사용자 주소 소유권 검증
+	private Addresses getOwnedAddress(Long addressId, Users user) {
+		return addressRepository.findByIdAndUser(addressId, user)
+			.orElseThrow(() -> new IllegalArgumentException("조회된 주소가 없습니다."));
 	}
 }

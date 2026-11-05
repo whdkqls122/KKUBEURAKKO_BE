@@ -10,7 +10,7 @@ import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 public interface AddressService {
 	void createAddress(AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User);
 
-	void updateAddress(Long addressId, AddressRequestDto addressRequestDto);
+	void updateAddress(Long addressId, AddressRequestDto addressRequestDto, CustomOAuth2User customOAuth2User);
 
 	void updatePrimary(Long addressId, CustomOAuth2User customOAuth2User);
 
