@@ -16,7 +16,10 @@ public class RestTemplateConfig {
 
 	@Bean
 	public RestTemplate restTemplate() {
-		return new RestTemplate();
+		return new RestTemplateBuilder()
+			.connectTimeout(Duration.ofSeconds(3))
+			.readTimeout(Duration.ofSeconds(10))
+			.build();
 	}
 
 	@Bean
