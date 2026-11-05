@@ -318,6 +318,27 @@ class OrderServiceImplTest {
 		verify(orderRepository, never()).save(any());
 	}
 
+	@DisplayName("이미 사용된 paymentId로 주문하면 결제 취소 이벤트 없이 거절된다")
+	@Test
+	void createOrder_duplicatePayment_noRollbackEvent() {
+		// given
+		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
+		OrderCreateRequest request = new OrderCreateRequest(
+			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
+			"paymentid", false, null, 36000, 0
+		);
+		when(paymentRepository.existsByPaymentId("paymentid")).thenReturn(true);
+
+		// when & then
+		assertThatThrownBy(() -> orderService.createOrder(request, customOAuth2User))
+			.isInstanceOf(InvalidPaymentException.class)
+			.hasMessage("이미 사용된 결제입니다.");
+
+		verify(eventPublisher, never()).publishEvent(any(Object.class));
+		verify(portOneService, never()).getVerifiedPayment(anyString(), anyInt());
+		verify(orderRepository, never()).save(any());
+	}
+
 	@DisplayName("PENDING → ACCEPTED로 주문이 접수된다.")
 	@Test
 	void acceptOrder() {

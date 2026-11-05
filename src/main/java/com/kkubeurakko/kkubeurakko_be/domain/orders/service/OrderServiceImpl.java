@@ -125,6 +125,10 @@ public class OrderServiceImpl implements OrderService {
 	public Long createOrder(OrderCreateRequest request, CustomOAuth2User customOAuth2User) {
 
 		try {
+			if (paymentRepository.existsByPaymentId(request.paymentId())) {
+				throw new InvalidPaymentException("이미 사용된 결제입니다.");
+			}
+
 			Users user = getUser(customOAuth2User);
 			Cart cart = validateCart(user);
 			Stores store = extractStore(cart);
