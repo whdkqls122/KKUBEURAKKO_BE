@@ -1,11 +1,13 @@
 package com.kkubeurakko.kkubeurakko_be.domain.orders.service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,6 +77,11 @@ public class OrderServiceImpl implements OrderService {
 	private final OrderDecryptService orderDecryptService;
 	private final StoreBusinessHoursRepository storeBusinessHoursRepository;
 	private final DeliveryRegionService deliveryRegionService;
+
+	private final RedisTemplate<String, String> redisTemplate;
+
+	private static final String PAYMENT_LOCK_PREFIX = "order:payment-lock:";
+	private static final Duration PAYMENT_LOCK_TTL = Duration.ofMinutes(10);
 
 	@Override
 	@Transactional(readOnly = true)
@@ -559,11 +566,25 @@ public class OrderServiceImpl implements OrderService {
 	 *  이미 사용된 결제인지와 결제 상태 및 상점을 확인
 	 *  실패 시 결제 취소 대상이 아님
 	 *  */
+	/** 이미 사용됐거나 처리 중인 결제인지와 결제 상태·상점을 확인한다. 실패 시 결제 취소 대상이 아니다. */
 	private PortOnePaymentResponseDto getUsablePayment(String paymentId) {
 		if (paymentRepository.existsByPaymentId(paymentId)) {
 			throw new InvalidPaymentException("이미 사용된 결제입니다.");
 		}
+		acquirePaymentLock(paymentId);
 		return portOneService.getPaidPayment(paymentId);
+	}
+
+	/**
+	 * 같은 결제로 주문을 동시에 처리하지 않도록 결제별로 한 번만 진입을 허용
+	 * 결제는 한 번만 쓰이므로 락은 해제하지 않고 TTL로 만료시킨다.
+	 */
+	private void acquirePaymentLock(String paymentId) {
+		Boolean acquired = redisTemplate.opsForValue()
+			.setIfAbsent(PAYMENT_LOCK_PREFIX + paymentId, "LOCKED", PAYMENT_LOCK_TTL);
+		if (!Boolean.TRUE.equals(acquired)) {
+			throw new InvalidPaymentException("이미 처리 중이거나 사용된 결제입니다.");
+		}
 	}
 
 	private void validatePaymentAmount(PortOnePaymentResponseDto paymentResponse, int expectedFinalAmount) {
