@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -44,6 +45,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentException;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.exception.PortOnePaymentHistoryException;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionAbleResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
@@ -220,6 +222,7 @@ class OrderServiceImplTest {
 		assertThat(orderId).isEqualTo(10L);
 		verify(paymentRepository).save(paymentCaptor.capture());
 		assertThat(paymentCaptor.getValue().getPaymentId()).isEqualTo("paymentid");
+		verify(redisTemplate, never()).delete(anyString());
 	}
 
 	@DisplayName("배달 주문 생성 시 주문번호가 정상적으로 생성된다")
@@ -279,6 +282,7 @@ class OrderServiceImplTest {
 		verify(userService, never()).getUser(anyString());
 		verify(eventPublisher, never()).publishEvent(any(Object.class));
 		verify(orderRepository, never()).save(any());
+		verify(redisTemplate).delete("order:payment-lock:paymentid");
 	}
 
 	@DisplayName("이미 사용된 paymentId로 주문하면 결제 조회와 취소 이벤트 없이 거절된다")
@@ -337,6 +341,7 @@ class OrderServiceImplTest {
 		verify(eventPublisher).publishEvent(eventCaptor.capture());
 		assertThat(eventCaptor.getValue().getPaymentId()).isEqualTo("paymentid");
 		verify(orderRepository, never()).save(any());
+		verify(redisTemplate, never()).delete(anyString());
 	}
 
 	@DisplayName("결제 확인 후 장바구니 검증에서 실패하면 결제 취소 이벤트를 발행한다")
@@ -381,6 +386,47 @@ class OrderServiceImplTest {
 		assertThatThrownBy(() -> orderService.createOrder(request, customOAuth2User))
 			.isInstanceOf(InvalidPaymentException.class)
 			.hasMessage("이미 처리 중이거나 사용된 결제입니다.");
+
+		verify(portOneService, never()).getPaidPayment(anyString());
+		verify(eventPublisher, never()).publishEvent(any(Object.class));
+	}
+
+	@DisplayName("PortOne 결제 조회에 실패하면 취소 이벤트 없이 거절하고 재시도할 수 있게 락을 해제한다")
+	@Test
+	void createOrder_paymentLookupFailed_noRollbackEventAndReleaseLock() {
+		// given
+		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
+		OrderCreateRequest request = new OrderCreateRequest(
+			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
+			"paymentid", false, null, 36000, 0
+		);
+		givenPaymentLock(true);
+		when(portOneService.getPaidPayment("paymentid"))
+			.thenThrow(new PortOnePaymentHistoryException("PortOne 결제 조회 실패: ", new RuntimeException("timeout")));
+
+		// when & then
+		assertThrows(PortOnePaymentHistoryException.class, () -> orderService.createOrder(request, customOAuth2User));
+
+		verify(redisTemplate).delete("order:payment-lock:paymentid");
+		verify(userService, never()).getUser(anyString());
+		verify(eventPublisher, never()).publishEvent(any(Object.class));
+	}
+
+	@DisplayName("결제 락 획득 중 Redis 오류가 나면 결제 조회와 취소 이벤트 없이 실패한다")
+	@Test
+	void createOrder_lockError_noRollbackEvent() {
+		// given
+		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
+		OrderCreateRequest request = new OrderCreateRequest(
+			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
+			"paymentid", false, null, 36000, 0
+		);
+		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+		when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+			.thenThrow(new RedisConnectionFailureException("Redis 연결 실패"));
+
+		// when & then
+		assertThrows(RedisConnectionFailureException.class, () -> orderService.createOrder(request, customOAuth2User));
 
 		verify(portOneService, never()).getPaidPayment(anyString());
 		verify(eventPublisher, never()).publishEvent(any(Object.class));
