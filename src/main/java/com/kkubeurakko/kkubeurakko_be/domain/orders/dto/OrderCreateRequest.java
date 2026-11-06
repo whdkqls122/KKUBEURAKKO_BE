@@ -11,6 +11,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 
 import io.micrometer.common.lang.Nullable;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -34,7 +35,7 @@ public record OrderCreateRequest(
 	@Nullable
 	String couponNumber,
 
-	@NotNull(message = "결제 아이디는 필수입니다.")
+	@NotBlank(message = "결제 아이디는 필수입니다.")
 	String paymentId,
 
 	@NotNull(message = "현금영수증 발급 여부는 필수입니다.")

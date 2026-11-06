@@ -125,10 +125,10 @@ public class OrderServiceImpl implements OrderService {
 	public Long createOrder(OrderCreateRequest request, CustomOAuth2User customOAuth2User) {
 
 		try {
-			if (paymentRepository.existsByPaymentId(request.paymentId())) {
-				throw new InvalidPaymentException("이미 사용된 결제입니다.");
-			}
+			// 결제 사용 가능 여부 됨
+			PortOnePaymentResponseDto paymentResponse = getUsablePayment(request.paymentId());
 
+			// 여기부터 실패하면 우리 상점에서 완료된 결제이므로 환불 대상
 			Users user = getUser(customOAuth2User);
 			Cart cart = validateCart(user);
 			Stores store = extractStore(cart);
@@ -143,11 +143,10 @@ public class OrderServiceImpl implements OrderService {
 			int discountAmount = calculateDiscountAmount(user.getUserNumber(), cart, request);
 			int finalAmount = totalAmount - discountAmount;
 
+			validatePaymentAmount(paymentResponse, finalAmount);
+			issueCashReceiptIfRequested(user, request, finalAmount);
+
 			String orderNumber = orderNumberUtil.createOrderNumber(store.getId(), request.orderType());
-
-			PortOnePaymentResponseDto paymentResponse =
-				verifyPaymentAndIssueCashReceipt(user, request, finalAmount);
-
 			UsersCoupons usersCoupon = getUsersCouponIfExists(user, request);
 
 			Orders order = createOrderEntity(
@@ -160,7 +159,7 @@ public class OrderServiceImpl implements OrderService {
 				usersCoupon
 			);
 
-			Payments payment = toPaymentEntity(order, discountAmount, paymentResponse);
+			Payments payment = toPaymentEntity(order, discountAmount, request.paymentId(), paymentResponse);
 			Orders savedOrder = saveOrderAndPayment(order, payment);
 
 			processAfterOrderSaved(user, request, savedOrder.getId(), store.getId(), address);
@@ -412,6 +411,7 @@ public class OrderServiceImpl implements OrderService {
 	private Payments toPaymentEntity(
 		Orders order,
 		int discountAmount,
+		String paymentId,
 		PortOnePaymentResponseDto paymentResponseDto
 	) {
 		return Payments.builder()
@@ -421,7 +421,7 @@ public class OrderServiceImpl implements OrderService {
 			.finalAmount(paymentResponseDto.amount().total())
 			.discountAmount(discountAmount)
 			.transactionId(paymentResponseDto.transactionId())
-			.paymentId(paymentResponseDto.id())
+			.paymentId(paymentId)
 			.build();
 	}
 
@@ -555,24 +555,33 @@ public class OrderServiceImpl implements OrderService {
 		return addresses;
 	}
 
-	private PortOnePaymentResponseDto verifyPaymentAndIssueCashReceipt(
-		Users user,
-		OrderCreateRequest request,
-		int expectedFinalAmount
-	) {
-		PortOnePaymentResponseDto paymentResponse =
-			portOneService.getVerifiedPayment(request.paymentId(), expectedFinalAmount);
+	/**
+	 *  이미 사용된 결제인지와 결제 상태 및 상점을 확인
+	 *  실패 시 결제 취소 대상이 아님
+	 *  */
+	private PortOnePaymentResponseDto getUsablePayment(String paymentId) {
+		if (paymentRepository.existsByPaymentId(paymentId)) {
+			throw new InvalidPaymentException("이미 사용된 결제입니다.");
+		}
+		return portOneService.getPaidPayment(paymentId);
+	}
 
+	private void validatePaymentAmount(PortOnePaymentResponseDto paymentResponse, int expectedFinalAmount) {
+		if (paymentResponse.amount().total() != expectedFinalAmount) {
+			// 결제는 완료됐으므로 환불 대상 예외
+			throw new IllegalStateException("결제 금액이 일치하지 않습니다.");
+		}
+	}
+
+	private void issueCashReceiptIfRequested(Users user, OrderCreateRequest request, int finalAmount) {
 		if (request.isCashReceipt()) {
 			portOneService.issueCashReceipt(
 				user,
 				request.paymentId(),
 				request.cashReceiptRequest(),
-				expectedFinalAmount
+				finalAmount
 			);
 		}
-
-		return paymentResponse;
 	}
 
 	private Orders createOrderEntity(

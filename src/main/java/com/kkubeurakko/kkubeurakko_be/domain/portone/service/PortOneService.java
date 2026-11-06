@@ -25,6 +25,6 @@ public interface PortOneService {
 	//현금 영수증 발급 취소 재시도 요청 메서드
 	void retryCancelIssueCashReceipt(String paymentId);
 
-	//포트원 결제 내역 조회 후 주문에 사용할 수 있는 결제인지 검증
-	PortOnePaymentResponseDto getVerifiedPayment(String paymentId, int expectedAmount);
+	//포트원 결제 내역 조회 후 우리 상점의 완료된 결제인지 검증
+	PortOnePaymentResponseDto getPaidPayment(String paymentId);
 }

@@ -267,20 +267,21 @@ public class PortOneServiceImpl implements PortOneService {
 	}
 
 	@Override
-	public PortOnePaymentResponseDto getVerifiedPayment(String paymentId, int expectedAmount) {
+	public PortOnePaymentResponseDto getPaidPayment(String paymentId) {
 		PortOnePaymentResponseDto payment = getPortOnePayment(paymentId);
 
-		if (!PAID_STATUS.equals(payment.status())) {
-			log.warn("결제 완료 상태가 아님 - paymentId: {}, status: {}", paymentId, payment.status());
+		if (payment == null || !PAID_STATUS.equals(payment.status())) {
+			log.warn("결제 완료 상태가 아님 - paymentId: {}, status: {}",
+				paymentId, payment == null ? null : payment.status());
 			throw new InvalidPaymentException("결제가 완료되지 않았습니다.");
 		}
 		if (!storeId.equals(payment.storeId())) {
 			log.warn("결제 상점 불일치 - paymentId: {}, storeId: {}", paymentId, payment.storeId());
 			throw new InvalidPaymentException("결제 상점 정보가 일치하지 않습니다.");
 		}
-		if (payment.amount().total() != expectedAmount) {
-			// 결제는 완료됐으므로 주문 생성 실패 시 자동 환불 대상
-			throw new IllegalStateException("결제 금액이 일치하지 않습니다.");
+		if (payment.amount() == null) {
+			log.warn("결제 금액 정보 없음 - paymentId: {}", paymentId);
+			throw new InvalidPaymentException("결제 금액 정보를 확인할 수 없습니다.");
 		}
 		return payment;
 	}
