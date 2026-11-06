@@ -58,43 +58,47 @@ class PortOneServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("완료 상태이고 상점·금액이 일치하면 결제 정보를 반환한다")
-	void getVerifiedPayment_success() {
+	@DisplayName("우리 상점의 완료된 결제면 결제 정보를 반환한다")
+	void getPaidPayment_success() {
 		givenPortOneResponse(payment("PAID", STORE_ID, 36000));
 
-		PortOnePaymentResponseDto result = portOneService.getVerifiedPayment(PAYMENT_ID, 36000);
+		PortOnePaymentResponseDto result = portOneService.getPaidPayment(PAYMENT_ID);
 
 		assertThat(result.status()).isEqualTo("PAID");
 	}
 
 	@Test
 	@DisplayName("결제가 완료 상태가 아니면 InvalidPaymentException이 발생한다")
-	void getVerifiedPayment_notPaid() {
+	void getPaidPayment_notPaid() {
 		givenPortOneResponse(payment("READY", STORE_ID, 36000));
 
-		assertThatThrownBy(() -> portOneService.getVerifiedPayment(PAYMENT_ID, 36000))
+		assertThatThrownBy(() -> portOneService.getPaidPayment(PAYMENT_ID))
 			.isInstanceOf(InvalidPaymentException.class)
 			.hasMessage("결제가 완료되지 않았습니다.");
 	}
 
 	@Test
 	@DisplayName("다른 상점의 결제면 InvalidPaymentException이 발생한다")
-	void getVerifiedPayment_otherStore() {
+	void getPaidPayment_otherStore() {
 		givenPortOneResponse(payment("PAID", "store-other", 36000));
 
-		assertThatThrownBy(() -> portOneService.getVerifiedPayment(PAYMENT_ID, 36000))
+		assertThatThrownBy(() -> portOneService.getPaidPayment(PAYMENT_ID))
 			.isInstanceOf(InvalidPaymentException.class)
 			.hasMessage("결제 상점 정보가 일치하지 않습니다.");
 	}
 
 	@Test
-	@DisplayName("결제 금액이 다르면 환불 대상 예외(IllegalStateException)가 발생한다")
-	void getVerifiedPayment_amountMismatch() {
-		givenPortOneResponse(payment("PAID", STORE_ID, 30000));
+	@DisplayName("PortOne 응답이 비어 있으면 InvalidPaymentException이 발생한다")
+	void getPaidPayment_emptyBody() {
+		given(restTemplate.exchange(
+			anyString(),
+			eq(HttpMethod.GET),
+			any(HttpEntity.class),
+			eq(PortOnePaymentResponseDto.class)
+		)).willReturn(ResponseEntity.ok(null));
 
-		assertThatThrownBy(() -> portOneService.getVerifiedPayment(PAYMENT_ID, 36000))
-			.isInstanceOf(IllegalStateException.class)
-			.isNotInstanceOf(InvalidPaymentException.class)
-			.hasMessage("결제 금액이 일치하지 않습니다.");
+		assertThatThrownBy(() -> portOneService.getPaidPayment(PAYMENT_ID))
+			.isInstanceOf(InvalidPaymentException.class)
+			.hasMessage("결제가 완료되지 않았습니다.");
 	}
 }
