@@ -130,11 +130,10 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional
 	@Override
 	public Long createOrder(OrderCreateRequest request, CustomOAuth2User customOAuth2User) {
+		// 결제 확인 전 실패(중복, 처리 중, 락 오류, 조회 실패, 미완료 결제)는 취소 대상이 아니므로 롤백 이벤트 없이 그대로 던짐
+		PortOnePaymentResponseDto paymentResponse = getUsablePayment(request.paymentId());
 
 		try {
-			// 결제 사용 가능 여부 됨
-			PortOnePaymentResponseDto paymentResponse = getUsablePayment(request.paymentId());
-
 			// 여기부터 실패하면 우리 상점에서 완료된 결제이므로 환불 대상
 			Users user = getUser(customOAuth2User);
 			Cart cart = validateCart(user);
@@ -172,9 +171,6 @@ public class OrderServiceImpl implements OrderService {
 			processAfterOrderSaved(user, request, savedOrder.getId(), store.getId(), address);
 
 			return savedOrder.getId();
-		} catch (InvalidPaymentException e) {
-			// 완료되지 않았거나 사용할 수 없는 결제 - 취소할 결제가 없거나 취소하면 안 되므로 롤백 이벤트를 발행하지 않음
-			throw e;
 		} catch (Exception e) {
 			OrderCreateException exception =
 				new OrderCreateException(
@@ -566,24 +562,38 @@ public class OrderServiceImpl implements OrderService {
 	 *  이미 사용된 결제인지와 결제 상태 및 상점을 확인
 	 *  실패 시 결제 취소 대상이 아님
 	 *  */
-	/** 이미 사용됐거나 처리 중인 결제인지와 결제 상태·상점을 확인한다. 실패 시 결제 취소 대상이 아니다. */
 	private PortOnePaymentResponseDto getUsablePayment(String paymentId) {
 		if (paymentRepository.existsByPaymentId(paymentId)) {
 			throw new InvalidPaymentException("이미 사용된 결제입니다.");
 		}
 		acquirePaymentLock(paymentId);
-		return portOneService.getPaidPayment(paymentId);
+		try {
+			return portOneService.getPaidPayment(paymentId);
+		} catch (RuntimeException e) {
+			// 결제 확인 전이라 처리한 것이 없으므로, 결제 완료 후 다시 시도할 수 있게 락 해제
+			releasePaymentLock(paymentId);
+			throw e;
+		}
 	}
-
 	/**
-	 * 같은 결제로 주문을 동시에 처리하지 않도록 결제별로 한 번만 진입을 허용
-	 * 결제는 한 번만 쓰이므로 락은 해제하지 않고 TTL로 만료시킨다.
+	 * 같은 결제로 주문을 동시에 처리하지 않도록 결제별로 한 번만 진입을 허용한다.
+	 * 결제 확인 이후에는 성공(사용 완료)이든 실패(환불 대상)든 다시 쓰면 안 되므로 락을 해제하지 않고 TTL로 만료시킨다.
 	 */
+
 	private void acquirePaymentLock(String paymentId) {
 		Boolean acquired = redisTemplate.opsForValue()
 			.setIfAbsent(PAYMENT_LOCK_PREFIX + paymentId, "LOCKED", PAYMENT_LOCK_TTL);
 		if (!Boolean.TRUE.equals(acquired)) {
 			throw new InvalidPaymentException("이미 처리 중이거나 사용된 결제입니다.");
+		}
+	}
+
+	private void releasePaymentLock(String paymentId) {
+		try {
+			redisTemplate.delete(PAYMENT_LOCK_PREFIX + paymentId);
+		} catch (RuntimeException e) {
+			// 해제 실패 시 원래 예외를 가리지 않도록 로그만 남김 (TTL로 만료)
+			log.warn("결제 락 해제 실패 - paymentId: {}", paymentId, e);
 		}
 	}
 
