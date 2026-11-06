@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -93,6 +96,16 @@ class OrderServiceImplTest {
 	@InjectMocks
 	private OrderServiceImpl orderService;
 
+	@Mock
+	private RedisTemplate<String, String> redisTemplate;
+	@Mock
+	private ValueOperations<String, String> valueOperations;
+
+	private void givenPaymentLock(boolean acquired) {
+		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+		when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenReturn(acquired);
+	}
+
 	@Test
 	@DisplayName("주문 내역 목록이 정상적으로 조회 되는지 검증한다.")
 	void getAllOrderHistory() {
@@ -169,6 +182,7 @@ class OrderServiceImplTest {
 	@DisplayName("배달 주문 생성이 정상적으로 처리되는지 검증한다")
 	void createOrder() {
 		// given
+		givenPaymentLock(true);
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 		Cart cart = TestFixture.createCartWithOneItem(user);
 		Addresses address = TestFixture.createAddress(1L, user);
@@ -212,6 +226,7 @@ class OrderServiceImplTest {
 	@Test
 	void createOrder_withOrderNumber() {
 		// given
+		givenPaymentLock(true);
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 		Cart cart = TestFixture.createCartWithOneItem(user);
 		Stores stores = TestFixture.createStore();
@@ -249,6 +264,7 @@ class OrderServiceImplTest {
 	@Test
 	void createOrder_invalidPayment_noRollbackEvent() {
 		// given
+		givenPaymentLock(true);
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
 		OrderCreateRequest request = new OrderCreateRequest(
 			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
@@ -282,6 +298,7 @@ class OrderServiceImplTest {
 			.hasMessage("이미 사용된 결제입니다.");
 
 		verify(portOneService, never()).getPaidPayment(anyString());
+		verify(redisTemplate, never()).opsForValue();
 		verify(eventPublisher, never()).publishEvent(any(Object.class));
 		verify(orderRepository, never()).save(any());
 	}
@@ -290,6 +307,7 @@ class OrderServiceImplTest {
 	@Test
 	void createOrder_amountMismatch_publishesRollbackEvent() {
 		// given
+		givenPaymentLock(true);
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 		Cart cart = TestFixture.createCartWithOneItem(user);
 		Addresses address = TestFixture.createAddress(1L, user);
@@ -325,6 +343,7 @@ class OrderServiceImplTest {
 	@Test
 	void createOrder_emptyCartAfterPaid_publishesRollbackEvent() {
 		// given: 장바구니 없는 사용자
+		givenPaymentLock(true);
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
@@ -345,6 +364,26 @@ class OrderServiceImplTest {
 		ArgumentCaptor<OrderCreateException> eventCaptor = ArgumentCaptor.forClass(OrderCreateException.class);
 		verify(eventPublisher).publishEvent(eventCaptor.capture());
 		assertThat(eventCaptor.getValue().getPaymentId()).isEqualTo("paymentid");
+	}
+
+	@DisplayName("같은 결제가 이미 처리 중이면 결제 조회와 취소 이벤트 없이 거절된다")
+	@Test
+	void createOrder_paymentLocked_noRollbackEvent() {
+		// given
+		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
+		OrderCreateRequest request = new OrderCreateRequest(
+			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
+			"paymentid", false, null, 36000, 0
+		);
+		givenPaymentLock(false);
+
+		// when & then
+		assertThatThrownBy(() -> orderService.createOrder(request, customOAuth2User))
+			.isInstanceOf(InvalidPaymentException.class)
+			.hasMessage("이미 처리 중이거나 사용된 결제입니다.");
+
+		verify(portOneService, never()).getPaidPayment(anyString());
+		verify(eventPublisher, never()).publishEvent(any(Object.class));
 	}
 
 	@DisplayName("PENDING → ACCEPTED로 주문이 접수된다.")
