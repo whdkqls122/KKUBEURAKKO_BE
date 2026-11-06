@@ -275,6 +275,11 @@ public class PortOneServiceImpl implements PortOneService {
 				paymentId, payment == null ? null : payment.status());
 			throw new InvalidPaymentException("결제가 완료되지 않았습니다.");
 		}
+		// URL 해석 과정에서 다른 결제가 조회됐을 수 있으므로 요청한 결제인지 확인
+		if (!paymentId.equals(payment.id())) {
+			log.warn("결제 ID 불일치 - 요청: {}, 조회: {}", paymentId, payment.id());
+			throw new InvalidPaymentException("결제 정보가 일치하지 않습니다.");
+		}
 		if (!storeId.equals(payment.storeId())) {
 			log.warn("결제 상점 불일치 - paymentId: {}, storeId: {}", paymentId, payment.storeId());
 			throw new InvalidPaymentException("결제 상점 정보가 일치하지 않습니다.");

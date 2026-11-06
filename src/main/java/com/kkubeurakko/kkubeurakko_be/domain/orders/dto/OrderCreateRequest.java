@@ -13,6 +13,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import io.micrometer.common.lang.Nullable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
@@ -36,6 +37,9 @@ public record OrderCreateRequest(
 	String couponNumber,
 
 	@NotBlank(message = "결제 아이디는 필수입니다.")
+	@Size(max = 100, message = "결제 아이디는 최대 100자까지 가능합니다.")
+	@Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "결제 아이디 형식이 올바르지 않습니다.")
+
 	String paymentId,
 
 	@NotNull(message = "현금영수증 발급 여부는 필수입니다.")
