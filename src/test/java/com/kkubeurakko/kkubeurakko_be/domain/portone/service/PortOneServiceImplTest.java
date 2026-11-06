@@ -13,14 +13,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentException;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.exception.PortOnePaymentHistoryException;
 
 @ExtendWith(MockitoExtension.class)
 class PortOneServiceImplTest {
@@ -100,5 +104,57 @@ class PortOneServiceImplTest {
 		assertThatThrownBy(() -> portOneService.getPaidPayment(PAYMENT_ID))
 			.isInstanceOf(InvalidPaymentException.class)
 			.hasMessage("결제가 완료되지 않았습니다.");
+	}
+
+	@Test
+	@DisplayName("조회된 결제 ID가 요청한 결제 ID와 다르면 InvalidPaymentException이 발생한다")
+	void getPaidPayment_otherPaymentId() {
+		PortOnePaymentResponseDto base = payment("PAID", STORE_ID, 36000);
+		givenPortOneResponse(new PortOnePaymentResponseDto(
+			base.status(), "payment-other", base.transactionId(), base.storeId(), base.amount(), base.method()));
+
+		assertThatThrownBy(() -> portOneService.getPaidPayment(PAYMENT_ID))
+			.isInstanceOf(InvalidPaymentException.class)
+			.hasMessage("결제 정보가 일치하지 않습니다.");
+	}
+
+	@Test
+	@DisplayName("결제 금액 정보가 없으면 InvalidPaymentException이 발생한다")
+	void getPaidPayment_noAmount() {
+		PortOnePaymentResponseDto base = payment("PAID", STORE_ID, 36000);
+		givenPortOneResponse(new PortOnePaymentResponseDto(
+			base.status(), base.id(), base.transactionId(), base.storeId(), null, base.method()));
+
+		assertThatThrownBy(() -> portOneService.getPaidPayment(PAYMENT_ID))
+			.isInstanceOf(InvalidPaymentException.class)
+			.hasMessage("결제 금액 정보를 확인할 수 없습니다.");
+	}
+
+	@Test
+	@DisplayName("PortOne이 오류 응답을 주면 PortOnePaymentHistoryException이 발생한다")
+	void getPaidPayment_httpError() {
+		given(restTemplate.exchange(
+			anyString(),
+			eq(HttpMethod.GET),
+			any(HttpEntity.class),
+			eq(PortOnePaymentResponseDto.class)
+		)).willThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
+		assertThatThrownBy(() -> portOneService.getPaidPayment(PAYMENT_ID))
+			.isInstanceOf(PortOnePaymentHistoryException.class);
+	}
+
+	@Test
+	@DisplayName("PortOne 응답이 시간 초과되면 PortOnePaymentHistoryException이 발생한다")
+	void getPaidPayment_timeout() {
+		given(restTemplate.exchange(
+			anyString(),
+			eq(HttpMethod.GET),
+			any(HttpEntity.class),
+			eq(PortOnePaymentResponseDto.class)
+		)).willThrow(new ResourceAccessException("Read timed out"));
+
+		assertThatThrownBy(() -> portOneService.getPaidPayment(PAYMENT_ID))
+			.isInstanceOf(PortOnePaymentHistoryException.class);
 	}
 }
