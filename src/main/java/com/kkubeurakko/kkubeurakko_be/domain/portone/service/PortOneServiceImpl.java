@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class PortOneServiceImpl implements PortOneService {
-	private final RestTemplate restTemplate;
+	private final RestTemplate portOneRestTemplate;
 	@Value("${spring.portOne.store-id}")
 	private String storeId;
 	@Value("${spring.portOne.request-uri}")
@@ -54,7 +54,7 @@ public class PortOneServiceImpl implements PortOneService {
 			HttpEntity<Void> entity = new HttpEntity<>(createHeaders());
 
 			ResponseEntity<PortOnePaymentResponseDto> response =
-				restTemplate.exchange(url, HttpMethod.GET, entity, PortOnePaymentResponseDto.class);
+				portOneRestTemplate.exchange(url, HttpMethod.GET, entity, PortOnePaymentResponseDto.class);
 
 			return response.getBody();
 
@@ -80,7 +80,7 @@ public class PortOneServiceImpl implements PortOneService {
 			HttpEntity<Void> entity = new HttpEntity<>(createHeaders());
 
 			ResponseEntity<PortOneVerifyInfoResponseDto> response =
-				restTemplate.exchange(url, HttpMethod.GET, entity, PortOneVerifyInfoResponseDto.class);
+				portOneRestTemplate.exchange(url, HttpMethod.GET, entity, PortOneVerifyInfoResponseDto.class);
 
 			return response.getBody();
 		} catch (HttpStatusCodeException e) {
@@ -184,7 +184,7 @@ public class PortOneServiceImpl implements PortOneService {
 			HttpEntity<PortOneCashReceiptRequestDto> entity =
 				new HttpEntity<>(body, headers);
 
-			restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+			portOneRestTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
 
 			log.info("현금영수증 발급 성공 - paymentId: {}", paymentId);
 		} catch (HttpStatusCodeException e) {
@@ -292,7 +292,7 @@ public class PortOneServiceImpl implements PortOneService {
 		HttpEntity<Void> entity =
 			new HttpEntity<>(createHeaders());
 
-		restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+		portOneRestTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
 	}
 
 	private void doCancelPayment(String paymentId) {
@@ -306,7 +306,7 @@ public class PortOneServiceImpl implements PortOneService {
 		HttpEntity<PortOnePaymentCancelRequestDto> entity =
 			new HttpEntity<>(body, createHeaders());
 
-		restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+		portOneRestTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
 	}
 
 	private HttpHeaders createHeaders() {
