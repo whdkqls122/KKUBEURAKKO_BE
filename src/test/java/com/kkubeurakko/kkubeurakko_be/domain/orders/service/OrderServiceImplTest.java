@@ -6,7 +6,14 @@ import static org.mockito.BDDMockito.*;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -442,6 +449,66 @@ class OrderServiceImplTest {
 
 		verify(portOneService, never()).getPaidPayment(anyString());
 		verify(eventPublisher, never()).publishEvent(any(Object.class));
+	}
+
+	@DisplayName("같은 결제로 두 요청이 동시에 들어오면 먼저 들어온 요청만 주문을 생성하고 나머지는 취소 이벤트 없이 거절된다")
+	@Test
+	void createOrder_concurrentSamePayment_onlyOneOrderCreated() throws Exception {
+		// given: 실제 Redis처럼 키가 없을 때만 저장되는 락 대역
+		Map<String, String> locks = new ConcurrentHashMap<>();
+		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+		when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+			.thenAnswer(inv -> locks.putIfAbsent(inv.getArgument(0), inv.getArgument(1)) == null);
+
+		Users user = TestFixture.createUser("kakao_1234", "01012345678");
+		Cart cart = TestFixture.createCartWithOneItem(user);
+		Addresses address = TestFixture.createAddress(1L, user);
+		Stores stores = TestFixture.createStore();
+		ReflectionTestUtils.setField(user, "cart", cart);
+
+		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
+		when(customOAuth2User.getName()).thenReturn("kakao_1234");
+
+		OrderCreateRequest request = new OrderCreateRequest(
+			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
+			"paymentid", false, null, 36000, 0
+		);
+
+		// 첫 요청이 락을 잡은 채 결제 조회에서 멈춰 있도록 해 두 요청을 겹치게 함
+		CountDownLatch firstEntered = new CountDownLatch(1);
+		CountDownLatch releaseFirst = new CountDownLatch(1);
+		when(portOneService.getPaidPayment("paymentid")).thenAnswer(inv -> {
+			firstEntered.countDown();
+			releaseFirst.await(5, TimeUnit.SECONDS);
+			return TestFixture.createPortOnePaymentResponse("paymentid", "tx-123", 36000);
+		});
+		when(userService.getUser("kakao_1234")).thenReturn(user);
+		when(addressRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(address));
+		when(deliveryRegionService.isDeliverable(stores.getId(), address.getLatitude(), address.getLongitude()))
+			.thenReturn(DeliveryRegionAbleResponse.builder().able(true).build());
+		when(orderRepository.save(any())).thenReturn(Orders.builder().id(10L).build());
+
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		try {
+			// when: 첫 요청이 처리 중일 때 같은 결제로 두 번째 요청
+			Future<Long> first = executor.submit(() -> orderService.createOrder(request, customOAuth2User));
+			assertTrue(firstEntered.await(5, TimeUnit.SECONDS));
+
+			assertThatThrownBy(() -> orderService.createOrder(request, customOAuth2User))
+				.isInstanceOf(InvalidPaymentException.class)
+				.hasMessage("이미 처리 중이거나 사용된 결제입니다.");
+
+			releaseFirst.countDown();
+
+			// then
+			assertThat(first.get(5, TimeUnit.SECONDS)).isEqualTo(10L);
+		} finally {
+			executor.shutdownNow();
+		}
+
+		verify(portOneService, times(1)).getPaidPayment("paymentid");
+		verify(orderRepository, times(1)).save(any());
+		verify(eventPublisher, never()).publishEvent(any(OrderCreateException.class));
 	}
 
 	@DisplayName("PENDING → ACCEPTED로 주문이 접수된다.")
