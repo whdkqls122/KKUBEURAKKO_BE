@@ -5,9 +5,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,6 +85,12 @@ public class OrderServiceImpl implements OrderService {
 
 	private static final String PAYMENT_LOCK_PREFIX = "order:payment-lock:";
 	private static final Duration PAYMENT_LOCK_TTL = Duration.ofMinutes(10);
+
+	// 락 값(토큰)이 내 것일 때만 삭제: 만료 후 다른 요청이 잡은 락을 지우지 않도록 확인과 삭제를 한 번에 실행
+	private static final RedisScript<Long> RELEASE_LOCK_SCRIPT = new DefaultRedisScript<>(
+		"if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
+		Long.class
+	);
 
 	@Override
 	@Transactional(readOnly = true)
@@ -566,31 +575,34 @@ public class OrderServiceImpl implements OrderService {
 		if (paymentRepository.existsByPaymentId(paymentId)) {
 			throw new InvalidPaymentException("이미 사용된 결제입니다.");
 		}
-		acquirePaymentLock(paymentId);
+		String lockToken = acquirePaymentLock(paymentId);
 		try {
 			return portOneService.getPaidPayment(paymentId);
 		} catch (RuntimeException e) {
 			// 결제 확인 전이라 처리한 것이 없으므로, 결제 완료 후 다시 시도할 수 있게 락 해제
-			releasePaymentLock(paymentId);
+			releasePaymentLock(paymentId, lockToken);
 			throw e;
 		}
 	}
+
 	/**
 	 * 같은 결제로 주문을 동시에 처리하지 않도록 결제별로 한 번만 진입을 허용한다.
 	 * 결제 확인 이후에는 성공(사용 완료)이든 실패(환불 대상)든 다시 쓰면 안 되므로 락을 해제하지 않고 TTL로 만료시킨다.
 	 */
 
-	private void acquirePaymentLock(String paymentId) {
+	private String acquirePaymentLock(String paymentId) {
+		String lockToken = UUID.randomUUID().toString();
 		Boolean acquired = redisTemplate.opsForValue()
-			.setIfAbsent(PAYMENT_LOCK_PREFIX + paymentId, "LOCKED", PAYMENT_LOCK_TTL);
+			.setIfAbsent(PAYMENT_LOCK_PREFIX + paymentId, lockToken, PAYMENT_LOCK_TTL);
 		if (!Boolean.TRUE.equals(acquired)) {
 			throw new InvalidPaymentException("이미 처리 중이거나 사용된 결제입니다.");
 		}
+		return lockToken;
 	}
 
-	private void releasePaymentLock(String paymentId) {
+	private void releasePaymentLock(String paymentId, String lockToken) {
 		try {
-			redisTemplate.delete(PAYMENT_LOCK_PREFIX + paymentId);
+			redisTemplate.execute(RELEASE_LOCK_SCRIPT, List.of(PAYMENT_LOCK_PREFIX + paymentId), lockToken);
 		} catch (RuntimeException e) {
 			// 해제 실패 시 원래 예외를 가리지 않도록 로그만 남김 (TTL로 만료)
 			log.warn("결제 락 해제 실패 - paymentId: {}", paymentId, e);
