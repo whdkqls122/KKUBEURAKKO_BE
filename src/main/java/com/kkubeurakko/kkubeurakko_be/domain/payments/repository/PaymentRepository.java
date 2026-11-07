@@ -7,4 +7,5 @@ import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payments, Long> {
+	boolean existsByPaymentId(String paymentId);
 }

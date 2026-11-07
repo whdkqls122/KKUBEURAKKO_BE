@@ -32,6 +32,10 @@ public class Payments extends BaseEntity {
 	@Column(name = "payments_id")
 	private Long id;
 
+	// PortOne 결제 ID. 같은 결제로 주문이 두 번 만들어지지 않도록 unique
+	@Column(name = "payment_id", unique = true, length = 100)
+	private String paymentId;
+
 	@Column(name = "total_amount", nullable = false)
 	private int totalAmount;
 

@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.CashReceiptRequestDto;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentException;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.IssueCashReceiptCustomerInput;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PaymentAmountInput;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOneCashReceiptRequestDto;
@@ -33,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class PortOneServiceImpl implements PortOneService {
-	private final RestTemplate restTemplate;
+	private final RestTemplate portOneRestTemplate;
 	@Value("${spring.portOne.store-id}")
 	private String storeId;
 	@Value("${spring.portOne.request-uri}")
@@ -44,15 +45,16 @@ public class PortOneServiceImpl implements PortOneService {
 	private String paymentChannelKey;
 	private final ObjectMapper objectMapper;
 
-	@Override
-	public PortOnePaymentResponseDto getPortOnePayment(String paymentId) {
+	private static final String PAID_STATUS = "PAID";
+
+	private PortOnePaymentResponseDto getPortOnePayment(String paymentId) {
 		try {
 			String url = requestUri + "/payments/" + paymentId;
 
 			HttpEntity<Void> entity = new HttpEntity<>(createHeaders());
 
 			ResponseEntity<PortOnePaymentResponseDto> response =
-				restTemplate.exchange(url, HttpMethod.GET, entity, PortOnePaymentResponseDto.class);
+				portOneRestTemplate.exchange(url, HttpMethod.GET, entity, PortOnePaymentResponseDto.class);
 
 			return response.getBody();
 
@@ -78,7 +80,7 @@ public class PortOneServiceImpl implements PortOneService {
 			HttpEntity<Void> entity = new HttpEntity<>(createHeaders());
 
 			ResponseEntity<PortOneVerifyInfoResponseDto> response =
-				restTemplate.exchange(url, HttpMethod.GET, entity, PortOneVerifyInfoResponseDto.class);
+				portOneRestTemplate.exchange(url, HttpMethod.GET, entity, PortOneVerifyInfoResponseDto.class);
 
 			return response.getBody();
 		} catch (HttpStatusCodeException e) {
@@ -182,7 +184,7 @@ public class PortOneServiceImpl implements PortOneService {
 			HttpEntity<PortOneCashReceiptRequestDto> entity =
 				new HttpEntity<>(body, headers);
 
-			restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+			portOneRestTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
 
 			log.info("현금영수증 발급 성공 - paymentId: {}", paymentId);
 		} catch (HttpStatusCodeException e) {
@@ -264,13 +266,38 @@ public class PortOneServiceImpl implements PortOneService {
 		}
 	}
 
+	@Override
+	public PortOnePaymentResponseDto getPaidPayment(String paymentId) {
+		PortOnePaymentResponseDto payment = getPortOnePayment(paymentId);
+
+		if (payment == null || !PAID_STATUS.equals(payment.status())) {
+			log.warn("결제 완료 상태가 아님 - paymentId: {}, status: {}",
+				paymentId, payment == null ? null : payment.status());
+			throw new InvalidPaymentException("결제가 완료되지 않았습니다.");
+		}
+		// URL 해석 과정에서 다른 결제가 조회됐을 수 있으므로 요청한 결제인지 확인
+		if (!paymentId.equals(payment.id())) {
+			log.warn("결제 ID 불일치 - 요청: {}, 조회: {}", paymentId, payment.id());
+			throw new InvalidPaymentException("결제 정보가 일치하지 않습니다.");
+		}
+		if (!storeId.equals(payment.storeId())) {
+			log.warn("결제 상점 불일치 - paymentId: {}, storeId: {}", paymentId, payment.storeId());
+			throw new InvalidPaymentException("결제 상점 정보가 일치하지 않습니다.");
+		}
+		if (payment.amount() == null) {
+			log.warn("결제 금액 정보 없음 - paymentId: {}", paymentId);
+			throw new InvalidPaymentException("결제 금액 정보를 확인할 수 없습니다.");
+		}
+		return payment;
+	}
+
 	private void doCancelCashReceipt(String paymentId) {
 		String url = requestUri + "/payments/" + paymentId + "/cash-receipt/cancel";
 
 		HttpEntity<Void> entity =
 			new HttpEntity<>(createHeaders());
 
-		restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+		portOneRestTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
 	}
 
 	private void doCancelPayment(String paymentId) {
@@ -284,7 +311,7 @@ public class PortOneServiceImpl implements PortOneService {
 		HttpEntity<PortOnePaymentCancelRequestDto> entity =
 			new HttpEntity<>(body, createHeaders());
 
-		restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+		portOneRestTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
 	}
 
 	private HttpHeaders createHeaders() {

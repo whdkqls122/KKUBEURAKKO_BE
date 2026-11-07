@@ -19,6 +19,18 @@ public class RestTemplateConfig {
 		return new RestTemplate();
 	}
 
+	/**
+	 * PortOne 결제 API 전용
+	 * 응답 지연 시 무한 대기하지 않도록 타입아웃 설정
+	 * */
+	@Bean
+	public RestTemplate portOneRestTemplate() {
+		return new RestTemplateBuilder()
+			.connectTimeout(Duration.ofSeconds(3))
+			.readTimeout(Duration.ofSeconds(10))
+			.build();
+	}
+
 	@Bean
 	public RestTemplate oauthRestTemplate() {
 		return new RestTemplateBuilder().connectTimeout(Duration.ofSeconds(3)).readTimeout(Duration.ofSeconds(5))

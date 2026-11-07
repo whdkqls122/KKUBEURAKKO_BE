@@ -1,11 +1,16 @@
 package com.kkubeurakko.kkubeurakko_be.domain.orders.service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +42,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.dto.PaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentException;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
@@ -74,6 +80,17 @@ public class OrderServiceImpl implements OrderService {
 	private final OrderDecryptService orderDecryptService;
 	private final StoreBusinessHoursRepository storeBusinessHoursRepository;
 	private final DeliveryRegionService deliveryRegionService;
+
+	private final RedisTemplate<String, String> redisTemplate;
+
+	private static final String PAYMENT_LOCK_PREFIX = "order:payment-lock:";
+	private static final Duration PAYMENT_LOCK_TTL = Duration.ofMinutes(10);
+
+	// 락 값(토큰)이 내 것일 때만 삭제: 만료 후 다른 요청이 잡은 락을 지우지 않도록 확인과 삭제를 한 번에 실행
+	private static final RedisScript<Long> RELEASE_LOCK_SCRIPT = new DefaultRedisScript<>(
+		"if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
+		Long.class
+	);
 
 	@Override
 	@Transactional(readOnly = true)
@@ -122,8 +139,11 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional
 	@Override
 	public Long createOrder(OrderCreateRequest request, CustomOAuth2User customOAuth2User) {
+		// 결제 확인 전 실패(중복, 처리 중, 락 오류, 조회 실패, 미완료 결제)는 취소 대상이 아니므로 롤백 이벤트 없이 그대로 던짐
+		PortOnePaymentResponseDto paymentResponse = getUsablePayment(request.paymentId());
 
 		try {
+			// 여기부터 실패하면 우리 상점에서 완료된 결제이므로 환불 대상
 			Users user = getUser(customOAuth2User);
 			Cart cart = validateCart(user);
 			Stores store = extractStore(cart);
@@ -138,11 +158,10 @@ public class OrderServiceImpl implements OrderService {
 			int discountAmount = calculateDiscountAmount(user.getUserNumber(), cart, request);
 			int finalAmount = totalAmount - discountAmount;
 
+			validatePaymentAmount(paymentResponse, finalAmount);
+			issueCashReceiptIfRequested(user, request, finalAmount);
+
 			String orderNumber = orderNumberUtil.createOrderNumber(store.getId(), request.orderType());
-
-			PortOnePaymentResponseDto paymentResponse =
-				verifyPaymentAndIssueCashReceipt(user, request, finalAmount);
-
 			UsersCoupons usersCoupon = getUsersCouponIfExists(user, request);
 
 			Orders order = createOrderEntity(
@@ -155,7 +174,7 @@ public class OrderServiceImpl implements OrderService {
 				usersCoupon
 			);
 
-			Payments payment = toPaymentEntity(order, discountAmount, paymentResponse);
+			Payments payment = toPaymentEntity(order, discountAmount, request.paymentId(), paymentResponse);
 			Orders savedOrder = saveOrderAndPayment(order, payment);
 
 			processAfterOrderSaved(user, request, savedOrder.getId(), store.getId(), address);
@@ -404,6 +423,7 @@ public class OrderServiceImpl implements OrderService {
 	private Payments toPaymentEntity(
 		Orders order,
 		int discountAmount,
+		String paymentId,
 		PortOnePaymentResponseDto paymentResponseDto
 	) {
 		return Payments.builder()
@@ -413,6 +433,7 @@ public class OrderServiceImpl implements OrderService {
 			.finalAmount(paymentResponseDto.amount().total())
 			.discountAmount(discountAmount)
 			.transactionId(paymentResponseDto.transactionId())
+			.paymentId(paymentId)
 			.build();
 	}
 
@@ -546,28 +567,64 @@ public class OrderServiceImpl implements OrderService {
 		return addresses;
 	}
 
-	private PortOnePaymentResponseDto verifyPaymentAndIssueCashReceipt(
-		Users user,
-		OrderCreateRequest request,
-		int expectedFinalAmount
-	) {
-		PortOnePaymentResponseDto paymentResponse =
-			portOneService.getPortOnePayment(request.paymentId());
+	/**
+	 *  이미 사용된 결제인지와 결제 상태 및 상점을 확인
+	 *  실패 시 결제 취소 대상이 아님
+	 *  */
+	private PortOnePaymentResponseDto getUsablePayment(String paymentId) {
+		if (paymentRepository.existsByPaymentId(paymentId)) {
+			throw new InvalidPaymentException("이미 사용된 결제입니다.");
+		}
+		String lockToken = acquirePaymentLock(paymentId);
+		try {
+			return portOneService.getPaidPayment(paymentId);
+		} catch (RuntimeException e) {
+			// 결제 확인 전이라 처리한 것이 없으므로, 결제 완료 후 다시 시도할 수 있게 락 해제
+			releasePaymentLock(paymentId, lockToken);
+			throw e;
+		}
+	}
 
+	/**
+	 * 같은 결제로 주문을 동시에 처리하지 않도록 결제별로 한 번만 진입을 허용한다.
+	 * 결제 확인 이후에는 성공(사용 완료)이든 실패(환불 대상)든 다시 쓰면 안 되므로 락을 해제하지 않고 TTL로 만료시킨다.
+	 */
+
+	private String acquirePaymentLock(String paymentId) {
+		String lockToken = UUID.randomUUID().toString();
+		Boolean acquired = redisTemplate.opsForValue()
+			.setIfAbsent(PAYMENT_LOCK_PREFIX + paymentId, lockToken, PAYMENT_LOCK_TTL);
+		if (!Boolean.TRUE.equals(acquired)) {
+			throw new InvalidPaymentException("이미 처리 중이거나 사용된 결제입니다.");
+		}
+		return lockToken;
+	}
+
+	private void releasePaymentLock(String paymentId, String lockToken) {
+		try {
+			redisTemplate.execute(RELEASE_LOCK_SCRIPT, List.of(PAYMENT_LOCK_PREFIX + paymentId), lockToken);
+		} catch (RuntimeException e) {
+			// 해제 실패 시 원래 예외를 가리지 않도록 로그만 남김 (TTL로 만료)
+			log.warn("결제 락 해제 실패 - paymentId: {}", paymentId, e);
+		}
+	}
+
+	private void validatePaymentAmount(PortOnePaymentResponseDto paymentResponse, int expectedFinalAmount) {
 		if (paymentResponse.amount().total() != expectedFinalAmount) {
+			// 결제는 완료됐으므로 환불 대상 예외
 			throw new IllegalStateException("결제 금액이 일치하지 않습니다.");
 		}
+	}
 
+	private void issueCashReceiptIfRequested(Users user, OrderCreateRequest request, int finalAmount) {
 		if (request.isCashReceipt()) {
 			portOneService.issueCashReceipt(
 				user,
 				request.paymentId(),
 				request.cashReceiptRequest(),
-				expectedFinalAmount
+				finalAmount
 			);
 		}
-
-		return paymentResponse;
 	}
 
 	private Orders createOrderEntity(
