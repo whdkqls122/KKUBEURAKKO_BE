@@ -19,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -106,6 +107,17 @@ class OrderServiceImplTest {
 	private void givenPaymentLock(boolean acquired) {
 		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 		when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenReturn(acquired);
+	}
+
+	/** 락을 잡을 때 쓴 토큰으로만 해제를 요청했는지 확인한다. */
+	private void verifyPaymentLockReleasedWithOwnToken() {
+		ArgumentCaptor<String> tokenCaptor = ArgumentCaptor.forClass(String.class);
+		verify(valueOperations).setIfAbsent(eq("order:payment-lock:paymentid"), tokenCaptor.capture(), any(Duration.class));
+		verify(redisTemplate).execute(
+			any(RedisScript.class),
+			eq(List.of("order:payment-lock:paymentid")),
+			eq(tokenCaptor.getValue())
+		);
 	}
 
 	@Test
@@ -222,7 +234,7 @@ class OrderServiceImplTest {
 		assertThat(orderId).isEqualTo(10L);
 		verify(paymentRepository).save(paymentCaptor.capture());
 		assertThat(paymentCaptor.getValue().getPaymentId()).isEqualTo("paymentid");
-		verify(redisTemplate, never()).delete(anyString());
+		verify(redisTemplate, never()).execute(any(RedisScript.class), anyList(), anyString());
 	}
 
 	@DisplayName("배달 주문 생성 시 주문번호가 정상적으로 생성된다")
@@ -282,7 +294,7 @@ class OrderServiceImplTest {
 		verify(userService, never()).getUser(anyString());
 		verify(eventPublisher, never()).publishEvent(any(Object.class));
 		verify(orderRepository, never()).save(any());
-		verify(redisTemplate).delete("order:payment-lock:paymentid");
+		verifyPaymentLockReleasedWithOwnToken();
 	}
 
 	@DisplayName("이미 사용된 paymentId로 주문하면 결제 조회와 취소 이벤트 없이 거절된다")
@@ -341,7 +353,7 @@ class OrderServiceImplTest {
 		verify(eventPublisher).publishEvent(eventCaptor.capture());
 		assertThat(eventCaptor.getValue().getPaymentId()).isEqualTo("paymentid");
 		verify(orderRepository, never()).save(any());
-		verify(redisTemplate, never()).delete(anyString());
+		verify(redisTemplate, never()).execute(any(RedisScript.class), anyList(), anyString());
 	}
 
 	@DisplayName("결제 확인 후 장바구니 검증에서 실패하면 결제 취소 이벤트를 발행한다")
@@ -407,7 +419,7 @@ class OrderServiceImplTest {
 		// when & then
 		assertThrows(PortOnePaymentHistoryException.class, () -> orderService.createOrder(request, customOAuth2User));
 
-		verify(redisTemplate).delete("order:payment-lock:paymentid");
+		verifyPaymentLockReleasedWithOwnToken();
 		verify(userService, never()).getUser(anyString());
 		verify(eventPublisher, never()).publishEvent(any(Object.class));
 	}
