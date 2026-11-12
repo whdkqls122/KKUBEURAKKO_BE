@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.kkubeurakko.kkubeurakko_be.domain.orders.exception.OrderCreateException;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.global.task.service.FailedTaskService;
 
@@ -20,6 +21,8 @@ class OrderRollbackListenerTest {
 	private PortOneService portOneService;
 	@Mock
 	private FailedTaskService failedTaskService;
+	@Mock
+	private PaymentRepository paymentRepository;
 	@InjectMocks
 	private OrderRollbackListener listener;
 
@@ -57,16 +60,49 @@ class OrderRollbackListenerTest {
 	}
 
 	@Test
-	@DisplayName("취소 작업 등록에 실패하면 결제를 즉시 취소한다")
+	@DisplayName("결제 취소 작업 등록에 실패하면 다른 주문에 사용되지 않은 결제를 즉시 취소한다")
 	void handleRollback_registerFailed_cancelNow() throws Exception {
 		// given
 		willThrow(new RuntimeException("DB 연결 실패"))
 			.given(failedTaskService).saveRefundPaymentTask(anyString(), anyString(), anyString());
+		given(paymentRepository.existsByPaymentId("paymentid")).willReturn(false);
 
 		// when
 		listener.handleRollback(orderCreateException(false));
 
 		// then
 		verify(portOneService).cancelPortOnePayment("paymentid");
+	}
+
+	@Test
+	@DisplayName("결제 취소 작업 등록에 실패해도 다른 주문에 사용된 결제면 즉시 취소하지 않는다")
+	void handleRollback_registerFailed_usedByCommittedOrder_noCancel() throws Exception {
+		// given
+		willThrow(new RuntimeException("DB 연결 실패"))
+			.given(failedTaskService).saveRefundPaymentTask(anyString(), anyString(), anyString());
+		given(paymentRepository.existsByPaymentId("paymentid")).willReturn(true);
+
+		// when
+		listener.handleRollback(orderCreateException(false));
+
+		// then
+		verify(portOneService, never()).cancelPortOnePayment(anyString());
+	}
+
+	@Test
+	@DisplayName("현금영수증 취소 작업 등록만 실패하면 결제 취소 작업은 등록하고 현금영수증은 즉시 취소한다")
+	void handleRollback_cashReceiptRegisterFailed_cancelCashReceiptNow() throws Exception {
+		// given
+		willThrow(new RuntimeException("DB 연결 실패"))
+			.given(failedTaskService).saveCashReceiptCancelTask(anyString(), anyString(), anyString());
+		given(paymentRepository.existsByPaymentId("paymentid")).willReturn(false);
+
+		// when
+		listener.handleRollback(orderCreateException(true));
+
+		// then
+		verify(failedTaskService).saveRefundPaymentTask("paymentid", "IllegalStateException", "배달 불가능한 지역입니다.");
+		verify(portOneService).cancelIssueCashReceipt("paymentid");
+		verify(portOneService, never()).cancelPortOnePayment(anyString());
 	}
 }
