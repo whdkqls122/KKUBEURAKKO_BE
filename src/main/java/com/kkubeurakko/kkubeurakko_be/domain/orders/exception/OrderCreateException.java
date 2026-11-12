@@ -8,7 +8,7 @@ public class OrderCreateException extends RuntimeException {
 	private final boolean cashReceipt;
 
 	public OrderCreateException(String message, String paymentId, boolean cashReceipt, Throwable cause) {
-		super(message);
+		super(message, cause);
 		this.paymentId = paymentId;
 		this.cashReceipt = cashReceipt;
 	}
