@@ -21,8 +21,11 @@ public class FailedTaskScheduler {
 	private final FailedTaskService failedTaskService;
 	private final TaskProcessor taskProcessor;
 
+	/**
+	 * 작업마다 외부 API는 트랜잭션 밖에서 호출하고, 작업 상태 저장만 짧은 트랜잭션으로 처리
+	 * 한 작업의 지연·실패가 다른 작업의 DB 커넥션 점유로 번지지 않도록 전체를 하나의 트랜잭션으로 묶지 않음
+	 */
 	@Scheduled(fixedDelay = 60000)
-	@Transactional
 	public void retryFailedTasks() {
 
 		List<FailedTask> tasks = failedTaskService.findRetryableTasks();
@@ -40,7 +43,7 @@ public class FailedTaskScheduler {
 
 				switch (e.getAction()) {
 					case SUCCESS -> failedTaskService.markSuccess(task);
-					case FAIL -> task.markFailed();
+					case FAIL -> failedTaskService.markFailed(task);
 					case RETRY -> failedTaskService.markFailure(task, e);
 				}
 

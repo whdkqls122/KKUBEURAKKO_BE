@@ -97,10 +97,12 @@ public class FailedTaskServiceImpl implements FailedTaskService {
 		failedTaskRepository.save(failedTask);
 	}
 
+	// 스케줄러는 트랜잭션 밖에서 조회한 작업(준영속 상태)을 넘기므로 변경 감지 대신 명시적으로 저장
 	@Override
 	@Transactional
 	public void markSuccess(FailedTask failedTask) {
 		failedTask.markSuccess();
+		failedTaskRepository.save(failedTask);
 	}
 
 	@Override
@@ -112,6 +114,14 @@ public class FailedTaskServiceImpl implements FailedTaskService {
 		if (failedTask.getRetryCount() > 5) {
 			failedTask.markFailed();
 		}
+		failedTaskRepository.save(failedTask);
+	}
+
+	@Override
+	@Transactional
+	public void markFailed(FailedTask failedTask) {
+		failedTask.markFailed();
+		failedTaskRepository.save(failedTask);
 	}
 
 	@Override
