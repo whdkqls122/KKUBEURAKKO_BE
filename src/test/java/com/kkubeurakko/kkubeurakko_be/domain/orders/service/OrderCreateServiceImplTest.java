@@ -35,6 +35,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.addresses.repository.AddressReposit
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreatedEvent;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.exception.OrderCreateException;
@@ -140,6 +141,14 @@ class OrderCreateServiceImplTest {
 		verify(paymentRepository).save(paymentCaptor.capture());
 		assertThat(paymentCaptor.getValue().getPaymentId()).isEqualTo("paymentid");
 		verify(redisTemplate, never()).execute(any(RedisScript.class), anyList(), anyString());
+
+		// 주문 후처리
+		assertThat(user.getCart()).isNull();
+		assertThat(address.getLastUsedAt()).isNotNull();
+		ArgumentCaptor<OrderCreatedEvent> eventCaptor = ArgumentCaptor.forClass(OrderCreatedEvent.class);
+		verify(eventPublisher).publishEvent(eventCaptor.capture());
+		assertThat(eventCaptor.getValue().orderId()).isEqualTo(10L);
+		assertThat(eventCaptor.getValue().storeId()).isEqualTo(stores.getId());
 	}
 
 	@DisplayName("배달 주문 생성 시 주문번호가 정상적으로 생성된다")
