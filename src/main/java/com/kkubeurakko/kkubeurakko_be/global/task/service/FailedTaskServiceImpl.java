@@ -125,6 +125,7 @@ public class FailedTaskServiceImpl implements FailedTaskService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public List<FailedTask> findRetryableTasks() {
 		return failedTaskRepository.findFailedTaskByTaskStatus(TaskStatus.PENDING);
 	}
