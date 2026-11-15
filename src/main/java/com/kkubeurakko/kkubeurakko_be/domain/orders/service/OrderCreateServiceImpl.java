@@ -122,7 +122,7 @@ public class OrderCreateServiceImpl implements OrderCreateService {
 			OrderCreateException exception =
 				new OrderCreateException(
 					e.getMessage() + "\n\n" +
-						"결제는 자동으로 취소 됩니다.\n" +
+						"결제는 잠시 후 자동으로 취소됩니다.\n" +
 						"환불이 지연되거나 같은 문제가 지속될 경우 가게로 문의 부탁드립니다.",
 					request.paymentId(),
 					request.isCashReceipt(),

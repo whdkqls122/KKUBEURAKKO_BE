@@ -29,5 +29,7 @@ public interface FailedTaskService {
 
 	void markFailure(FailedTask failedTask, Exception e);
 
+	void markFailed(FailedTask failedTask);
+
 	List<FailedTask> findRetryableTasks();
 }
