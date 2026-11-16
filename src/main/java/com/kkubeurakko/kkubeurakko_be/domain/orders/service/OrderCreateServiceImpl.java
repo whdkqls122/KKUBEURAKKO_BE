@@ -32,6 +32,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentException;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.service.PaymentAttemptService;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionAbleResponse;
@@ -59,16 +60,8 @@ public class OrderCreateServiceImpl implements OrderCreateService {
 	private final ApplicationEventPublisher eventPublisher;
 	private final OrderNumberUtil orderNumberUtil;
 	private final DeliveryRegionService deliveryRegionService;
+	private final PaymentAttemptService paymentAttemptService;
 	private final RedisTemplate<String, String> redisTemplate;
-
-	private static final String PAYMENT_LOCK_PREFIX = "order:payment-lock:";
-	private static final Duration PAYMENT_LOCK_TTL = Duration.ofMinutes(10);
-
-	// 락 값(토큰)이 내 것일 때만 삭제: 만료 후 다른 요청이 잡은 락을 지우지 않도록 확인과 삭제를 한 번에 실행
-	private static final RedisScript<Long> RELEASE_LOCK_SCRIPT = new DefaultRedisScript<>(
-		"if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
-		Long.class
-	);
 
 	/**
 	 * 결제 확인 후 장바구니·주소·금액을 검증하고 주문과 결제를 저장한다.
@@ -78,8 +71,8 @@ public class OrderCreateServiceImpl implements OrderCreateService {
 	@Override
 	public Long createOrder(OrderCreateRequest request, CustomOAuth2User customOAuth2User) {
 		// 결제 확인 전 실패(중복, 처리 중, 락 오류, 조회 실패, 미완료 결제)는 취소 대상이 아니므로 롤백 이벤트 없이 그대로 던짐
-		PortOnePaymentResponseDto paymentResponse = getUsablePayment(request.paymentId());
-
+		// 조회 실패처럼 결제 여부를 알 수 없는 경우는 처리 기록이 남아 방치 감지 스케줄러가 취소한다
+		PortOnePaymentResponseDto paymentResponse = getUsablePayment(request);
 		try {
 			// 여기부터 실패하면 우리 상점에서 완료된 결제이므로 환불 대상
 			Users user = getUser(customOAuth2User);
@@ -116,6 +109,9 @@ public class OrderCreateServiceImpl implements OrderCreateService {
 			Orders savedOrder = saveOrderAndPayment(order, payment);
 
 			processAfterOrderSaved(user, request, savedOrder.getId(), store.getId(), address);
+
+			// 주문 저장과 같은 트랜잭션에서 결제 처리 기록을 완료로 바꾼다 (이미 취소 요청됐으면 예외로 롤백)
+			paymentAttemptService.complete(request.paymentId());
 
 			return savedOrder.getId();
 		} catch (Exception e) {
@@ -308,44 +304,22 @@ public class OrderCreateServiceImpl implements OrderCreateService {
 	}
 
 	/**
-	 *  이미 사용된 결제인지와 결제 상태 및 상점을 확인
-	 *  실패 시 결제 취소 대상이 아님
-	 *  */
-	private PortOnePaymentResponseDto getUsablePayment(String paymentId) {
+	 * 이미 사용된 결제인지 확인하고 결제 처리 기록을 남긴 뒤 결제 상태·상점을 확인한다.
+	 * 실패 시 결제 취소 이벤트를 발행하지 않는다.
+	 */
+	private PortOnePaymentResponseDto getUsablePayment(OrderCreateRequest request) {
+		String paymentId = request.paymentId();
 		if (paymentRepository.existsByPaymentId(paymentId)) {
 			throw new InvalidPaymentException("이미 사용된 결제입니다.");
 		}
-		String lockToken = acquirePaymentLock(paymentId);
+		// 주문 처리 전에 기록을 먼저 커밋: 같은 결제의 동시 요청을 막고, 이후 주문이 완료되지 않으면 취소 대상으로 남긴다
+		paymentAttemptService.start(paymentId, request.isCashReceipt());
 		try {
 			return portOneService.getPaidPayment(paymentId);
-		} catch (RuntimeException e) {
-			// 결제 확인 전이라 처리한 것이 없으므로, 결제 완료 후 다시 시도할 수 있게 락 해제
-			releasePaymentLock(paymentId, lockToken);
+		} catch (InvalidPaymentException e) {
+			// 완료되지 않았거나 우리 상점 결제가 아니면 취소할 결제가 없으므로, 결제 완료 후 다시 시도할 수 있게 기록을 지운다
+			paymentAttemptService.discard(paymentId);
 			throw e;
-		}
-	}
-
-	/**
-	 * 같은 결제로 주문을 동시에 처리하지 않도록 결제별로 한 번만 진입을 허용한다.
-	 * 결제 확인 이후에는 성공(사용 완료)이든 실패(환불 대상)든 다시 쓰면 안 되므로 락을 해제하지 않고 TTL로 만료시킨다.
-	 */
-
-	private String acquirePaymentLock(String paymentId) {
-		String lockToken = UUID.randomUUID().toString();
-		Boolean acquired = redisTemplate.opsForValue()
-			.setIfAbsent(PAYMENT_LOCK_PREFIX + paymentId, lockToken, PAYMENT_LOCK_TTL);
-		if (!Boolean.TRUE.equals(acquired)) {
-			throw new InvalidPaymentException("이미 처리 중이거나 사용된 결제입니다.");
-		}
-		return lockToken;
-	}
-
-	private void releasePaymentLock(String paymentId, String lockToken) {
-		try {
-			redisTemplate.execute(RELEASE_LOCK_SCRIPT, List.of(PAYMENT_LOCK_PREFIX + paymentId), lockToken);
-		} catch (RuntimeException e) {
-			// 해제 실패 시 원래 예외를 가리지 않도록 로그만 남김 (TTL로 만료)
-			log.warn("결제 락 해제 실패 - paymentId: {}", paymentId, e);
 		}
 	}
 
