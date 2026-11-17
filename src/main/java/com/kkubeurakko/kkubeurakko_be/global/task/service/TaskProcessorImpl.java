@@ -4,7 +4,9 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentAttemptStatus;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.service.PaymentAttemptService;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.service.OAuthUnlinkService;
 import com.kkubeurakko.kkubeurakko_be.global.task.dto.CashReceiptCancelPayload;
@@ -22,6 +24,7 @@ public class TaskProcessorImpl implements TaskProcessor {
 	private final OAuthUnlinkService oAuthUnlinkService;
 	private final PortOneService portOneService;
 	private final PaymentRepository paymentRepository;
+	private final PaymentAttemptService paymentAttemptService;
 	private final ObjectMapper objectMapper;
 
 	@Override
@@ -46,8 +49,8 @@ public class TaskProcessorImpl implements TaskProcessor {
 		RefundPayload payload =
 			objectMapper.readValue(task.getPayload(), RefundPayload.class);
 
-		if (isUsedByCommittedOrder(payload.paymentId())) {
-			log.warn("다른 주문에 사용된 결제라 결제 취소를 건너뜀 (paymentId={})", payload.paymentId());
+		if (!canCancel(payload.paymentId())) {
+			log.warn("취소 요청 상태가 아니거나 다른 주문에 사용된 결제라 결제 취소를 건너뜀 (paymentId={})", payload.paymentId());
 			return;
 		}
 		portOneService.retryCancelPortOnePayment(payload.paymentId());
@@ -58,15 +61,21 @@ public class TaskProcessorImpl implements TaskProcessor {
 		CashReceiptCancelPayload payload =
 			objectMapper.readValue(task.getPayload(), CashReceiptCancelPayload.class);
 
-		if (isUsedByCommittedOrder(payload.paymentId())) {
-			log.warn("다른 주문에 사용된 결제라 현금영수증 취소를 건너뜀 (paymentId={})", payload.paymentId());
+		if (!canCancel(payload.paymentId())) {
+			log.warn("취소 요청 상태가 아니거나 다른 주문에 사용된 결제라 현금영수증 취소를 건너뜀 (paymentId={})", payload.paymentId());
 			return;
 		}
 		portOneService.retryCancelIssueCashReceipt(payload.paymentId());
 	}
 
-	// 실패한 요청의 결제 저장은 롤백됐으므로, 결제가 남아 있다면 다른 요청이 커밋한 주문의 결제
-	private boolean isUsedByCommittedOrder(String paymentId) {
-		return paymentRepository.existsByPaymentId(paymentId);
+	/**
+	 * 결제 처리 기록이 취소 요청 상태일 때만 취소
+	 * 주문 완료와 취소 요청은 조건부 상태 전이라 둘 중 하나만 성공하므로, 이 상태면 같은 결제로 주문이 커밋
+	 * 처리 기록이 없는 이전 작업은 커밋된 주문이 있는지로 판단
+	 */
+	private boolean canCancel(String paymentId) {
+		return paymentAttemptService.findStatus(paymentId)
+			.map(status -> status == PaymentAttemptStatus.CANCEL_REQUESTED)
+			.orElseGet(() -> !paymentRepository.existsByPaymentId(paymentId));
 	}
 }
