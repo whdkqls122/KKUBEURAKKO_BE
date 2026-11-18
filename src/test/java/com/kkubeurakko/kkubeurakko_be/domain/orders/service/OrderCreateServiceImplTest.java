@@ -4,10 +4,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -23,10 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.redis.RedisConnectionFailureException;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
@@ -44,6 +39,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentException;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
+import com.kkubeurakko.kkubeurakko_be.domain.payments.service.PaymentAttemptService;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.exception.PortOnePaymentHistoryException;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionAbleResponse;
@@ -75,34 +71,15 @@ class OrderCreateServiceImplTest {
 	@Mock
 	private DeliveryRegionService deliveryRegionService;
 	@Mock
-	private RedisTemplate<String, String> redisTemplate;
-	@Mock
-	private ValueOperations<String, String> valueOperations;
+	private PaymentAttemptService paymentAttemptService;
 
 	@InjectMocks
 	private OrderCreateServiceImpl orderCreateService;
-
-	private void givenPaymentLock(boolean acquired) {
-		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-		when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenReturn(acquired);
-	}
-
-	/** 락을 잡을 때 쓴 토큰으로만 해제를 요청했는지 확인한다. */
-	private void verifyPaymentLockReleasedWithOwnToken() {
-		ArgumentCaptor<String> tokenCaptor = ArgumentCaptor.forClass(String.class);
-		verify(valueOperations).setIfAbsent(eq("order:payment-lock:paymentid"), tokenCaptor.capture(), any(Duration.class));
-		verify(redisTemplate).execute(
-			any(RedisScript.class),
-			eq(List.of("order:payment-lock:paymentid")),
-			eq(tokenCaptor.getValue())
-		);
-	}
 
 	@Test
 	@DisplayName("배달 주문 생성이 정상적으로 처리되는지 검증한다")
 	void createOrder() {
 		// given
-		givenPaymentLock(true);
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 		Cart cart = TestFixture.createCartWithOneItem(user);
 		Addresses address = TestFixture.createAddress(1L, user);
@@ -140,7 +117,8 @@ class OrderCreateServiceImplTest {
 		assertThat(orderId).isEqualTo(10L);
 		verify(paymentRepository).save(paymentCaptor.capture());
 		assertThat(paymentCaptor.getValue().getPaymentId()).isEqualTo("paymentid");
-		verify(redisTemplate, never()).execute(any(RedisScript.class), anyList(), anyString());
+		verify(paymentAttemptService).start("paymentid", false);
+		verify(paymentAttemptService).complete("paymentid");
 
 		// 주문 후처리
 		assertThat(user.getCart()).isNull();
@@ -155,7 +133,6 @@ class OrderCreateServiceImplTest {
 	@Test
 	void createOrder_withOrderNumber() {
 		// given
-		givenPaymentLock(true);
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 		Cart cart = TestFixture.createCartWithOneItem(user);
 		Stores stores = TestFixture.createStore();
@@ -193,7 +170,6 @@ class OrderCreateServiceImplTest {
 	@Test
 	void createOrder_invalidPayment_noRollbackEvent() {
 		// given
-		givenPaymentLock(true);
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
 		OrderCreateRequest request = new OrderCreateRequest(
 			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
@@ -208,7 +184,7 @@ class OrderCreateServiceImplTest {
 		verify(userService, never()).getUser(anyString());
 		verify(eventPublisher, never()).publishEvent(any(Object.class));
 		verify(orderRepository, never()).save(any());
-		verifyPaymentLockReleasedWithOwnToken();
+		verify(paymentAttemptService).discard("paymentid");
 	}
 
 	@DisplayName("이미 사용된 paymentId로 주문하면 결제 조회와 취소 이벤트 없이 거절된다")
@@ -228,7 +204,7 @@ class OrderCreateServiceImplTest {
 			.hasMessage("이미 사용된 결제입니다.");
 
 		verify(portOneService, never()).getPaidPayment(anyString());
-		verify(redisTemplate, never()).opsForValue();
+		verify(paymentAttemptService, never()).start(anyString(), anyBoolean());
 		verify(eventPublisher, never()).publishEvent(any(Object.class));
 		verify(orderRepository, never()).save(any());
 	}
@@ -237,7 +213,6 @@ class OrderCreateServiceImplTest {
 	@Test
 	void createOrder_amountMismatch_publishesRollbackEvent() {
 		// given
-		givenPaymentLock(true);
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 		Cart cart = TestFixture.createCartWithOneItem(user);
 		Addresses address = TestFixture.createAddress(1L, user);
@@ -267,14 +242,14 @@ class OrderCreateServiceImplTest {
 		verify(eventPublisher).publishEvent(eventCaptor.capture());
 		assertThat(eventCaptor.getValue().getPaymentId()).isEqualTo("paymentid");
 		verify(orderRepository, never()).save(any());
-		verify(redisTemplate, never()).execute(any(RedisScript.class), anyList(), anyString());
+		verify(paymentAttemptService, never()).complete(anyString());
+		verify(paymentAttemptService, never()).discard(anyString());
 	}
 
 	@DisplayName("결제 확인 후 장바구니 검증에서 실패하면 결제 취소 이벤트를 발행한다")
 	@Test
 	void createOrder_emptyCartAfterPaid_publishesRollbackEvent() {
 		// given: 장바구니 없는 사용자
-		givenPaymentLock(true);
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
@@ -299,14 +274,15 @@ class OrderCreateServiceImplTest {
 
 	@DisplayName("같은 결제가 이미 처리 중이면 결제 조회와 취소 이벤트 없이 거절된다")
 	@Test
-	void createOrder_paymentLocked_noRollbackEvent() {
+	void createOrder_paymentInProgress_noRollbackEvent() {
 		// given
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
 		OrderCreateRequest request = new OrderCreateRequest(
 			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
 			"paymentid", false, null, 36000, 0
 		);
-		givenPaymentLock(false);
+		willThrow(new InvalidPaymentException("이미 처리 중이거나 사용된 결제입니다."))
+			.given(paymentAttemptService).start("paymentid", false);
 
 		// when & then
 		assertThatThrownBy(() -> orderCreateService.createOrder(request, customOAuth2User))
@@ -317,42 +293,42 @@ class OrderCreateServiceImplTest {
 		verify(eventPublisher, never()).publishEvent(any(Object.class));
 	}
 
-	@DisplayName("PortOne 결제 조회에 실패하면 취소 이벤트 없이 거절하고 재시도할 수 있게 락을 해제한다")
+	@DisplayName("PortOne 결제 조회에 실패하면 취소 이벤트 없이 거절하고, 결제 여부를 알 수 없으므로 처리 기록은 남긴다")
 	@Test
-	void createOrder_paymentLookupFailed_noRollbackEventAndReleaseLock() {
+	void createOrder_paymentLookupFailed_noRollbackEventAndKeepAttempt() {
 		// given
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
 		OrderCreateRequest request = new OrderCreateRequest(
 			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
 			"paymentid", false, null, 36000, 0
 		);
-		givenPaymentLock(true);
 		when(portOneService.getPaidPayment("paymentid"))
 			.thenThrow(new PortOnePaymentHistoryException("PortOne 결제 조회 실패: ", new RuntimeException("timeout")));
 
 		// when & then
-		assertThrows(PortOnePaymentHistoryException.class, () -> orderCreateService.createOrder(request, customOAuth2User));
+		assertThatThrownBy(() -> orderCreateService.createOrder(request, customOAuth2User))
+			.isInstanceOf(PortOnePaymentHistoryException.class)
+			.hasMessageContaining("다시 결제해 주세요");
 
-		verifyPaymentLockReleasedWithOwnToken();
+		verify(paymentAttemptService, never()).discard(anyString());
 		verify(userService, never()).getUser(anyString());
 		verify(eventPublisher, never()).publishEvent(any(Object.class));
 	}
 
-	@DisplayName("결제 락 획득 중 Redis 오류가 나면 결제 조회와 취소 이벤트 없이 실패한다")
+	@DisplayName("결제 처리 기록 저장 중 DB 오류가 나면 결제 조회와 취소 이벤트 없이 실패한다")
 	@Test
-	void createOrder_lockError_noRollbackEvent() {
+	void createOrder_attemptStoreError_noRollbackEvent() {
 		// given
 		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
 		OrderCreateRequest request = new OrderCreateRequest(
 			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
 			"paymentid", false, null, 36000, 0
 		);
-		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-		when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
-			.thenThrow(new RedisConnectionFailureException("Redis 연결 실패"));
+		willThrow(new DataAccessResourceFailureException("DB 연결 실패"))
+			.given(paymentAttemptService).start("paymentid", false);
 
 		// when & then
-		assertThrows(RedisConnectionFailureException.class, () -> orderCreateService.createOrder(request, customOAuth2User));
+		assertThrows(DataAccessResourceFailureException.class, () -> orderCreateService.createOrder(request, customOAuth2User));
 
 		verify(portOneService, never()).getPaidPayment(anyString());
 		verify(eventPublisher, never()).publishEvent(any(Object.class));
@@ -361,11 +337,14 @@ class OrderCreateServiceImplTest {
 	@DisplayName("같은 결제로 두 요청이 동시에 들어오면 먼저 들어온 요청만 주문을 생성하고 나머지는 취소 이벤트 없이 거절된다")
 	@Test
 	void createOrder_concurrentSamePayment_onlyOneOrderCreated() throws Exception {
-		// given: 실제 Redis처럼 키가 없을 때만 저장되는 락 대역
-		Map<String, String> locks = new ConcurrentHashMap<>();
-		when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-		when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
-			.thenAnswer(inv -> locks.putIfAbsent(inv.getArgument(0), inv.getArgument(1)) == null);
+		// given: 실제 DB의 paymentId unique 제약처럼 같은 결제는 한 번만 기록되는 처리 기록 대역
+		Set<String> startedPayments = ConcurrentHashMap.newKeySet();
+		willAnswer(inv -> {
+			if (!startedPayments.add(inv.getArgument(0))) {
+				throw new InvalidPaymentException("이미 처리 중이거나 사용된 결제입니다.");
+			}
+			return null;
+		}).given(paymentAttemptService).start(anyString(), anyBoolean());
 
 		Users user = TestFixture.createUser("kakao_1234", "01012345678");
 		Cart cart = TestFixture.createCartWithOneItem(user);
@@ -381,7 +360,7 @@ class OrderCreateServiceImplTest {
 			"paymentid", false, null, 36000, 0
 		);
 
-		// 첫 요청이 락을 잡은 채 결제 조회에서 멈춰 있도록 해 두 요청을 겹치게 함
+		// 첫 요청이 처리 기록을 남긴 채 결제 조회에서 멈춰 있도록 해 두 요청을 겹치게 함
 		CountDownLatch firstEntered = new CountDownLatch(1);
 		CountDownLatch releaseFirst = new CountDownLatch(1);
 		when(portOneService.getPaidPayment("paymentid")).thenAnswer(inv -> {

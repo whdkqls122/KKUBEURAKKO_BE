@@ -54,7 +54,7 @@ public class FailedTaskServiceImpl implements FailedTaskService {
 	}
 
 	@Override
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	@Transactional
 	public void saveRefundPaymentTask(String paymentId, String errorType, String errorMessage)
 		throws JsonProcessingException {
 		RefundPayload refundPayload = RefundPayload.builder()
@@ -76,7 +76,7 @@ public class FailedTaskServiceImpl implements FailedTaskService {
 	}
 
 	@Override
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	@Transactional
 	public void saveCashReceiptCancelTask(String paymentId, String errorType, String errorMessage)
 		throws JsonProcessingException {
 		CashReceiptCancelPayload cashReceiptCancelPayload = CashReceiptCancelPayload.builder()
