@@ -267,13 +267,12 @@ public class PortOneServiceImpl implements PortOneService {
 	}
 
 	@Override
-	public PortOnePaymentResponseDto getPaidPayment(String paymentId) {
+	public PortOnePaymentResponseDto getOwnPayment(String paymentId) {
 		PortOnePaymentResponseDto payment = getPortOnePayment(paymentId);
 
-		if (payment == null || !PAID_STATUS.equals(payment.status())) {
-			log.warn("결제 완료 상태가 아님 - paymentId: {}, status: {}",
-				paymentId, payment == null ? null : payment.status());
-			throw new InvalidPaymentException("결제가 완료되지 않았습니다.");
+		if (payment == null) {
+			log.warn("결제 정보 없음 - paymentId: {}", paymentId);
+			throw new InvalidPaymentException("결제 정보를 확인할 수 없습니다.");
 		}
 		// URL 해석 과정에서 다른 결제가 조회됐을 수 있으므로 요청한 결제인지 확인
 		if (!paymentId.equals(payment.id())) {
@@ -283,6 +282,17 @@ public class PortOneServiceImpl implements PortOneService {
 		if (!storeId.equals(payment.storeId())) {
 			log.warn("결제 상점 불일치 - paymentId: {}, storeId: {}", paymentId, payment.storeId());
 			throw new InvalidPaymentException("결제 상점 정보가 일치하지 않습니다.");
+		}
+		return payment;
+	}
+
+	@Override
+	public PortOnePaymentResponseDto getPaidPayment(String paymentId) {
+		PortOnePaymentResponseDto payment = getOwnPayment(paymentId);
+
+		if (!payment.isPaid()) {
+			log.warn("결제 완료 상태가 아님 - paymentId: {}, status: {}", paymentId, payment.status());
+			throw new InvalidPaymentException("결제가 완료되지 않았습니다.");
 		}
 		if (payment.amount() == null) {
 			log.warn("결제 금액 정보 없음 - paymentId: {}", paymentId);

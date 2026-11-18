@@ -103,7 +103,7 @@ class PortOneServiceImplTest {
 
 		assertThatThrownBy(() -> portOneService.getPaidPayment(PAYMENT_ID))
 			.isInstanceOf(InvalidPaymentException.class)
-			.hasMessage("결제가 완료되지 않았습니다.");
+			.hasMessage("결제 정보를 확인할 수 없습니다.");
 	}
 
 	@Test
@@ -156,5 +156,25 @@ class PortOneServiceImplTest {
 
 		assertThatThrownBy(() -> portOneService.getPaidPayment(PAYMENT_ID))
 			.isInstanceOf(PortOnePaymentHistoryException.class);
+	}
+
+	@Test
+	@DisplayName("우리 상점의 결제면 완료되지 않은 상태여도 결제 정보를 반환한다")
+	void getOwnPayment_notPaid() {
+		givenPortOneResponse(payment("CANCELLED", STORE_ID, 36000));
+
+		PortOnePaymentResponseDto result = portOneService.getOwnPayment(PAYMENT_ID);
+
+		assertThat(result.status()).isEqualTo("CANCELLED");
+	}
+
+	@Test
+	@DisplayName("다른 상점의 결제면 상태와 무관하게 InvalidPaymentException이 발생한다")
+	void getOwnPayment_otherStore() {
+		givenPortOneResponse(payment("CANCELLED", "store-other", 36000));
+
+		assertThatThrownBy(() -> portOneService.getOwnPayment(PAYMENT_ID))
+			.isInstanceOf(InvalidPaymentException.class)
+			.hasMessage("결제 상점 정보가 일치하지 않습니다.");
 	}
 }

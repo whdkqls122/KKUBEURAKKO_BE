@@ -11,4 +11,7 @@ public record PortOnePaymentResponseDto(
 	PaymentAmount amount,
 	PaymentMethodDto method
 ) {
+	public boolean isPaid() {
+		return "PAID".equals(status);
+	}
 }
