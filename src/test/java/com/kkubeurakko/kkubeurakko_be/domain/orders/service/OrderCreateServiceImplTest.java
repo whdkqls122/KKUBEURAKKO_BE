@@ -306,7 +306,9 @@ class OrderCreateServiceImplTest {
 			.thenThrow(new PortOnePaymentHistoryException("PortOne 결제 조회 실패: ", new RuntimeException("timeout")));
 
 		// when & then
-		assertThrows(PortOnePaymentHistoryException.class, () -> orderCreateService.createOrder(request, customOAuth2User));
+		assertThatThrownBy(() -> orderCreateService.createOrder(request, customOAuth2User))
+			.isInstanceOf(PortOnePaymentHistoryException.class)
+			.hasMessageContaining("다시 결제해 주세요");
 
 		verify(paymentAttemptService, never()).discard(anyString());
 		verify(userService, never()).getUser(anyString());

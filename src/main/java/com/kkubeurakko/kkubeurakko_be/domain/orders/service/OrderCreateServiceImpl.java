@@ -34,6 +34,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentEx
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.service.PaymentAttemptService;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.exception.PortOnePaymentHistoryException;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionAbleResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.StoreStatus;
@@ -320,6 +321,10 @@ public class OrderCreateServiceImpl implements OrderCreateService {
 			// 완료되지 않았거나 우리 상점 결제가 아니면 취소할 결제가 없으므로, 결제 완료 후 다시 시도할 수 있게 기록을 지운다
 			paymentAttemptService.discard(paymentId);
 			throw e;
+		} catch (PortOnePaymentHistoryException e) {
+			// 결제 여부를 알 수 없으므로 기록을 남겨 방치 감지 스케줄러가 확인 후 취소하게 하고, 새 결제로 다시 주문하도록 안내한다
+			throw new PortOnePaymentHistoryException(
+				"결제 확인에 실패했습니다. 결제가 완료됐다면 잠시 후 자동으로 취소되니 다시 결제해 주세요.", e);
 		}
 	}
 
