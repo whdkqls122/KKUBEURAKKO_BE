@@ -2,13 +2,16 @@ package com.kkubeurakko.kkubeurakko_be.domain.payments.scheduler;
 
 import static org.mockito.BDDMockito.*;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -17,10 +20,19 @@ import com.kkubeurakko.kkubeurakko_be.domain.payments.service.PaymentAttemptServ
 @ExtendWith(MockitoExtension.class)
 class PaymentAttemptSchedulerTest {
 
+	// 2026-11-18 12:00 (Asia/Seoul)
+	private static final Clock FIXED_CLOCK =
+		Clock.fixed(Instant.parse("2026-11-18T03:00:00Z"), ZoneId.of("Asia/Seoul"));
+
 	@Mock
 	private PaymentAttemptService paymentAttemptService;
-	@InjectMocks
+
 	private PaymentAttemptScheduler scheduler;
+
+	@BeforeEach
+	void setUp() {
+		scheduler = new PaymentAttemptScheduler(paymentAttemptService, FIXED_CLOCK);
+	}
 
 	@Test
 	@DisplayName("오래 처리 중으로 남은 결제마다 취소를 요청하고, 하나가 실패해도 다음 결제를 처리한다")
@@ -39,10 +51,9 @@ class PaymentAttemptSchedulerTest {
 	}
 
 	@Test
-	@DisplayName("15분 전보다 먼저 시작한 처리 기록만 조회한다")
+	@DisplayName("현재 시각보다 정확히 15분 전에 시작한 처리 기록까지 조회한다")
 	void cancelStaleAttempts_threshold() {
 		// given
-		LocalDateTime before = LocalDateTime.now().minusMinutes(15);
 		given(paymentAttemptService.findProcessingPaymentIdsStartedBefore(any(LocalDateTime.class)))
 			.willReturn(List.of());
 
@@ -50,8 +61,7 @@ class PaymentAttemptSchedulerTest {
 		scheduler.cancelStaleAttempts();
 
 		// then
-		verify(paymentAttemptService).findProcessingPaymentIdsStartedBefore(
-			argThat(time -> !time.isBefore(before) && time.isBefore(before.plusSeconds(5))));
+		verify(paymentAttemptService).findProcessingPaymentIdsStartedBefore(LocalDateTime.of(2026, 11, 18, 11, 45));
 		verify(paymentAttemptService, never()).requestCancel(anyString(), anyString(), anyString());
 	}
 }

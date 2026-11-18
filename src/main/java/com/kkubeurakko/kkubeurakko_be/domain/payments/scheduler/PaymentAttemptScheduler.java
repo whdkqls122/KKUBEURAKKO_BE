@@ -1,5 +1,6 @@
 package com.kkubeurakko.kkubeurakko_be.domain.payments.scheduler;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,11 +25,12 @@ public class PaymentAttemptScheduler {
 	static final Duration STALE_AFTER = Duration.ofMinutes(15);
 
 	private final PaymentAttemptService paymentAttemptService;
+	private final Clock clock;
 
 	@Scheduled(fixedDelay = 60000)
 	public void cancelStaleAttempts() {
 		List<String> paymentIds =
-			paymentAttemptService.findProcessingPaymentIdsStartedBefore(LocalDateTime.now().minus(STALE_AFTER));
+			paymentAttemptService.findProcessingPaymentIdsStartedBefore(LocalDateTime.now(clock).minus(STALE_AFTER));
 
 		for (String paymentId : paymentIds) {
 			try {
