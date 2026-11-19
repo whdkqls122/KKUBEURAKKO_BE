@@ -18,7 +18,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderDetailResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderSocketResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Status;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.service.OrderCreateService;
+import com.kkubeurakko.kkubeurakko_be.domain.orders.service.OrderCreateFacadeService;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.service.OrderService;
 import com.kkubeurakko.kkubeurakko_be.global.ApiResponse;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
@@ -35,7 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class OrderController {
 
 	private final OrderService orderService;
-	private final OrderCreateService orderCreateService;
+	private final OrderCreateFacadeService orderCreateFacadeService;
 
 	@Operation(
 		summary = "주문 내역 목록 조회",
@@ -86,7 +86,7 @@ public class OrderController {
 		@Valid @RequestBody OrderCreateRequest request,
 		@AuthenticationPrincipal CustomOAuth2User customOAuth2User
 	) {
-		Long orderId = orderCreateService.createOrder(request, customOAuth2User);
+		Long orderId = orderCreateFacadeService.createOrder(request, customOAuth2User);
 		return ResponseEntity.ok().body(
 			ApiResponse.success(
 				"주문 요청이 완료되었습니다.",

@@ -1,13 +1,7 @@
 package com.kkubeurakko.kkubeurakko_be.domain.orders.service;
 
-import java.time.Duration;
-import java.util.List;
-import java.util.UUID;
-
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +19,6 @@ import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItems;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderItemsOptions;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.exception.OrderCreateException;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentType;
@@ -57,77 +50,61 @@ public class OrderCreateServiceImpl implements OrderCreateService {
 	private final AddressRepository addressRepository;
 	private final OrderRepository orderRepository;
 	private final UserService userService;
-	private final PortOneService portOneService;
 	private final ApplicationEventPublisher eventPublisher;
 	private final OrderNumberUtil orderNumberUtil;
 	private final DeliveryRegionService deliveryRegionService;
 	private final PaymentAttemptService paymentAttemptService;
-	private final RedisTemplate<String, String> redisTemplate;
 
 	/**
-	 * 결제 확인 후 장바구니·주소·금액을 검증하고 주문과 결제를 저장한다.
-	 * 결제 확인 이후 실패하면 결제 취소 이벤트를 발행한다.
+	 * 결제 확인이 끝난 주문의 장바구니, 주소,금액을 검증하고 주문과 결제를 저장
+	 * 외부 API를 호출하지 않으며, 결제 처리 기록 완료까지 하나의 트랜잭션으로 커밋
+	 * 실패(커밋 시점 실패 포함) 시 결제 취소 요청은 호출한 Facade가 처리
 	 */
 	@Transactional
 	@Override
-	public Long createOrder(OrderCreateRequest request, CustomOAuth2User customOAuth2User) {
-		// 결제 확인 전 실패(중복, 처리 중, 락 오류, 조회 실패, 미완료 결제)는 취소 대상이 아니므로 롤백 이벤트 없이 그대로 던짐
-		// 조회 실패처럼 결제 여부를 알 수 없는 경우는 처리 기록이 남아 방치 감지 스케줄러가 취소한다
-		PortOnePaymentResponseDto paymentResponse = getUsablePayment(request);
-		try {
-			// 여기부터 실패하면 우리 상점에서 완료된 결제이므로 환불 대상
-			Users user = getUser(customOAuth2User);
-			Cart cart = validateCart(user);
-			Stores store = extractStore(cart);
+	public Long createOrder(
+		OrderCreateRequest request,
+		CustomOAuth2User customOAuth2User,
+		PortOnePaymentResponseDto paymentResponse
+	) {
+		Users user = getUser(customOAuth2User);
+		Cart cart = validateCart(user);
+		Stores store = extractStore(cart);
 
-			if (store.getStatus() != StoreStatus.OPEN) {
-				throw new IllegalStateException("현재 가게가 영업 중이 아닙니다.");
-			}
-
-			Addresses address = getAddress(store, request, user);
-
-			int totalAmount = calculateCartTotal(cart);
-			int discountAmount = calculateDiscountAmount(user.getUserNumber(), cart, request);
-			int finalAmount = totalAmount - discountAmount;
-
-			validatePaymentAmount(paymentResponse, finalAmount);
-			issueCashReceiptIfRequested(user, request, finalAmount);
-
-			String orderNumber = orderNumberUtil.createOrderNumber(store.getId(), request.orderType());
-			UsersCoupons usersCoupon = getUsersCouponIfExists(user, request);
-
-			Orders order = createOrderEntity(
-				request,
-				user,
-				address,
-				totalAmount,
-				orderNumber,
-				cart,
-				usersCoupon
-			);
-
-			Payments payment = toPaymentEntity(order, discountAmount, request.paymentId(), paymentResponse);
-			Orders savedOrder = saveOrderAndPayment(order, payment);
-
-			processAfterOrderSaved(user, request, savedOrder.getId(), store.getId(), address);
-
-			// 주문 저장과 같은 트랜잭션에서 결제 처리 기록을 완료로 바꾼다 (이미 취소 요청됐으면 예외로 롤백)
-			paymentAttemptService.complete(request.paymentId());
-
-			return savedOrder.getId();
-		} catch (Exception e) {
-			OrderCreateException exception =
-				new OrderCreateException(
-					e.getMessage() + "\n\n" +
-						"결제는 잠시 후 자동으로 취소됩니다.\n" +
-						"환불이 지연되거나 같은 문제가 지속될 경우 가게로 문의 부탁드립니다.",
-					request.paymentId(),
-					request.isCashReceipt(),
-					e
-				);
-			eventPublisher.publishEvent(exception);
-			throw exception;
+		if (store.getStatus() != StoreStatus.OPEN) {
+			throw new IllegalStateException("현재 가게가 영업 중이 아닙니다.");
 		}
+
+		Addresses address = getAddress(store, request, user);
+
+		int totalAmount = calculateCartTotal(cart);
+		int discountAmount = calculateDiscountAmount(user.getUserNumber(), cart, request);
+		int finalAmount = totalAmount - discountAmount;
+
+		validatePaymentAmount(paymentResponse, finalAmount);
+
+		String orderNumber = orderNumberUtil.createOrderNumber(store.getId(), request.orderType());
+		UsersCoupons usersCoupon = getUsersCouponIfExists(user, request);
+
+		Orders order = createOrderEntity(
+			request,
+			user,
+			address,
+			totalAmount,
+			orderNumber,
+			cart,
+			usersCoupon
+		);
+
+		Payments payment = toPaymentEntity(order, discountAmount, request.paymentId(), paymentResponse);
+		Orders savedOrder = saveOrderAndPayment(order, payment);
+
+		processAfterOrderSaved(user, request, savedOrder.getId(), store.getId(), address);
+
+		// 주문 저장과 같은 트랜잭션에서 결제 처리 기록을 완료로 바꾼다 (이미 취소 요청됐으면 예외로 롤백)
+		paymentAttemptService.complete(request.paymentId());
+
+		return savedOrder.getId();
 	}
 
 	private void createOrderItems(Orders order, Cart cart) {
@@ -304,45 +281,10 @@ public class OrderCreateServiceImpl implements OrderCreateService {
 		return addresses;
 	}
 
-	/**
-	 * 이미 사용된 결제인지 확인하고 결제 처리 기록을 남긴 뒤 결제 상태·상점을 확인한다.
-	 * 실패 시 결제 취소 이벤트를 발행하지 않는다.
-	 */
-	private PortOnePaymentResponseDto getUsablePayment(OrderCreateRequest request) {
-		String paymentId = request.paymentId();
-		if (paymentRepository.existsByPaymentId(paymentId)) {
-			throw new InvalidPaymentException("이미 사용된 결제입니다.");
-		}
-		// 주문 처리 전에 기록을 먼저 커밋: 같은 결제의 동시 요청을 막고, 이후 주문이 완료되지 않으면 취소 대상으로 남긴다
-		paymentAttemptService.start(paymentId, request.isCashReceipt());
-		try {
-			return portOneService.getPaidPayment(paymentId);
-		} catch (InvalidPaymentException e) {
-			// 완료되지 않았거나 우리 상점 결제가 아니면 취소할 결제가 없으므로, 결제 완료 후 다시 시도할 수 있게 기록을 지운다
-			paymentAttemptService.discard(paymentId);
-			throw e;
-		} catch (PortOnePaymentHistoryException e) {
-			// 결제 여부를 알 수 없으므로 기록을 남겨 방치 감지 스케줄러가 확인 후 취소하게 하고, 새 결제로 다시 주문하도록 안내한다
-			throw new PortOnePaymentHistoryException(
-				"결제 확인에 실패했습니다. 결제가 완료됐다면 잠시 후 자동으로 취소되니 다시 결제해 주세요.", e);
-		}
-	}
-
 	private void validatePaymentAmount(PortOnePaymentResponseDto paymentResponse, int expectedFinalAmount) {
 		if (paymentResponse.amount().total() != expectedFinalAmount) {
 			// 결제는 완료됐으므로 환불 대상 예외
 			throw new IllegalStateException("결제 금액이 일치하지 않습니다.");
-		}
-	}
-
-	private void issueCashReceiptIfRequested(Users user, OrderCreateRequest request, int finalAmount) {
-		if (request.isCashReceipt()) {
-			portOneService.issueCashReceipt(
-				user,
-				request.paymentId(),
-				request.cashReceiptRequest(),
-				finalAmount
-			);
 		}
 	}
 
