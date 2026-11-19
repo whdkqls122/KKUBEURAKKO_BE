@@ -84,6 +84,10 @@ public class Orders {
 	@Embedded
 	private OrderAddressSnapshot addressSnapshot;
 
+	public void assignPayments(Payments payments) {
+		this.payments = payments;
+	}
+
 	public void revokeUser() {
 		this.user = null;
 	}

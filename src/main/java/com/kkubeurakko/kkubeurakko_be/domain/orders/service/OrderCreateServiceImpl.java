@@ -150,7 +150,7 @@ public class OrderCreateServiceImpl implements OrderCreateService {
 		String paymentId,
 		PortOnePaymentResponseDto paymentResponseDto
 	) {
-		return Payments.builder()
+		Payments payment = Payments.builder()
 			.order(order)
 			.paymentsType(getPaymentType(paymentResponseDto))
 			.totalAmount(order.getTotalAmount())
@@ -159,6 +159,9 @@ public class OrderCreateServiceImpl implements OrderCreateService {
 			.transactionId(paymentResponseDto.transactionId())
 			.paymentId(paymentId)
 			.build();
+		// 양방향 연관관계를 함께 설정해 저장 전에도 객체 그래프가 일관되게 함
+		order.assignPayments(payment);
+		return payment;
 	}
 
 	private PaymentType getPaymentType(PortOnePaymentResponseDto paymentResponseDto) {

@@ -111,10 +111,11 @@ class OrderCreateServiceImplTest {
 	@DisplayName("주문과 결제를 저장하고 결제 처리 기록을 완료로 바꾼 뒤 후처리를 한다")
 	void createOrder() {
 		// given
+		// given
 		givenDeliverableUser();
+		ArgumentCaptor<Orders> orderCaptor = ArgumentCaptor.forClass(Orders.class);
 		ArgumentCaptor<Payments> paymentCaptor = ArgumentCaptor.forClass(Payments.class);
-		given(orderRepository.save(any())).willReturn(Orders.builder().id(10L).build());
-
+		given(orderRepository.save(orderCaptor.capture())).willReturn(Orders.builder().id(10L).build());
 		// when
 		Long orderId = orderCreateService.createOrder(deliveryRequest(null), customOAuth2User, paidPayment(CART_TOTAL));
 
@@ -128,9 +129,10 @@ class OrderCreateServiceImplTest {
 		assertThat(user.getCart()).isNull();
 		assertThat(address.getLastUsedAt()).isNotNull();
 		ArgumentCaptor<OrderCreatedEvent> eventCaptor = ArgumentCaptor.forClass(OrderCreatedEvent.class);
-		verify(eventPublisher).publishEvent(eventCaptor.capture());
-		assertThat(eventCaptor.getValue().orderId()).isEqualTo(10L);
-		assertThat(eventCaptor.getValue().storeId()).isEqualTo(store.getId());
+		verify(paymentRepository).save(paymentCaptor.capture());
+		assertThat(paymentCaptor.getValue().getPaymentId()).isEqualTo(PAYMENT_ID);
+		assertThat(orderCaptor.getValue().getPayments()).isSameAs(paymentCaptor.getValue());
+		verify(paymentAttemptService).complete(PAYMENT_ID);
 	}
 
 	@Test
