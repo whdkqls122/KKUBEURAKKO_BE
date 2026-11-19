@@ -1,18 +1,12 @@
 package com.kkubeurakko.kkubeurakko_be.domain.orders.service;
 
-import static org.assertj.core.api.AssertionsForClassTypes.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.time.LocalDate;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,27 +15,28 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.entity.Addresses;
 import com.kkubeurakko.kkubeurakko_be.domain.addresses.repository.AddressRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponCategory;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.CouponType;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Coupons;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.Status;
+import com.kkubeurakko.kkubeurakko_be.domain.coupons.entity.UsersCoupons;
 import com.kkubeurakko.kkubeurakko_be.domain.coupons.repository.UserCouponRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreatedEvent;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.Orders;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.exception.OrderCreateException;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.Payments;
-import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentException;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.service.PaymentAttemptService;
-import com.kkubeurakko.kkubeurakko_be.domain.portone.exception.PortOnePaymentHistoryException;
-import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
+import com.kkubeurakko.kkubeurakko_be.domain.portone.dto.PortOnePaymentResponseDto;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.dto.DeliveryRegionAbleResponse;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
 import com.kkubeurakko.kkubeurakko_be.domain.stores.service.DeliveryRegionService;
@@ -51,6 +46,9 @@ import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 
 @ExtendWith(MockitoExtension.class)
 class OrderCreateServiceImplTest {
+
+	private static final String PAYMENT_ID = "paymentid";
+	private static final int CART_TOTAL = 36000;
 
 	@Mock
 	private UserCouponRepository userCouponRepository;
@@ -63,8 +61,6 @@ class OrderCreateServiceImplTest {
 	@Mock
 	private UserService userService;
 	@Mock
-	private PortOneService portOneService;
-	@Mock
 	private ApplicationEventPublisher eventPublisher;
 	@Mock
 	private OrderNumberUtil orderNumberUtil;
@@ -76,324 +72,153 @@ class OrderCreateServiceImplTest {
 	@InjectMocks
 	private OrderCreateServiceImpl orderCreateService;
 
+	private Users user;
+	private Addresses address;
+	private Stores store;
+	private CustomOAuth2User customOAuth2User;
+
+	@BeforeEach
+	void setUp() {
+		user = TestFixture.createUser("kakao_1234", "01012345678");
+		Cart cart = TestFixture.createCartWithOneItem(user);
+		ReflectionTestUtils.setField(user, "cart", cart);
+		address = TestFixture.createAddress(1L, user);
+		store = TestFixture.createStore();
+		customOAuth2User = mock(CustomOAuth2User.class);
+	}
+
+	private OrderCreateRequest deliveryRequest(String couponNumber) {
+		return new OrderCreateRequest(
+			1L, "젓가락 2개 주세요", "초인종 누르지 말아주세요", OrderType.DELIVERY, couponNumber,
+			PAYMENT_ID, false, null, CART_TOTAL, 0
+		);
+	}
+
+	private PortOnePaymentResponseDto paidPayment(int amount) {
+		return TestFixture.createPortOnePaymentResponse(PAYMENT_ID, "tx-123", amount);
+	}
+
+	/** 로그인한 사용자의 장바구니가 있고, 주소가 배달 가능 지역인 상태 */
+	private void givenDeliverableUser() {
+		given(customOAuth2User.getName()).willReturn("kakao_1234");
+		given(userService.getUser("kakao_1234")).willReturn(user);
+		given(addressRepository.findByIdAndUser(1L, user)).willReturn(Optional.of(address));
+		given(deliveryRegionService.isDeliverable(store.getId(), address.getLatitude(), address.getLongitude()))
+			.willReturn(DeliveryRegionAbleResponse.builder().able(true).build());
+	}
+
 	@Test
-	@DisplayName("배달 주문 생성이 정상적으로 처리되는지 검증한다")
+	@DisplayName("주문과 결제를 저장하고 결제 처리 기록을 완료로 바꾼 뒤 후처리를 한다")
 	void createOrder() {
 		// given
-		Users user = TestFixture.createUser("kakao_1234", "01012345678");
-		Cart cart = TestFixture.createCartWithOneItem(user);
-		Addresses address = TestFixture.createAddress(1L, user);
-		Stores stores = TestFixture.createStore();
-		ReflectionTestUtils.setField(user, "cart", cart);
+		givenDeliverableUser();
+		ArgumentCaptor<Orders> orderCaptor = ArgumentCaptor.forClass(Orders.class);
 		ArgumentCaptor<Payments> paymentCaptor = ArgumentCaptor.forClass(Payments.class);
-		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
-		when(customOAuth2User.getName()).thenReturn("kakao_1234");
-
-		OrderCreateRequest request = new OrderCreateRequest(
-			1L,
-			"젓가락 2개 주세요",
-			"초인종 누르지 말아주세요",
-			OrderType.DELIVERY,
-			null,
-			"paymentid",
-			false,
-			null,
-			36000,
-			0
-		);
-
-		when(portOneService.getPaidPayment("paymentid"))
-			.thenReturn(TestFixture.createPortOnePaymentResponse("paymentid", "tx-123", 36000));
-		when(userService.getUser("kakao_1234")).thenReturn(user);
-		when(addressRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(address));
-		when(deliveryRegionService.isDeliverable(stores.getId(), address.getLatitude(), address.getLongitude()))
-			.thenReturn(DeliveryRegionAbleResponse.builder().able(true).build());
-		when(orderRepository.save(any())).thenReturn(Orders.builder().id(10L).build());
+		given(orderRepository.save(orderCaptor.capture())).willReturn(Orders.builder().id(10L).build());
 
 		// when
-		Long orderId = orderCreateService.createOrder(request, customOAuth2User);
+		Long orderId = orderCreateService.createOrder(deliveryRequest(null), customOAuth2User, paidPayment(CART_TOTAL));
 
 		// then
 		assertThat(orderId).isEqualTo(10L);
 		verify(paymentRepository).save(paymentCaptor.capture());
-		assertThat(paymentCaptor.getValue().getPaymentId()).isEqualTo("paymentid");
-		verify(paymentAttemptService).start("paymentid", false);
-		verify(paymentAttemptService).complete("paymentid");
+		assertThat(paymentCaptor.getValue().getPaymentId()).isEqualTo(PAYMENT_ID);
+		assertThat(orderCaptor.getValue().getPayments()).isSameAs(paymentCaptor.getValue());
+		verify(paymentAttemptService).complete(PAYMENT_ID);
 
-		// 주문 후처리
+		// 주문 후처리: 장바구니 비우기, 주소 사용 시각 갱신, 주문 생성 이벤트 발행
 		assertThat(user.getCart()).isNull();
 		assertThat(address.getLastUsedAt()).isNotNull();
 		ArgumentCaptor<OrderCreatedEvent> eventCaptor = ArgumentCaptor.forClass(OrderCreatedEvent.class);
 		verify(eventPublisher).publishEvent(eventCaptor.capture());
 		assertThat(eventCaptor.getValue().orderId()).isEqualTo(10L);
-		assertThat(eventCaptor.getValue().storeId()).isEqualTo(stores.getId());
+		assertThat(eventCaptor.getValue().storeId()).isEqualTo(store.getId());
 	}
 
-	@DisplayName("배달 주문 생성 시 주문번호가 정상적으로 생성된다")
 	@Test
+	@DisplayName("주문번호를 생성해 주문에 저장한다")
 	void createOrder_withOrderNumber() {
 		// given
-		Users user = TestFixture.createUser("kakao_1234", "01012345678");
-		Cart cart = TestFixture.createCartWithOneItem(user);
-		Stores stores = TestFixture.createStore();
-		Addresses address = TestFixture.createAddress(1L, user);
-		ReflectionTestUtils.setField(user, "cart", cart);
-
-		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
-		when(customOAuth2User.getName()).thenReturn("kakao_1234");
-
-		OrderCreateRequest request = new OrderCreateRequest(
-			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
-			"paymentid", false, null, 36000, 0
-		);
-
-		when(portOneService.getPaidPayment("paymentid"))
-			.thenReturn(TestFixture.createPortOnePaymentResponse("paymentid", "tx-123", 36000));
-		when(userService.getUser("kakao_1234")).thenReturn(user);
-		when(addressRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(address));
-		when(deliveryRegionService.isDeliverable(stores.getId(), address.getLatitude(), address.getLongitude()))
-			.thenReturn(DeliveryRegionAbleResponse.builder().able(true).build());
-		when(orderNumberUtil.createOrderNumber(anyLong(), eq(OrderType.DELIVERY))).thenReturn("A-1");
-
+		givenDeliverableUser();
+		given(orderNumberUtil.createOrderNumber(anyLong(), eq(OrderType.DELIVERY))).willReturn("A-1");
 		ArgumentCaptor<Orders> captor = ArgumentCaptor.forClass(Orders.class);
-		when(orderRepository.save(captor.capture())).thenReturn(Orders.builder().id(10L).build());
+		given(orderRepository.save(captor.capture())).willReturn(Orders.builder().id(10L).build());
 
 		// when
-		Long orderId = orderCreateService.createOrder(request, customOAuth2User);
+		orderCreateService.createOrder(deliveryRequest(null), customOAuth2User, paidPayment(CART_TOTAL));
 
 		// then
-		assertThat(orderId).isEqualTo(10L);
 		assertThat(captor.getValue().getOrderNumber()).isEqualTo("A-1");
 	}
 
-	@DisplayName("사용할 수 없는 결제면 장바구니 확인과 결제 취소 이벤트 없이 거절된다")
 	@Test
-	void createOrder_invalidPayment_noRollbackEvent() {
-		// given
-		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
-		OrderCreateRequest request = new OrderCreateRequest(
-			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
-			"paymentid", false, null, 36000, 0
-		);
-		when(portOneService.getPaidPayment("paymentid"))
-			.thenThrow(new InvalidPaymentException("결제가 완료되지 않았습니다."));
+	@DisplayName("쿠폰을 사용하면 할인된 금액으로 결제를 검증하고 쿠폰을 사용 처리한다")
+	void createOrder_withCoupon() {
+		// given: 1,000원 할인 쿠폰 (최소 주문 12,000원)
+		givenDeliverableUser();
+		Coupons coupon = TestFixture.createCoupon(1L, "할인 쿠폰", 10, LocalDate.now().minusDays(1),
+			LocalDate.now().plusDays(1), CouponType.ALL, CouponCategory.GENERAL, Status.OFFER, store);
+		UsersCoupons usersCoupon = TestFixture.createUserCoupon(1L, user, coupon, false);
+		String couponNumber = usersCoupon.getCouponsNumber();
+		given(userCouponRepository.findByUser_UserNumberAndCouponsNumber(user.getUserNumber(), couponNumber))
+			.willReturn(Optional.of(usersCoupon));
+		ArgumentCaptor<Payments> paymentCaptor = ArgumentCaptor.forClass(Payments.class);
+		given(orderRepository.save(any())).willReturn(Orders.builder().id(10L).build());
 
-		// when & then
-		assertThrows(InvalidPaymentException.class, () -> orderCreateService.createOrder(request, customOAuth2User));
+		// when
+		orderCreateService.createOrder(deliveryRequest(couponNumber), customOAuth2User, paidPayment(CART_TOTAL - 1000));
 
-		verify(userService, never()).getUser(anyString());
-		verify(eventPublisher, never()).publishEvent(any(Object.class));
-		verify(orderRepository, never()).save(any());
-		verify(paymentAttemptService).discard("paymentid");
+		// then
+		verify(paymentRepository).save(paymentCaptor.capture());
+		assertThat(paymentCaptor.getValue().getDiscountAmount()).isEqualTo(1000);
+		assertThat(paymentCaptor.getValue().getFinalAmount()).isEqualTo(CART_TOTAL - 1000);
+		assertThat(usersCoupon.isUsed()).isTrue();
 	}
 
-	@DisplayName("이미 사용된 paymentId로 주문하면 결제 조회와 취소 이벤트 없이 거절된다")
 	@Test
-	void createOrder_duplicatePayment_noRollbackEvent() {
-		// given
-		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
-		OrderCreateRequest request = new OrderCreateRequest(
-			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
-			"paymentid", false, null, 36000, 0
-		);
-		when(paymentRepository.existsByPaymentId("paymentid")).thenReturn(true);
+	@DisplayName("결제 금액이 장바구니 금액과 다르면 주문을 저장하지 않고 예외를 던진다")
+	void createOrder_amountMismatch() {
+		// given: 장바구니 금액은 36,000원인데 결제는 30,000원
+		givenDeliverableUser();
 
 		// when & then
-		assertThatThrownBy(() -> orderCreateService.createOrder(request, customOAuth2User))
-			.isInstanceOf(InvalidPaymentException.class)
-			.hasMessage("이미 사용된 결제입니다.");
+		assertThatThrownBy(() -> orderCreateService.createOrder(deliveryRequest(null), customOAuth2User, paidPayment(30000)))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessage("결제 금액이 일치하지 않습니다.");
 
-		verify(portOneService, never()).getPaidPayment(anyString());
-		verify(paymentAttemptService, never()).start(anyString(), anyBoolean());
-		verify(eventPublisher, never()).publishEvent(any(Object.class));
-		verify(orderRepository, never()).save(any());
-	}
-
-	@DisplayName("결제 금액이 다르면 결제 ID를 담은 취소 이벤트를 발행한다")
-	@Test
-	void createOrder_amountMismatch_publishesRollbackEvent() {
-		// given
-		Users user = TestFixture.createUser("kakao_1234", "01012345678");
-		Cart cart = TestFixture.createCartWithOneItem(user);
-		Addresses address = TestFixture.createAddress(1L, user);
-		Stores stores = TestFixture.createStore();
-		ReflectionTestUtils.setField(user, "cart", cart);
-
-		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
-		when(customOAuth2User.getName()).thenReturn("kakao_1234");
-
-		OrderCreateRequest request = new OrderCreateRequest(
-			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
-			"paymentid", false, null, 36000, 0
-		);
-
-		// 장바구니 금액은 36,000원인데 결제는 30,000원
-		when(portOneService.getPaidPayment("paymentid"))
-			.thenReturn(TestFixture.createPortOnePaymentResponse("paymentid", "tx-123", 30000));
-		when(userService.getUser("kakao_1234")).thenReturn(user);
-		when(addressRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(address));
-		when(deliveryRegionService.isDeliverable(stores.getId(), address.getLatitude(), address.getLongitude()))
-			.thenReturn(DeliveryRegionAbleResponse.builder().able(true).build());
-
-		// when & then
-		assertThrows(OrderCreateException.class, () -> orderCreateService.createOrder(request, customOAuth2User));
-
-		ArgumentCaptor<OrderCreateException> eventCaptor = ArgumentCaptor.forClass(OrderCreateException.class);
-		verify(eventPublisher).publishEvent(eventCaptor.capture());
-		assertThat(eventCaptor.getValue().getPaymentId()).isEqualTo("paymentid");
 		verify(orderRepository, never()).save(any());
 		verify(paymentAttemptService, never()).complete(anyString());
-		verify(paymentAttemptService, never()).discard(anyString());
-	}
-
-	@DisplayName("결제 확인 후 장바구니 검증에서 실패하면 결제 취소 이벤트를 발행한다")
-	@Test
-	void createOrder_emptyCartAfterPaid_publishesRollbackEvent() {
-		// given: 장바구니 없는 사용자
-		Users user = TestFixture.createUser("kakao_1234", "01012345678");
-
-		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
-		when(customOAuth2User.getName()).thenReturn("kakao_1234");
-
-		OrderCreateRequest request = new OrderCreateRequest(
-			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
-			"paymentid", false, null, 36000, 0
-		);
-
-		when(portOneService.getPaidPayment("paymentid"))
-			.thenReturn(TestFixture.createPortOnePaymentResponse("paymentid", "tx-123", 36000));
-		when(userService.getUser("kakao_1234")).thenReturn(user);
-
-		// when & then
-		assertThrows(OrderCreateException.class, () -> orderCreateService.createOrder(request, customOAuth2User));
-
-		ArgumentCaptor<OrderCreateException> eventCaptor = ArgumentCaptor.forClass(OrderCreateException.class);
-		verify(eventPublisher).publishEvent(eventCaptor.capture());
-		assertThat(eventCaptor.getValue().getPaymentId()).isEqualTo("paymentid");
-	}
-
-	@DisplayName("같은 결제가 이미 처리 중이면 결제 조회와 취소 이벤트 없이 거절된다")
-	@Test
-	void createOrder_paymentInProgress_noRollbackEvent() {
-		// given
-		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
-		OrderCreateRequest request = new OrderCreateRequest(
-			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
-			"paymentid", false, null, 36000, 0
-		);
-		willThrow(new InvalidPaymentException("이미 처리 중이거나 사용된 결제입니다."))
-			.given(paymentAttemptService).start("paymentid", false);
-
-		// when & then
-		assertThatThrownBy(() -> orderCreateService.createOrder(request, customOAuth2User))
-			.isInstanceOf(InvalidPaymentException.class)
-			.hasMessage("이미 처리 중이거나 사용된 결제입니다.");
-
-		verify(portOneService, never()).getPaidPayment(anyString());
 		verify(eventPublisher, never()).publishEvent(any(Object.class));
 	}
 
-	@DisplayName("PortOne 결제 조회에 실패하면 취소 이벤트 없이 거절하고, 결제 여부를 알 수 없으므로 처리 기록은 남긴다")
 	@Test
-	void createOrder_paymentLookupFailed_noRollbackEventAndKeepAttempt() {
+	@DisplayName("장바구니가 없으면 주문을 저장하지 않고 예외를 던진다")
+	void createOrder_emptyCart() {
 		// given
-		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
-		OrderCreateRequest request = new OrderCreateRequest(
-			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
-			"paymentid", false, null, 36000, 0
-		);
-		when(portOneService.getPaidPayment("paymentid"))
-			.thenThrow(new PortOnePaymentHistoryException("PortOne 결제 조회 실패: ", new RuntimeException("timeout")));
+		Users userWithoutCart = TestFixture.createUser("kakao_5678", "01056785678");
+		given(customOAuth2User.getName()).willReturn("kakao_5678");
+		given(userService.getUser("kakao_5678")).willReturn(userWithoutCart);
 
 		// when & then
-		assertThatThrownBy(() -> orderCreateService.createOrder(request, customOAuth2User))
-			.isInstanceOf(PortOnePaymentHistoryException.class)
-			.hasMessageContaining("다시 결제해 주세요");
+		assertThatThrownBy(() -> orderCreateService.createOrder(deliveryRequest(null), customOAuth2User, paidPayment(CART_TOTAL)))
+			.isInstanceOf(IllegalStateException.class);
 
-		verify(paymentAttemptService, never()).discard(anyString());
-		verify(userService, never()).getUser(anyString());
-		verify(eventPublisher, never()).publishEvent(any(Object.class));
+		verify(orderRepository, never()).save(any());
+		verify(paymentAttemptService, never()).complete(anyString());
 	}
 
-	@DisplayName("결제 처리 기록 저장 중 DB 오류가 나면 결제 조회와 취소 이벤트 없이 실패한다")
 	@Test
-	void createOrder_attemptStoreError_noRollbackEvent() {
+	@DisplayName("결제가 이미 취소 요청됐으면 결제 처리 기록 완료에서 예외가 나 주문 트랜잭션이 롤백된다")
+	void createOrder_alreadyCancelRequested() {
 		// given
-		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
-		OrderCreateRequest request = new OrderCreateRequest(
-			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
-			"paymentid", false, null, 36000, 0
-		);
-		willThrow(new DataAccessResourceFailureException("DB 연결 실패"))
-			.given(paymentAttemptService).start("paymentid", false);
+		givenDeliverableUser();
+		given(orderRepository.save(any())).willReturn(Orders.builder().id(10L).build());
+		willThrow(new IllegalStateException("결제 처리 상태가 변경되어 주문을 완료할 수 없습니다."))
+			.given(paymentAttemptService).complete(PAYMENT_ID);
 
 		// when & then
-		assertThrows(DataAccessResourceFailureException.class, () -> orderCreateService.createOrder(request, customOAuth2User));
-
-		verify(portOneService, never()).getPaidPayment(anyString());
-		verify(eventPublisher, never()).publishEvent(any(Object.class));
-	}
-
-	@DisplayName("같은 결제로 두 요청이 동시에 들어오면 먼저 들어온 요청만 주문을 생성하고 나머지는 취소 이벤트 없이 거절된다")
-	@Test
-	void createOrder_concurrentSamePayment_onlyOneOrderCreated() throws Exception {
-		// given: 실제 DB의 paymentId unique 제약처럼 같은 결제는 한 번만 기록되는 처리 기록 대역
-		Set<String> startedPayments = ConcurrentHashMap.newKeySet();
-		willAnswer(inv -> {
-			if (!startedPayments.add(inv.getArgument(0))) {
-				throw new InvalidPaymentException("이미 처리 중이거나 사용된 결제입니다.");
-			}
-			return null;
-		}).given(paymentAttemptService).start(anyString(), anyBoolean());
-
-		Users user = TestFixture.createUser("kakao_1234", "01012345678");
-		Cart cart = TestFixture.createCartWithOneItem(user);
-		Addresses address = TestFixture.createAddress(1L, user);
-		Stores stores = TestFixture.createStore();
-		ReflectionTestUtils.setField(user, "cart", cart);
-
-		CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
-		when(customOAuth2User.getName()).thenReturn("kakao_1234");
-
-		OrderCreateRequest request = new OrderCreateRequest(
-			1L, "요청사항", "배달메모", OrderType.DELIVERY, null,
-			"paymentid", false, null, 36000, 0
-		);
-
-		// 첫 요청이 처리 기록을 남긴 채 결제 조회에서 멈춰 있도록 해 두 요청을 겹치게 함
-		CountDownLatch firstEntered = new CountDownLatch(1);
-		CountDownLatch releaseFirst = new CountDownLatch(1);
-		when(portOneService.getPaidPayment("paymentid")).thenAnswer(inv -> {
-			firstEntered.countDown();
-			releaseFirst.await(5, TimeUnit.SECONDS);
-			return TestFixture.createPortOnePaymentResponse("paymentid", "tx-123", 36000);
-		});
-		when(userService.getUser("kakao_1234")).thenReturn(user);
-		when(addressRepository.findByIdAndUser(1L, user)).thenReturn(Optional.of(address));
-		when(deliveryRegionService.isDeliverable(stores.getId(), address.getLatitude(), address.getLongitude()))
-			.thenReturn(DeliveryRegionAbleResponse.builder().able(true).build());
-		when(orderRepository.save(any())).thenReturn(Orders.builder().id(10L).build());
-
-		ExecutorService executor = Executors.newSingleThreadExecutor();
-		try {
-			// when: 첫 요청이 처리 중일 때 같은 결제로 두 번째 요청
-			Future<Long> first = executor.submit(() -> orderCreateService.createOrder(request, customOAuth2User));
-			assertTrue(firstEntered.await(5, TimeUnit.SECONDS));
-
-			assertThatThrownBy(() -> orderCreateService.createOrder(request, customOAuth2User))
-				.isInstanceOf(InvalidPaymentException.class)
-				.hasMessage("이미 처리 중이거나 사용된 결제입니다.");
-
-			releaseFirst.countDown();
-
-			// then
-			assertThat(first.get(5, TimeUnit.SECONDS)).isEqualTo(10L);
-		} finally {
-			executor.shutdownNow();
-		}
-
-		verify(portOneService, times(1)).getPaidPayment("paymentid");
-		verify(orderRepository, times(1)).save(any());
-		verify(eventPublisher, never()).publishEvent(any(OrderCreateException.class));
+		assertThatThrownBy(() -> orderCreateService.createOrder(deliveryRequest(null), customOAuth2User, paidPayment(CART_TOTAL)))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessage("결제 처리 상태가 변경되어 주문을 완료할 수 없습니다.");
 	}
 }
