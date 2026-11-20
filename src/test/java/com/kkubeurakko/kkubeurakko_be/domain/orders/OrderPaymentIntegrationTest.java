@@ -4,35 +4,22 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.IllegalTransactionStateException;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import com.kkubeurakko.kkubeurakko_be.TestFixture;
-import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.Cart;
-import com.kkubeurakko.kkubeurakko_be.domain.cart.entity.CartItem;
-import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuGroups;
-import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.MenuStatus;
-import com.kkubeurakko.kkubeurakko_be.domain.menus.entity.Menus;
-import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuGroupRepository;
-import com.kkubeurakko.kkubeurakko_be.domain.menus.repository.MenuRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.dto.OrderCreateRequest;
-import com.kkubeurakko.kkubeurakko_be.domain.orders.entity.OrderType;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.exception.OrderCreateException;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.repository.OrderRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.service.OrderCreateFacadeService;
@@ -40,27 +27,19 @@ import com.kkubeurakko.kkubeurakko_be.domain.payments.entity.PaymentAttemptStatu
 import com.kkubeurakko.kkubeurakko_be.domain.payments.exception.InvalidPaymentException;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.repository.PaymentRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.payments.service.PaymentAttemptService;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.entity.Stores;
-import com.kkubeurakko.kkubeurakko_be.domain.stores.repository.StoreRepository;
-import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
-import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.task.entity.FailedTask;
 import com.kkubeurakko.kkubeurakko_be.global.task.entity.TaskType;
 import com.kkubeurakko.kkubeurakko_be.global.task.repository.FailedTaskRepository;
-import com.kkubeurakko.kkubeurakko_be.support.IntegrationTestSupport;
+import com.kkubeurakko.kkubeurakko_be.support.OrderIntegrationTestSupport;
 
 /**
  * 주문 생성·결제 처리 기록의 실제 DB 동작을 검증
  * PortOne(외부 API)과 주문번호 생성(영업시간 데이터 필요)만 IntegrationTestSupport의 mock을 쓰고 나머지는 실제 빈과 MySQL, Redis를 사용
  * 테스트끼리 데이터가 섞이지 않도록 결제 ID와 사용자를 테스트마다 새로 만든다.
  */
-class OrderPaymentIntegrationTest extends IntegrationTestSupport {
-
-	private static final int MENU_PRICE = 18000;
-	// AdminInitializer가 앱 기동 시 만드는 가게
-	private static final long STORE_ID = 1L;
+class OrderPaymentIntegrationTest extends OrderIntegrationTestSupport {
 
 	@Autowired
 	private OrderCreateFacadeService orderCreateFacadeService;
@@ -72,77 +51,8 @@ class OrderPaymentIntegrationTest extends IntegrationTestSupport {
 	private PaymentRepository paymentRepository;
 	@Autowired
 	private FailedTaskRepository failedTaskRepository;
-	@Autowired
-	private UserRepository userRepository;
-	@Autowired
-	private StoreRepository storeRepository;
-	@Autowired
-	private MenuGroupRepository menuGroupRepository;
-	@Autowired
-	private MenuRepository menuRepository;
-	@Autowired
-	private PlatformTransactionManager transactionManager;
-
-	private TransactionTemplate transactionTemplate;
-
-	@BeforeEach
-	void setUp() {
-		transactionTemplate = new TransactionTemplate(transactionManager);
-	}
 
 	// ===== 테스트 데이터 =====
-
-	private String newPaymentId() {
-		return "it-" + UUID.randomUUID().toString().substring(0, 12);
-	}
-
-	/** 메뉴 1개(18,000원)가 담긴 장바구니를 가진 사용자를 저장한다. */
-	private Users saveUserWithCart() {
-		Stores store = storeRepository.findById(STORE_ID).orElseThrow();
-		MenuGroups menuGroup = menuGroupRepository.save(MenuGroups.builder()
-			.name("통합 테스트 메뉴 그룹")
-			.menuStatus(MenuStatus.ON_SALE)
-			.store(store)
-			.build());
-		Menus menu = menuRepository.save(Menus.builder()
-			.name("통합 테스트 메뉴")
-			.menuStatus(MenuStatus.ON_SALE)
-			.price(MENU_PRICE)
-			.menuGroup(menuGroup)
-			.build());
-
-		Cart cart = Cart.builder().build();
-		cart.getCartItemList().add(CartItem.builder().cart(cart).menu(menu).quantity(1).build());
-
-		String unique = UUID.randomUUID().toString().substring(0, 8);
-		return userRepository.save(Users.builder()
-			.userNumber("it-user-" + unique)
-			.phone("it-phone-" + unique)
-			.phoneHash("it-hash-" + unique)
-			.nickname("통합테스트")
-			.name("통합테스트")
-			.role(UserRole.CUSTOMER)
-			.cart(cart)
-			.build());
-	}
-
-	private CustomOAuth2User loginAs(Users user) {
-		CustomOAuth2User customOAuth2User = Mockito.mock(CustomOAuth2User.class);
-		given(customOAuth2User.getName()).willReturn(user.getUserNumber());
-		return customOAuth2User;
-	}
-
-	private OrderCreateRequest takeoutRequest(String paymentId) {
-		return new OrderCreateRequest(
-			null, "요청사항", null, OrderType.TAKEOUT, null,
-			paymentId, false, null, MENU_PRICE, 0
-		);
-	}
-
-	private void givenPaidPayment(String paymentId) {
-		given(portOneService.getPaidPayment(paymentId))
-			.willReturn(TestFixture.createPortOnePaymentResponse(paymentId, "tx-" + paymentId, MENU_PRICE));
-	}
 
 	private List<FailedTask> tasksOf(String paymentId) {
 		return failedTaskRepository.findAll().stream()
@@ -282,29 +192,19 @@ class OrderPaymentIntegrationTest extends IntegrationTestSupport {
 		CustomOAuth2User customOAuth2User = loginAs(user);
 		String paymentId = newPaymentId();
 		givenPaidPayment(paymentId);
+		AtomicBoolean beforeCommitCalled = failOrderTransactionAtCommit();
 
-		// 주문 트랜잭션 안에서 호출되는 주문번호 생성 시점에, 커밋 직전에 실패하는 동기화를 등록
-		given(orderNumberUtil.createOrderNumber(anyLong(), any())).willAnswer(inv -> {
-			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-				@Override
-				public void beforeCommit(boolean readOnly) {
-					throw new DataIntegrityViolationException("커밋 시점 제약 조건 위반");
-				}
-			});
-			return "T-commit-fail";
-		});
-
-		// when & then
+		// when & then: 메서드 본문은 끝까지 성공하고 커밋 단계에서 실패
 		assertThatThrownBy(() -> orderCreateFacadeService.createOrder(takeoutRequest(paymentId), customOAuth2User))
 			.isInstanceOf(OrderCreateException.class)
-			.hasMessageContaining("주문을 처리하는 중 오류가 발생했습니다.");
+			.hasMessageContaining("주문을 처리하는 중 오류가 발생했습니다.")
+			.hasCauseInstanceOf(DataIntegrityViolationException.class);
+		assertThat(beforeCommitCalled).isTrue();
 
 		// 주문 트랜잭션의 변경은 모두 롤백
 		assertThat(orderRepository.findByUser(user)).isEmpty();
 		assertThat(paymentRepository.existsByPaymentId(paymentId)).isFalse();
-		Boolean cartRemains = transactionTemplate.execute(status ->
-			!userRepository.findByUserNumber(user.getUserNumber()).orElseThrow().getCart().getCartItemList().isEmpty());
-		assertThat(cartRemains).isTrue();
+		assertThat(hasCartItems(user)).isTrue();
 
 		// 취소 요청은 별도 트랜잭션으로 남음
 		assertThat(attemptStatusOf(paymentId)).isEqualTo(PaymentAttemptStatus.CANCEL_REQUESTED);
