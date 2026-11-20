@@ -15,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -172,13 +173,14 @@ class OrderSocketIntegrationTest extends OrderIntegrationTestSupport {
 		Users user = saveUserWithCart();
 		String paymentId = newPaymentId();
 		givenPaidPayment(paymentId);
-		failOrderTransactionAtCommit();
+		AtomicBoolean beforeCommitCalled = failOrderTransactionAtCommit();
 
 		List<Map<String, Object>> received = subscribeAndAwaitReady(connect(accessToken("ADMIN")));
 
 		// when
 		assertThatThrownBy(() -> orderCreateFacadeService.createOrder(takeoutRequest(paymentId), loginAs(user)))
 			.isInstanceOf(OrderCreateException.class);
+		assertThat(beforeCommitCalled).isTrue();
 
 		// then: 주문 생성 이벤트는 발행됐지만 커밋되지 않아 AFTER_COMMIT 리스너가 실행되지 않음
 		await().during(Duration.ofSeconds(1)).atMost(TIMEOUT)

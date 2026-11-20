@@ -35,6 +35,9 @@ class RefreshTokenIntegrationTest extends IntegrationTestSupport {
 	// 저장~조회 사이에 흐른 시간과 초 단위 절삭을 허용하는 오차
 	private static final long TTL_TOLERANCE_MS = 5_000;
 
+	// 설정된 access-token-expiry보다 짧게 발급해, 블랙리스트 TTL이 전체 유효 기간으로 다시 설정되는 실수를 구분
+	private static final long SHORT_ACCESS_EXPIRY_MS = 60_000;
+
 	@Autowired
 	private TokenService tokenService;
 	@Autowired
@@ -48,8 +51,6 @@ class RefreshTokenIntegrationTest extends IntegrationTestSupport {
 
 	@Value("${spring.jwt.refresh-token-expiry}")
 	private long refreshTokenExpiry;
-	@Value("${spring.jwt.access-token-expiry}")
-	private long accessTokenExpiry;
 
 	private String newUserNumber() {
 		return "it-user-" + UUID.randomUUID().toString().substring(0, 8);
@@ -106,17 +107,21 @@ class RefreshTokenIntegrationTest extends IntegrationTestSupport {
 	@Test
 	@DisplayName("Redis의 RefreshToken이 만료되면 JWT 자체는 유효해도 재발급이 거부된다")
 	void reissue_rejectedAfterRedisExpiry() {
-		// given: JWT는 14일 유효하지만 Redis에는 1초만 보관
+		// given: JWT는 14일 유효하지만 Redis에는 2초만 보관
 		String userNumber = newUserNumber();
 		String refresh = jwtUtil.createRefreshToken(userNumber, ROLE, refreshTokenExpiry);
 		refreshTokenRepository.save(RefreshToken.builder()
 			.userNumber(userNumber)
 			.refresh(refresh)
-			.expiration(1_000L)
+			.expiration(2_000L)
 			.build());
 
-		// when: Redis가 키를 만료시킬 때까지 대기
+		// 저장 실패와 만료를 구분하기 위해 먼저 저장 상태를 확인
 		String key = refreshKeyOf(userNumber);
+		assertThat(stringRedisTemplate.hasKey(key)).isTrue();
+		assertThat(ttlMillisOf(key)).isPositive();
+
+		// when: Redis가 키를 만료시킬 때까지 대기
 		await().atMost(Duration.ofSeconds(5))
 			.until(() -> !Boolean.TRUE.equals(stringRedisTemplate.hasKey(key)));
 
@@ -131,8 +136,9 @@ class RefreshTokenIntegrationTest extends IntegrationTestSupport {
 	void logout_deletesRefreshTokenAndBlacklistsAccessToken() {
 		// given
 		String userNumber = newUserNumber();
-		String accessToken = tokenService.createLoginToken(new MockHttpServletResponse(), userNumber, ROLE);
+		tokenService.createLoginToken(new MockHttpServletResponse(), userNumber, ROLE);
 		String savedRefresh = refreshTokenRepository.findByUserNumber(userNumber).getRefresh();
+		String accessToken = jwtUtil.createAccessToken(userNumber, ROLE, SHORT_ACCESS_EXPIRY_MS);
 
 		MockHttpServletRequest request = requestWithRefreshCookie(savedRefresh);
 		request.addHeader("Authorization", "Bearer " + accessToken);
@@ -145,6 +151,7 @@ class RefreshTokenIntegrationTest extends IntegrationTestSupport {
 
 		String blacklistKey = "blacklist:" + accessToken;
 		assertThat(stringRedisTemplate.hasKey(blacklistKey)).isTrue();
-		assertThat(ttlMillisOf(blacklistKey)).isBetween(1L, accessTokenExpiry);
+		long expectedTtl = jwtUtil.getRemainingExpiration(accessToken);
+		assertThat(ttlMillisOf(blacklistKey)).isCloseTo(expectedTtl, within(TTL_TOLERANCE_MS));
 	}
 }
