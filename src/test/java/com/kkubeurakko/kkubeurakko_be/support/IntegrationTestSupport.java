@@ -12,12 +12,14 @@ import org.testcontainers.containers.MySQLContainer;
 import com.kkubeurakko.kkubeurakko_be.domain.orders.util.OrderNumberUtil;
 import com.kkubeurakko.kkubeurakko_be.domain.portone.service.PortOneService;
 import com.kkubeurakko.kkubeurakko_be.global.task.service.FailedTaskService;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 
 /**
  * 통합 테스트 공통 설정. MySQL, Redis 컨테이너를 JVM당 한 번만 띄워 모든 통합 테스트가 함께 씀
  * 컨테이너는 JVM이 끝나면 Testcontainers(Ryuk)가 정리
+ * 웹소켓 테스트에 실제 서버가 필요해 모든 통합 테스트가 랜덤 포트 서버로 뜨는 같은 컨텍스트를 사용
  */
-@SpringBootTest
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public abstract class IntegrationTestSupport {
 	// 모든 통합 테스트가 같은 mock 구성을 써야 스프링 컨텍스트 하나를 재사용
