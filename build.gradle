@@ -73,6 +73,11 @@ dependencies {
 
     //webp
     implementation 'org.sejda.imageio:webp-imageio:0.1.6'
+
+    //testcontainers
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:mysql'
 }
 
 tasks.named('test') {
