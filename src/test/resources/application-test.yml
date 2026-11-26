@@ -61,6 +61,9 @@ spring:
     aes:
       secret: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
 
+    phone-hash:
+      secret: dGVzdC1waG9uZS1oYXNoLWtleS0zMi1ieXRlcy1vayE=
+
     kakao:
       refresh-url: https://kauth.kakao.com/oauth/token
       unlink-url: https://kapi.kakao.com/v1/user/unlink
