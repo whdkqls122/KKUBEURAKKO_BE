@@ -23,6 +23,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.domain.users.util.PhoneMaskingUtil;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
+import com.kkubeurakko.kkubeurakko_be.global.security.util.PhoneHashUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceImpl implements UserService {
 	private final AesUtil aesUtil;
 	private final UserRepository userRepository;
+	private final PhoneHashUtil phoneHashUtil;
 
 	@Override
 	public void createUser(TempUser tempUser, PortOneVerifyInfoResponseDto responseDto) {
@@ -40,7 +42,7 @@ public class UserServiceImpl implements UserService {
 			throw new IllegalStateException("본인인증 실패");
 		}
 		String phone = responseDto.verifiedCustomer().phoneNumber();
-		String phoneHash = hashPhone(phone);
+		String phoneHash = phoneHashUtil.hash(phone);
 		String name = responseDto.verifiedCustomer().name();
 
 		validateDuplicatePhone(phoneHash);
@@ -93,17 +95,6 @@ public class UserServiceImpl implements UserService {
 	public Users getUser(String userNumber) {
 		return userRepository.findByUserNumber(userNumber)
 			.orElseThrow(() -> new IllegalArgumentException("해당 사용자 정보가 없습니다."));
-	}
-
-	private String hashPhone(String phone) {
-		try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			byte[] encoded = digest.digest(phone.getBytes(StandardCharsets.UTF_8));
-			return Base64.getEncoder().encodeToString(encoded);
-
-		} catch (Exception e) {
-			throw new PhoneHashingException("전화번호 해시 생성에 실패 하였습니다.", e);
-		}
 	}
 
 	private UserInfoResponseDto toResponseDto(Users user) {

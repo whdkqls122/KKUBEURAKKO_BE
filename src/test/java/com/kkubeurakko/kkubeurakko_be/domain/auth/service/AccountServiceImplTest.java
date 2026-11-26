@@ -28,6 +28,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.dto.UserVerifyRequestDto;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
+import com.kkubeurakko.kkubeurakko_be.global.security.util.PhoneHashUtil;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -62,11 +63,14 @@ class AccountServiceImplTest {
 	@Mock
 	private ValueOperations<String, Object> valueOperations;
 
+	@Mock
+	private PhoneHashUtil phoneHashUtil;
+
 	@InjectMocks
 	private AccountServiceImpl accountService;
 
 	@Test
-	@DisplayName("휴대폰 인증 후 ID 마스킹 반환이 정상적으로 이루어진다.")
+	@DisplayName("휴대폰 인증 후 인증된 번호의 해시로 사용자를 찾아 ID 마스킹을 반환한다.")
 	void findUserId_success() {
 		// given
 		UserVerifyRequestDto dto = new UserVerifyRequestDto("verifyId");
@@ -77,8 +81,9 @@ class AccountServiceImplTest {
 
 		when(portOneService.getPortOneVerifyInfo("verifyId")).thenReturn(responseDto);
 		when(responseDto.verifiedCustomer()).thenReturn(customer);
-		when(customer.phoneNumber()).thenReturn(user.getPhone());
-		when(userRepository.findByPhoneHash(any())).thenReturn(Optional.of(user));
+		when(customer.phoneNumber()).thenReturn("01012345678");
+		when(phoneHashUtil.hash("01012345678")).thenReturn("phone-hash");
+		when(userRepository.findByPhoneHash("phone-hash")).thenReturn(Optional.of(user));
 
 		//when
 		UserIdResponseDto result = accountService.findUserId(dto);

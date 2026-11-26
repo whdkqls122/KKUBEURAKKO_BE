@@ -25,6 +25,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.exception.PhoneHashingException;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
+import com.kkubeurakko.kkubeurakko_be.global.security.util.PhoneHashUtil;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,6 +42,7 @@ public class AccountServiceImpl implements AccountService {
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final PasswordEncoder passwordEncoder;
 	private final CookieService cookieService;
+	private final PhoneHashUtil phoneHashUtil;
 	private static final String VERIFY_SESSION_PREFIX = "VERIFY_SESSION:";
 	private static final String RESET_PASSWORD_PREFIX = "RESET_PASSWORD:";
 
@@ -56,7 +58,7 @@ public class AccountServiceImpl implements AccountService {
 			portOneService.getPortOneVerifyInfo(userVerifyRequestDto.identityVerificationId());
 
 		String phone = response.verifiedCustomer().phoneNumber();
-		String phoneHash = hashPhone(phone);
+		String phoneHash = phoneHashUtil.hash(phone);
 		Users users = userRepository.findByPhoneHash(phoneHash)
 			.orElseThrow(() -> new EntityNotFoundException("가입된 이력이 없습니다."));
 
@@ -126,7 +128,7 @@ public class AccountServiceImpl implements AccountService {
 		PortOneVerifyInfoResponseDto portOneVerifyInfoResponseDto =
 			portOneService.getPortOneVerifyInfo(verifyRequestDto.identityVerificationId());
 
-		String phoneHash = hashPhone(portOneVerifyInfoResponseDto.verifiedCustomer().phoneNumber());
+		String phoneHash = phoneHashUtil.hash(portOneVerifyInfoResponseDto.verifiedCustomer().phoneNumber());
 
 		Users user = userRepository.findByPhoneHash(phoneHash)
 			.orElseThrow(() -> new EntityNotFoundException("인증정보로 가입된 이력이 없습니다."));
@@ -188,17 +190,6 @@ public class AccountServiceImpl implements AccountService {
 		}
 
 		user.updatePassword(passwordEncoder.encode(resetPasswordRequestDto.newPassword()));
-	}
-
-	private String hashPhone(String phone) {
-		try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			byte[] encoded = digest.digest(phone.getBytes(StandardCharsets.UTF_8));
-			return Base64.getEncoder().encodeToString(encoded);
-
-		} catch (Exception e) {
-			throw new PhoneHashingException("전화번호 해시 생성에 실패 하였습니다.", e);
-		}
 	}
 
 	private String getProvider(String userNumber) {

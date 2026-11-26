@@ -19,6 +19,7 @@ import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.global.oauth.dto.CustomOAuth2User;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
+import com.kkubeurakko.kkubeurakko_be.global.security.util.PhoneHashUtil;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -27,6 +28,9 @@ class UserServiceImplTest {
 
 	@Mock
 	private UserRepository userRepository;
+
+	@Mock
+	private PhoneHashUtil phoneHashUtil;
 
 	@InjectMocks
 	private UserServiceImpl userService;
