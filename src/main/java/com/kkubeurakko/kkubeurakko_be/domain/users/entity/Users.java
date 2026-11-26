@@ -90,4 +90,8 @@ public class Users extends BaseEntity {
 	public void updatePassword(String password) {
 		this.password = password;
 	}
+
+	public void updatePhoneHash(String phoneHash) {
+		this.phoneHash = phoneHash;
+	}
 }
