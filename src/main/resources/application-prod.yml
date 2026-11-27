@@ -82,6 +82,9 @@ spring:
     aes:
       secret: ${AES_SECRET}
 
+    phone-hash:
+      secret: ${PHONE_HASH_SECRET}
+
     kakao:
       refresh-url: https://kauth.kakao.com/oauth/token
       unlink-url: https://kapi.kakao.com/v1/user/unlink
