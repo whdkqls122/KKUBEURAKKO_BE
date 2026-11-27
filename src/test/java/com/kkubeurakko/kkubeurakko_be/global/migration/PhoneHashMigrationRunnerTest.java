@@ -1,76 +1,82 @@
 package com.kkubeurakko.kkubeurakko_be.global.migration;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.Base64;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.UserRole;
 import com.kkubeurakko.kkubeurakko_be.domain.users.entity.Users;
 import com.kkubeurakko.kkubeurakko_be.domain.users.repository.UserRepository;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.AesUtil;
 import com.kkubeurakko.kkubeurakko_be.global.security.util.PhoneHashUtil;
-import com.kkubeurakko.kkubeurakko_be.support.IntegrationTestSupport;
 
-/**
- * 기존 SHA-256 해시로 저장된 사용자가 마이그레이션 후 새 HMAC 해시로 조회되는지 검증
- * 러너 빈은 설정으로 꺼져 있어, 컨텍스트를 바꾸지 않도록 같은 의존성으로 직접 만들어 실행
- */
-class PhoneHashMigrationRunnerIntegrationTest extends IntegrationTestSupport {
+@ExtendWith(MockitoExtension.class)
+class PhoneHashMigrationRunnerTest {
 
-	@Autowired
+	@Mock
 	private UserRepository userRepository;
-	@Autowired
+	@Mock
 	private AesUtil aesUtil;
-	@Autowired
+	@Mock
 	private PhoneHashUtil phoneHashUtil;
-	@Autowired
-	private PlatformTransactionManager transactionManager;
 
-	private String legacySha256(String phone) throws Exception {
-		byte[] digest = MessageDigest.getInstance("SHA-256").digest(phone.getBytes(StandardCharsets.UTF_8));
-		return Base64.getEncoder().encodeToString(digest);
-	}
+	@InjectMocks
+	private PhoneHashMigrationRunner runner;
 
-	private void runMigration() {
-		PhoneHashMigrationRunner runner = new PhoneHashMigrationRunner(userRepository, aesUtil, phoneHashUtil);
-		new TransactionTemplate(transactionManager).executeWithoutResult(status -> runner.run(null));
+	private Users user(String userNumber, String encryptedPhone, String phoneHash) {
+		return Users.builder()
+			.userNumber(userNumber)
+			.phone(encryptedPhone)
+			.phoneHash(phoneHash)
+			.nickname("닉네임")
+			.name("이름")
+			.role(UserRole.CUSTOMER)
+			.build();
 	}
 
 	@Test
-	@DisplayName("기존 SHA-256 해시 사용자가 마이그레이션 후 새 해시로 조회되고, 다시 실행해도 결과가 같다")
-	void migrate_legacyHash() throws Exception {
-		// given: 이전 방식으로 저장된 사용자
-		String phone = String.format("010%08d", ThreadLocalRandom.current().nextInt(100_000_000));
-		String unique = UUID.randomUUID().toString().substring(0, 8);
-		userRepository.save(Users.builder()
-			.userNumber("it-user-" + unique)
-			.phone(aesUtil.encryptToBase64(phone))
-			.phoneHash(legacySha256(phone))
-			.nickname("통합테스트")
-			.name("통합테스트")
-			.role(UserRole.CUSTOMER)
-			.build());
+	@DisplayName("이전 해시 사용자만 갱신하고, 이미 새 해시인 사용자는 건너뛴다")
+	void migrate_skipsAlreadyMigrated() {
+		// given
+		Users legacy = user("kakao_1", "enc-1", "legacy-hash");
+		Users migrated = user("kakao_2", "enc-2", "new-hash-2");
+		when(userRepository.findAll()).thenReturn(List.of(legacy, migrated));
+		when(aesUtil.decryptFromBase64("enc-1")).thenReturn("01011112222");
+		when(aesUtil.decryptFromBase64("enc-2")).thenReturn("01033334444");
+		when(phoneHashUtil.hash("01011112222")).thenReturn("new-hash-1");
+		when(phoneHashUtil.hash("01033334444")).thenReturn("new-hash-2");
 
 		// when
-		runMigration();
+		int updated = runner.migrate();
 
 		// then
-		String newHash = phoneHashUtil.hash(phone);
-		assertThat(userRepository.findByPhoneHash(newHash)).isPresent();
-		assertThat(userRepository.findByPhoneHash(legacySha256(phone))).isEmpty();
+		assertThat(updated).isEqualTo(1);
+		assertThat(legacy.getPhoneHash()).isEqualTo("new-hash-1");
+		assertThat(migrated.getPhoneHash()).isEqualTo("new-hash-2");
+	}
 
-		// 다시 실행해도 같은 해시 유지
-		runMigration();
-		assertThat(userRepository.findByPhoneHash(newHash)).isPresent();
+	@Test
+	@DisplayName("복호화에 실패하면 실패한 사용자 번호를 담은 예외로 중단한다")
+	void migrate_failure_includesUserNumber() {
+		// given
+		Users broken = user("kakao_broken", "broken-cipher", "legacy-hash");
+		IllegalArgumentException cause = new IllegalArgumentException("복호화 실패");
+		when(userRepository.findAll()).thenReturn(List.of(broken));
+		when(aesUtil.decryptFromBase64("broken-cipher")).thenThrow(cause);
+
+		// when & then
+		assertThatThrownBy(() -> runner.migrate())
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("userNumber=kakao_broken")
+			.hasCause(cause);
+		assertThat(broken.getPhoneHash()).isEqualTo("legacy-hash");
 	}
 }

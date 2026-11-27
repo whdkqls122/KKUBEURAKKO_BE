@@ -34,17 +34,34 @@ public class PhoneHashMigrationRunner implements ApplicationRunner {
 	@Override
 	@Transactional
 	public void run(ApplicationArguments args) {
+		int total = (int)userRepository.count();
+		int updated = migrate();
+		log.info("전화번호 해시 재계산 완료 (전체={}, 갱신={})", total, updated);
+	}
+
+	/** 갱신한 사용자 수를 반환. 한 명이라도 실패하면 예외를 던져 전체를 롤백 */
+	int migrate() {
 		List<Users> users = userRepository.findAll();
 		int updated = 0;
 
 		for (Users user : users) {
-			String phone = aesUtil.decryptFromBase64(user.getPhone());
-			String newHash = phoneHashUtil.hash(phone);
-			if (!newHash.equals(user.getPhoneHash())) {
-				user.updatePhoneHash(newHash);
+			if (rehash(user)) {
 				updated++;
 			}
 		}
-		log.info("전화번호 해시 재계산 완료 (전체={}, 갱신={})", users.size(), updated);
+		return updated;
+	}
+
+	private boolean rehash(Users user) {
+		try {
+			String newHash = phoneHashUtil.hash(aesUtil.decryptFromBase64(user.getPhone()));
+			if (newHash.equals(user.getPhoneHash())) {
+				return false;
+			}
+			user.updatePhoneHash(newHash);
+			return true;
+		} catch (RuntimeException e) {
+			throw new IllegalStateException("전화번호 해시 재계산 실패 (userNumber=" + user.getUserNumber() + ")", e);
+		}
 	}
 }

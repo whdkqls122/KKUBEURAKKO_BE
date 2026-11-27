@@ -160,7 +160,8 @@ class AccountServiceImplTest {
 		when(portOneService.getPortOneVerifyInfo("verifyId")).thenReturn(responseDto);
 		when(responseDto.verifiedCustomer()).thenReturn(customer);
 		when(customer.phoneNumber()).thenReturn(phone);
-		when(userRepository.findByPhoneHash(any())).thenReturn(Optional.of(user));
+		when(phoneHashUtil.hash(phone)).thenReturn("phone-hash");
+		when(userRepository.findByPhoneHash("phone-hash")).thenReturn(Optional.of(user));
 		when(user.getId()).thenReturn(userId);
 
 		// when
